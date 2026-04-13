@@ -40,7 +40,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 
 /**
  * Порт AccountsListView.swift + AccountCell.
- * Свайп влево → удалить. Долгое нажатие на ручку → перетаскивать.
+ * Свайп влево → удалить (только в edit mode). Долгое нажатие на ручку → перетаскивать (только в edit mode).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +53,7 @@ fun AccountsListView(
     onDeleteAccount: (String) -> Unit,
     onMove: (Int, Int) -> Unit,
     isDraggable: Boolean = true,
+    isEditMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val lazyListState = rememberLazyListState()
@@ -66,15 +67,14 @@ fun AccountsListView(
     ) {
         items(accounts, key = { it.id }) { token ->
             ReorderableItem(reorderState, key = token.id) { isDragging ->
-                SwipeToDeleteCell(
-                    onDelete = { onDeleteAccount(token.id) }
-                ) {
+                val cell: @Composable () -> Unit = {
                     AccountCell(
                         token = token,
                         code = codes[token.id] ?: "",
                         secondsRemaining = secondsRemaining[token.id] ?: 30,
                         onCopyCode = onCopyCode,
                         onEdit = { onEditAccount(token.id) },
+                        isEditMode = isEditMode,
                         dragHandle = if (isDraggable) {
                             {
                                 Icon(
@@ -89,6 +89,11 @@ fun AccountsListView(
                         } else null,
                         isDragging = isDragging
                     )
+                }
+                if (isEditMode) {
+                    SwipeToDeleteCell(onDelete = { onDeleteAccount(token.id) }) { cell() }
+                } else {
+                    cell()
                 }
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             }
@@ -142,6 +147,8 @@ private fun SwipeToDeleteCell(
 
 /**
  * Порт AccountCell из AccountsListView.swift.
+ * В edit mode: скрыт OTP-код, тап → редактировать.
+ * В обычном режиме: показывается OTP-код, тап — ничего (копирование внутри OtpCodeView).
  * Ручка перетаскивания справа.
  */
 @Composable
@@ -151,6 +158,7 @@ fun AccountCell(
     secondsRemaining: Int,
     onCopyCode: (String) -> Unit,
     onEdit: () -> Unit,
+    isEditMode: Boolean = false,
     dragHandle: (@Composable () -> Unit)? = null,
     isDragging: Boolean = false,
     modifier: Modifier = Modifier
@@ -162,7 +170,7 @@ fun AccountCell(
                 if (isDragging) MaterialTheme.colorScheme.surfaceVariant
                 else MaterialTheme.colorScheme.surface
             )
-            .clickable { onEdit() }
+            .clickable(enabled = isEditMode) { onEdit() }
             .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -184,12 +192,14 @@ fun AccountCell(
                     Text(text = token.name, style = MaterialTheme.typography.bodyMedium)
                 }
             }
-            Spacer(Modifier.height(4.dp))
-            OtpCodeView(
-                code = code,
-                secondsRemaining = secondsRemaining,
-                onTap = onCopyCode
-            )
+            if (!isEditMode) {
+                Spacer(Modifier.height(4.dp))
+                OtpCodeView(
+                    code = code,
+                    secondsRemaining = secondsRemaining,
+                    onTap = onCopyCode
+                )
+            }
         }
 
         // Ручка перетаскивания

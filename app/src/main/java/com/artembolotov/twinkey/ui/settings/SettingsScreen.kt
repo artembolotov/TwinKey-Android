@@ -55,7 +55,8 @@ fun SettingsScreen(
     onImportAccounts: (List<Token>) -> Unit,
     onDeleteAll: () -> Unit,
     onMessage: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onEditAccounts: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -85,6 +86,14 @@ fun SettingsScreen(
 
         // Секция: Accounts
         SectionLabel(stringResource(R.string.settings_section_accounts))
+
+        if (onEditAccounts != null) {
+            SettingsRow(
+                title = stringResource(R.string.settings_edit_accounts),
+                enabled = accounts.isNotEmpty(),
+                onClick = { onEditAccounts() }
+            )
+        }
 
         SettingsRow(
             title = stringResource(R.string.settings_export),

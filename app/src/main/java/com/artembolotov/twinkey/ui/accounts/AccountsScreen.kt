@@ -20,8 +20,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -78,6 +80,12 @@ fun AccountsScreen(
     var editingToken by remember { mutableStateOf<Token?>(null) }
     var showSettings by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var editMode by remember { mutableStateOf(false) }
+
+    val accountsEmpty by remember { derivedStateOf { state.accounts.isEmpty() } }
+    LaunchedEffect(accountsEmpty) {
+        if (accountsEmpty) editMode = false
+    }
 
     val filteredAccounts by remember {
         derivedStateOf {
@@ -146,15 +154,26 @@ fun AccountsScreen(
             TopAppBar(
                 title = { Text("TwinKey") },
                 actions = {
-                    IconButton(onClick = { showSettings = true }) {
-                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                    if (editMode) {
+                        TextButton(onClick = { editMode = false }) {
+                            Text(
+                                stringResource(R.string.accounts_done),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = { showSettings = true }) {
+                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                        }
                     }
                 }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { addFlow = AddFlow.Scanner }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
+            if (!editMode) {
+                FloatingActionButton(onClick = { addFlow = AddFlow.Scanner }) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackbar) }
@@ -206,7 +225,8 @@ fun AccountsScreen(
                     },
                     onDeleteAccount = { id -> vm.deleteAccount(id) },
                     onMove = { from, to -> vm.moveAccount(from, to) },
-                    isDraggable = searchQuery.isBlank(),
+                    isDraggable = editMode && searchQuery.isBlank(),
+                    isEditMode = editMode,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -307,6 +327,13 @@ fun AccountsScreen(
                     scope.launch {
                         settingsSheetState.hide()
                         showSettings = false
+                    }
+                },
+                onEditAccounts = {
+                    scope.launch {
+                        settingsSheetState.hide()
+                        showSettings = false
+                        editMode = true
                     }
                 }
             )
