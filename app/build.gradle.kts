@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -37,6 +38,17 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Unit-тесты не используют JNI.
+    // Сбрасываем java.library.path чтобы обойти баг на Windows:
+    // Gradle передаёт PATH как -Djava.library.path, а в PATH есть лишние
+    // кавычки (из записей типа "Microsoft VS Code"), которые ломают
+    // парсинг командной строки JVM.
+    testOptions {
+        unitTests.all {
+            it.jvmArgs("-Djava.library.path=.")
+        }
+    }
 }
 
 dependencies {
@@ -48,6 +60,19 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation("androidx.compose.material:material-icons-core")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.commons.codec)
+    implementation(libs.reorderable)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
