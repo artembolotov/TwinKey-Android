@@ -83,7 +83,7 @@ fun AccountsListView(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier
                                         .size(24.dp)
-                                        .longPressDraggableHandle()
+                                        .draggableHandle()
                                 )
                             }
                         } else null,
