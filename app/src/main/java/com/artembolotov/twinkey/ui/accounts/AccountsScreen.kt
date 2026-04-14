@@ -325,6 +325,13 @@ fun AccountsScreen(
                 accounts = state.accounts,
                 onImportAccounts = { tokens -> vm.addMultiple(tokens) },
                 onDeleteAll = { vm.removeAll() },
+                onEraseAll = {
+                    scope.launch {
+                        settingsSheetState.hide()
+                        showSettings = false
+                        vm.eraseAll()
+                    }
+                },
                 onMessage = { msg -> vm.showMessage(msg) },
                 onDismiss = {
                     scope.launch {

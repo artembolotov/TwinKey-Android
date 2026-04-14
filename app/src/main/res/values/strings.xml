@@ -70,6 +70,10 @@
     <string name="settings_delete_all">Delete All Accounts</string>
     <string name="settings_delete_all_title">Delete All Accounts?</string>
     <string name="settings_delete_all_message">All accounts will be permanently removed from this device.</string>
+    <string name="settings_erase_all">Erase All…</string>
+    <string name="settings_erase_all_title">Erase everything?</string>
+    <string name="settings_erase_all_message">This will permanently delete all accounts and settings.</string>
+    <string name="settings_erase_all_confirm">Erase All</string>
     <string name="settings_section_info">Info</string>
     <string name="settings_website">Website</string>
     <string name="settings_terms">Terms of Use</string>

@@ -78,6 +78,12 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
         _state.update { it.copy(accounts = emptyList(), codes = emptyMap(), secondsRemaining = emptyMap()) }
     }
 
+    fun eraseAll() {
+        repository.removeAll()
+        settings.edit().remove("initialized").apply()
+        _state.update { it.copy(accounts = emptyList(), codes = emptyMap(), secondsRemaining = emptyMap(), mode = AppMode.Welcome) }
+    }
+
     fun addMultiple(tokens: List<Token>) {
         var current = _state.value.accounts
         tokens.forEach { token -> current = repository.add(token, current) }

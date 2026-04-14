@@ -54,6 +54,7 @@ fun SettingsScreen(
     accounts: List<Token>,
     onImportAccounts: (List<Token>) -> Unit,
     onDeleteAll: () -> Unit,
+    onEraseAll: () -> Unit,
     onMessage: (String) -> Unit,
     onDismiss: () -> Unit,
     onEditAccounts: (() -> Unit)? = null
@@ -61,6 +62,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showDeleteAllDialog by remember { mutableStateOf(false) }
+    var showEraseAllDialog by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
     var showImport by remember { mutableStateOf(false) }
     val exportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -118,6 +120,12 @@ fun SettingsScreen(
             enabled = accounts.isNotEmpty(),
             destructive = true,
             onClick = { showDeleteAllDialog = true }
+        )
+
+        SettingsRow(
+            title = stringResource(R.string.settings_erase_all),
+            destructive = true,
+            onClick = { showEraseAllDialog = true }
         )
 
         Spacer(Modifier.height(16.dp))
@@ -187,6 +195,24 @@ fun SettingsScreen(
                 TextButton(onClick = { showDeleteAllDialog = false }) {
                     Text(stringResource(R.string.cancel))
                 }
+            }
+        )
+    }
+
+    // Диалог: стереть всё
+    if (showEraseAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showEraseAllDialog = false },
+            title = { Text(stringResource(R.string.settings_erase_all_title)) },
+            text = { Text(stringResource(R.string.settings_erase_all_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showEraseAllDialog = false
+                    onEraseAll()
+                }) { Text(stringResource(R.string.settings_erase_all_confirm), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEraseAllDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
