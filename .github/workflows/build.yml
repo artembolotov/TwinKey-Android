@@ -25,17 +25,17 @@ jobs:
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
-          keytool -list -keystore keystore.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -noprompt
+          cat > keystore.properties << EOF
+          storeFile=../keystore.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
 
       - name: Build release AAB
         run: |
           chmod +x ./gradlew
-          ./gradlew bundleRelease \
-            -PversionCode=${{ github.run_number }} \
-            -Pandroid.injected.signing.store.file=${{ github.workspace }}/keystore.jks \
-            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+          ./gradlew bundleRelease -PversionCode=${{ github.run_number }}
 
       - name: Upload to Play Console
         uses: r0adkll/upload-google-play@v1

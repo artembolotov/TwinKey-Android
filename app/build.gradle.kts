@@ -4,6 +4,13 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+import java.util.Properties
+
+val keystoreProperties = Properties().apply {
+    val f = rootProject.file("keystore.properties")
+    if (f.exists()) load(f.inputStream())
+}
+
 android {
     namespace = "com.artembolotov.twinkey"
     compileSdk {
@@ -22,9 +29,19 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = keystoreProperties["storeFile"]?.let { rootProject.file(it) }
+            storePassword = keystoreProperties["storePassword"] as String?
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -39,11 +56,6 @@ android {
         compose = true
     }
 
-    // Unit-тесты не используют JNI.
-    // Сбрасываем java.library.path чтобы обойти баг на Windows:
-    // Gradle передаёт PATH как -Djava.library.path, а в PATH есть лишние
-    // кавычки (из записей типа "Microsoft VS Code"), которые ломают
-    // парсинг командной строки JVM.
     testOptions {
         unitTests.all {
             it.jvmArgs("-Djava.library.path=.")
