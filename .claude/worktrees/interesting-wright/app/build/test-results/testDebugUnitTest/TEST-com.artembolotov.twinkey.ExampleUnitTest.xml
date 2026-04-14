@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.artembolotov.twinkey.ExampleUnitTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-04-11T14:41:41.866Z" hostname="TEMON" time="0.011">
-  <properties/>
-  <testcase name="addition_isCorrect" classname="com.artembolotov.twinkey.ExampleUnitTest" time="0.003"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
