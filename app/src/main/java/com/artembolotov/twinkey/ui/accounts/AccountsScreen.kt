@@ -1,6 +1,9 @@
 package com.artembolotov.twinkey.ui.accounts
 
 import android.content.ClipData
+import android.content.ClipboardManager
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,8 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -34,8 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -70,8 +70,7 @@ fun AccountsScreen(
     vm: AccountsViewModel = viewModel()
 ) {
     val state by vm.state.collectAsState()
-    val clipboard = LocalClipboard.current
-    val snackbar = remember { SnackbarHostState() }
+    val context = LocalContext.current
     val copiedMessage = stringResource(R.string.accounts_code_copied)
     val invalidQrMessage = stringResource(R.string.scan_invalid_qr)
     val scope = rememberCoroutineScope()
@@ -104,7 +103,7 @@ fun AccountsScreen(
 
     LaunchedEffect(state.message) {
         state.message?.let {
-            snackbar.showSnackbar(it)
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             vm.clearMessage()
         }
     }
@@ -176,7 +175,6 @@ fun AccountsScreen(
                 }
             }
         },
-        snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
         if (state.accounts.isEmpty()) {
             AccountsEmptyView(
@@ -215,10 +213,11 @@ fun AccountsScreen(
                     codes = state.codes,
                     secondsRemaining = state.secondsRemaining,
                     onCopyCode = { code ->
-                        scope.launch {
-                            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", code)))
+                        context.getSystemService(ClipboardManager::class.java)
+                            .setPrimaryClip(ClipData.newPlainText("", code))
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                            vm.showMessage(copiedMessage)
                         }
-                        vm.showMessage(copiedMessage)
                     },
                     onEditAccount = { id ->
                         editingToken = state.accounts.find { it.id == id }
@@ -275,7 +274,11 @@ fun AccountsScreen(
                         addFlow = AddFlow.None
                     }
                 },
-                onCopied = { vm.showMessage(copiedMessage) }
+                onCopied = {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        vm.showMessage(copiedMessage)
+                    }
+                }
             )
         }
     }

@@ -14,15 +14,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import android.content.ClipData
-import kotlinx.coroutines.launch
+import android.content.ClipboardManager
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.Token
@@ -41,8 +39,7 @@ fun AccountAddedScreen(
     onDone: () -> Unit,
     onCopied: () -> Unit
 ) {
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -86,9 +83,8 @@ fun AccountAddedScreen(
             code = code,
             secondsRemaining = secondsRemaining,
             onTap = { copiedCode ->
-                scope.launch {
-                    clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", copiedCode)))
-                }
+                context.getSystemService(ClipboardManager::class.java)
+                    .setPrimaryClip(ClipData.newPlainText("", copiedCode))
                 onCopied()
             }
         )
