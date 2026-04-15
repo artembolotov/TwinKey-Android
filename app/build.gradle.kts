@@ -1,10 +1,10 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
-
-import java.util.Properties
 
 val keystoreProperties = Properties().apply {
     val f = rootProject.file("keystore.properties")
