@@ -26,7 +26,8 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
         val accounts: List<Token> = emptyList(),
         val codes: Map<String, String> = emptyMap(),          // id → текущий код
         val secondsRemaining: Map<String, Int> = emptyMap(),  // id → секунды до смены
-        val message: String? = null
+        val message: String? = null,
+        val welcomeSessionId: Int = 0
     )
 
     private val keychain = KeychainService(application)
@@ -81,7 +82,15 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
     fun eraseAll() {
         repository.removeAll()
         settings.edit().remove("initialized").apply()
-        _state.update { it.copy(accounts = emptyList(), codes = emptyMap(), secondsRemaining = emptyMap(), mode = AppMode.Welcome) }
+        _state.update {
+            it.copy(
+                accounts = emptyList(),
+                codes = emptyMap(),
+                secondsRemaining = emptyMap(),
+                mode = AppMode.Welcome,
+                welcomeSessionId = it.welcomeSessionId + 1
+            )
+        }
     }
 
     fun addMultiple(tokens: List<Token>) {

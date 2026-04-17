@@ -34,7 +34,10 @@ fun WelcomeScreen(
             }
         }
         AppMode.Welcome -> {
-            TutorialScreen(onGetStarted = { vm.completeWelcome() })
+            TutorialScreen(
+                sessionId = state.welcomeSessionId,
+                onGetStarted = { vm.completeWelcome() }
+            )
         }
         AppMode.Accounts -> {
             AccountsScreen(vm = vm)

@@ -2,15 +2,19 @@ package com.artembolotov.twinkey.ui.welcome
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +42,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun TutorialScreen(
+    sessionId: Int = 0,
     onGetStarted: () -> Unit,
     vm: TutorialViewModel = viewModel()
 ) {
@@ -44,8 +51,9 @@ fun TutorialScreen(
     val depth by vm.depth
     val listState = rememberLazyListState()
 
-    LaunchedEffect(Unit) {
-        vm.startGreetingIfNeeded()
+    LaunchedEffect(sessionId) {
+        vm.reset()
+        vm.startGreeting()
     }
 
     LaunchedEffect(messages.size) {
@@ -60,6 +68,23 @@ fun TutorialScreen(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            item {
+                Spacer(Modifier.height(24.dp))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(R.mipmap.ic_launcher),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(96.dp)
+                            .clip(RoundedCornerShape(22.dp))
+                    )
+                }
+                Spacer(Modifier.height(24.dp))
+            }
+
             items(messages) { msg ->
                 when (msg) {
                     is ChatMessage.Typing -> TypingBubble()

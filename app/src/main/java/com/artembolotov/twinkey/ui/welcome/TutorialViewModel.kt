@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.artembolotov.twinkey.R
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -15,13 +16,19 @@ class TutorialViewModel : ViewModel() {
     var showMoreInfo = mutableStateOf(false)
     var depth = mutableStateOf(0)
 
-    private var greetingStarted = false
+    private var greetingJob: Job? = null
 
-    fun startGreetingIfNeeded() {
-        if (greetingStarted) return
-        greetingStarted = true
+    fun reset() {
+        greetingJob?.cancel()
+        greetingJob = null
+        messages.clear()
+        showButtons.value = false
+        showMoreInfo.value = false
+        depth.value = 0
+    }
 
-        viewModelScope.launch {
+    fun startGreeting() {
+        greetingJob = viewModelScope.launch {
             messages.add(ChatMessage.Typing)
             delay(1_500)
             messages.removeAt(messages.lastIndex)
