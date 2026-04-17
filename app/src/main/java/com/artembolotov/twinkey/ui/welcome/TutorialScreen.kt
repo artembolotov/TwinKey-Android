@@ -4,6 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,8 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,6 +52,12 @@ fun TutorialScreen(
     val showButtons by vm.showButtons
     val depth by vm.depth
     val listState = rememberLazyListState()
+    val context = LocalContext.current
+    val appIcon = remember {
+        BitmapPainter(
+            context.packageManager.getApplicationIcon(context.packageName).toBitmap().asImageBitmap()
+        )
+    }
 
     LaunchedEffect(sessionId) {
         vm.reset()
@@ -75,11 +83,9 @@ fun TutorialScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.mipmap.ic_launcher),
+                        painter = appIcon,
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(96.dp)
-                            .clip(RoundedCornerShape(22.dp))
+                        modifier = Modifier.size(96.dp)
                     )
                 }
                 Spacer(Modifier.height(24.dp))
