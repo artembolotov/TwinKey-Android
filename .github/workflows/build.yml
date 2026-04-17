@@ -32,10 +32,10 @@ jobs:
           keyPassword=${{ secrets.KEY_PASSWORD }}
           EOF
 
-      - name: Build release AAB
+      - name: Build release AAB and APK
         run: |
           chmod +x ./gradlew
-          ./gradlew bundleRelease -PversionCode=${{ github.run_number }}
+          ./gradlew bundleRelease assembleRelease -PversionCode=${{ github.run_number }}
 
       - name: Upload to Play Console
         uses: r0adkll/upload-google-play@v1
@@ -44,3 +44,15 @@ jobs:
           packageName: com.artembolotov.twinkey
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: internal
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.aab
+          path: app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.apk
+          path: app/build/outputs/apk/release/app-release.apk
