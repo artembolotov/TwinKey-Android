@@ -33,7 +33,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.stringResource
@@ -78,16 +77,11 @@ fun TutorialScreen(
         ) {
             item {
                 Spacer(Modifier.height(24.dp))
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = appIcon,
-                        contentDescription = null,
-                        modifier = Modifier.size(96.dp)
-                    )
-                }
+                Image(
+                    painter = appIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(96.dp)
+                )
                 Spacer(Modifier.height(24.dp))
             }
 
@@ -166,15 +160,10 @@ private fun TypingBubble() {
             dots = when (dots.length) { 3 -> ""; else -> dots + "." }
         }
     }
-    Box(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.tutorial_typing) + dots,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    Text(
+        text = stringResource(R.string.tutorial_typing) + dots,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+    )
 }
