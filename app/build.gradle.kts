@@ -13,12 +13,12 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.artembolotov.twinkey"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.artembolotov.twinkey"
         minSdk = 26
-        targetSdk = 37
+        targetSdk = 36
         versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
         versionName = "1.0"
 
@@ -55,7 +55,8 @@ android {
     }
 
     lint {
-        disable += "TargetSdkMigration"
+        disable += "OldTargetApi"
+        disable += "GradleDependency"
     }
 
     testOptions {
