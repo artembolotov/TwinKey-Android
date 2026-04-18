@@ -1,9 +1,8 @@
 package com.artembolotov.twinkey.ui.settings
 
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import androidx.core.content.pm.PackageInfoCompat
+import androidx.core.net.toUri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -61,17 +60,12 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var showDeleteAllDialog by remember { mutableStateOf(false) }
-    var showEraseAllDialog by remember { mutableStateOf(false) }
-    var showExport by remember { mutableStateOf(false) }
-    var showImport by remember { mutableStateOf(false) }
+    val state = remember { SettingsState() }
     val exportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val importSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val exportSuccess = stringResource(R.string.backup_export_success)
-    val exportError = stringResource(R.string.backup_export_error)
     val importSuccess = stringResource(R.string.backup_import_success)
-    val importError = stringResource(R.string.backup_import_error)
 
     Column(
         modifier = Modifier
@@ -100,12 +94,12 @@ fun SettingsScreen(
         SettingsRow(
             title = stringResource(R.string.settings_export),
             enabled = accounts.isNotEmpty(),
-            onClick = { showExport = true }
+            onClick = { state.showExport = true }
         )
 
         SettingsRow(
             title = stringResource(R.string.settings_import),
-            onClick = { showImport = true }
+            onClick = { state.showImport = true }
         )
 
         Spacer(Modifier.height(16.dp))
@@ -119,13 +113,13 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_delete_all),
             enabled = accounts.isNotEmpty(),
             destructive = true,
-            onClick = { showDeleteAllDialog = true }
+            onClick = { state.showDeleteAll = true }
         )
 
         SettingsRow(
             title = stringResource(R.string.settings_erase_all),
             destructive = true,
-            onClick = { showEraseAllDialog = true }
+            onClick = { state.showEraseAll = true }
         )
 
         Spacer(Modifier.height(16.dp))
@@ -157,14 +151,9 @@ fun SettingsScreen(
             try {
                 val pi = context.packageManager.getPackageInfo(context.packageName, 0)
                 "${pi.versionName} (${PackageInfoCompat.getLongVersionCode(pi)})"
-            } catch (e: Exception) { "—" }
+            } catch (_: Exception) { "—" }
         }
-        SettingsRow(
-            title = stringResource(R.string.settings_version),
-            detail = version,
-            enabled = false,
-            onClick = {}
-        )
+        VersionRow(label = stringResource(R.string.settings_version), version = version)
 
         Spacer(Modifier.height(24.dp))
 
@@ -176,15 +165,15 @@ fun SettingsScreen(
     }
 
     // Диалог: удалить все
-    if (showDeleteAllDialog) {
+    if (state.showDeleteAll) {
         AlertDialog(
-            onDismissRequest = { showDeleteAllDialog = false },
+            onDismissRequest = { state.showDeleteAll = false },
             title = { Text(stringResource(R.string.settings_delete_all_title)) },
             text = { Text(stringResource(R.string.settings_delete_all_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showDeleteAllDialog = false
+                        state.showDeleteAll = false
                         onDeleteAll()
                         onDismiss()
                     },
@@ -192,7 +181,7 @@ fun SettingsScreen(
                 ) { Text(stringResource(R.string.settings_delete_all)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteAllDialog = false }) {
+                TextButton(onClick = { state.showDeleteAll = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             }
@@ -200,27 +189,27 @@ fun SettingsScreen(
     }
 
     // Диалог: стереть всё
-    if (showEraseAllDialog) {
+    if (state.showEraseAll) {
         AlertDialog(
-            onDismissRequest = { showEraseAllDialog = false },
+            onDismissRequest = { state.showEraseAll = false },
             title = { Text(stringResource(R.string.settings_erase_all_title)) },
             text = { Text(stringResource(R.string.settings_erase_all_message)) },
             confirmButton = {
                 TextButton(onClick = {
-                    showEraseAllDialog = false
+                    state.showEraseAll = false
                     onEraseAll()
                 }) { Text(stringResource(R.string.settings_erase_all_confirm), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showEraseAllDialog = false }) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = { state.showEraseAll = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
 
     // BottomSheet: Export
-    if (showExport) {
+    if (state.showExport) {
         ModalBottomSheet(
-            onDismissRequest = { showExport = false },
+            onDismissRequest = { state.showExport = false },
             sheetState = exportSheetState
         ) {
             AccountsExportScreen(
@@ -228,7 +217,7 @@ fun SettingsScreen(
                 onSuccess = {
                     scope.launch {
                         exportSheetState.hide()
-                        showExport = false
+                        state.showExport = false
                         onMessage(exportSuccess)
                         onDismiss()
                     }
@@ -236,14 +225,14 @@ fun SettingsScreen(
                 onError = { msg ->
                     scope.launch {
                         exportSheetState.hide()
-                        showExport = false
+                        state.showExport = false
                         onMessage(msg)
                     }
                 },
                 onDismiss = {
                     scope.launch {
                         exportSheetState.hide()
-                        showExport = false
+                        state.showExport = false
                     }
                 }
             )
@@ -251,16 +240,16 @@ fun SettingsScreen(
     }
 
     // BottomSheet: Import
-    if (showImport) {
+    if (state.showImport) {
         ModalBottomSheet(
-            onDismissRequest = { showImport = false },
+            onDismissRequest = { state.showImport = false },
             sheetState = importSheetState
         ) {
             AccountsImportScreen(
                 onImport = { tokens ->
                     scope.launch {
                         importSheetState.hide()
-                        showImport = false
+                        state.showImport = false
                         onImportAccounts(tokens)
                         onMessage(importSuccess)
                         onDismiss()
@@ -269,19 +258,36 @@ fun SettingsScreen(
                 onError = { msg ->
                     scope.launch {
                         importSheetState.hide()
-                        showImport = false
+                        state.showImport = false
                         onMessage(msg)
                     }
                 },
                 onDismiss = {
                     scope.launch {
                         importSheetState.hide()
-                        showImport = false
+                        state.showImport = false
                     }
                 }
             )
         }
     }
+}
+
+@Composable
+private fun VersionRow(label: String, version: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "$label $version",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    HorizontalDivider()
 }
 
 @Composable
@@ -329,15 +335,22 @@ private fun SettingsRow(
         }
         if (isLink) {
             androidx.compose.material3.Icon(
-                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                imageVector = Icons.Default.NorthEast,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.primary
             )
         }
     }
     HorizontalDivider()
 }
 
+private class SettingsState {
+    var showDeleteAll by mutableStateOf(false)
+    var showEraseAll by mutableStateOf(false)
+    var showExport by mutableStateOf(false)
+    var showImport by mutableStateOf(false)
+}
+
 private fun openUrl(context: android.content.Context, url: String) {
-    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
 }
