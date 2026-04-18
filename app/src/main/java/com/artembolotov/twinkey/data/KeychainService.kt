@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.artembolotov.twinkey.data
 
 import android.content.Context
@@ -6,10 +8,9 @@ import androidx.security.crypto.MasterKey
 import com.artembolotov.twinkey.domain.CodableToken
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.domain.TokenUrlParser
+import androidx.core.content.edit
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.jsonObject
 
 /**
  * Порт KeychainService.swift.
@@ -63,15 +64,18 @@ class KeychainService(context: Context) {
         val data = tokens.associate { token ->
             token.id to TokenUrlParser.toCodableToken(token)
         }
-        prefs.edit()
-            .putString(ORDER_KEY, json.encodeToString(ids))
-            .putString(ACCOUNTS_KEY, json.encodeToString(data))
-            .apply()
+        prefs.edit {
+            putString(ORDER_KEY, json.encodeToString(ids))
+            putString(ACCOUNTS_KEY, json.encodeToString(data))
+        }
     }
 
     // MARK: - Clear
 
     fun clear() {
-        prefs.edit().remove(ORDER_KEY).remove(ACCOUNTS_KEY).apply()
+        prefs.edit {
+            remove(ORDER_KEY)
+            remove(ACCOUNTS_KEY)
+        }
     }
 }

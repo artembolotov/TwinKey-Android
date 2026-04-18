@@ -57,6 +57,7 @@ fun AccountsImportScreen(
     val context = LocalContext.current
     var importResult by remember { mutableStateOf<ImportResult?>(null) }
     val selected = remember { mutableStateMapOf<String, Boolean>() }
+    val importErrorMsg = stringResource(R.string.backup_import_error)
 
     val openFileLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -68,7 +69,7 @@ fun AccountsImportScreen(
                 // По умолчанию выбрать все успешно распознанные
                 result.successful.forEach { selected[it.id] = true }
             } else {
-                onError(context.getString(R.string.backup_import_error))
+                onError(importErrorMsg)
             }
         }
     }
@@ -252,7 +253,7 @@ private fun readBackupFile(context: Context, uri: Uri): ImportResult? {
             stream.readBytes().toString(Charsets.UTF_8)
         } ?: return null
         BackupManager.import(json)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
 }

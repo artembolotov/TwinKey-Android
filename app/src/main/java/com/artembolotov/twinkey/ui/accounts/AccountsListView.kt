@@ -27,6 +27,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,9 +53,9 @@ fun AccountsListView(
     onEditAccount: (String) -> Unit,
     onDeleteAccount: (String) -> Unit,
     onMove: (Int, Int) -> Unit,
+    modifier: Modifier = Modifier,
     isDraggable: Boolean = true,
-    isEditMode: Boolean = false,
-    modifier: Modifier = Modifier
+    isEditMode: Boolean = false
 ) {
     val lazyListState = rememberLazyListState()
     val reorderState = rememberReorderableLazyListState(lazyListState) { from, to ->
@@ -107,14 +108,13 @@ private fun SwipeToDeleteCell(
     onDelete: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                onDelete()
-                true
-            } else false
+    val dismissState = rememberSwipeToDismissBoxState()
+
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+            onDelete()
         }
-    )
+    }
 
     SwipeToDismissBox(
         state = dismissState,
@@ -158,10 +158,10 @@ fun AccountCell(
     secondsRemaining: Int,
     onCopyCode: (String) -> Unit,
     onEdit: () -> Unit,
+    modifier: Modifier = Modifier,
     isEditMode: Boolean = false,
     dragHandle: (@Composable () -> Unit)? = null,
-    isDragging: Boolean = false,
-    modifier: Modifier = Modifier
+    isDragging: Boolean = false
 ) {
     Row(
         modifier = modifier

@@ -178,12 +178,12 @@ fun QrScannerScreen(
     }
 }
 
+@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 private fun CameraPreview(
     modifier: Modifier = Modifier,
     onQrCodeDetected: (String) -> Unit
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val executor = remember { Executors.newSingleThreadExecutor() }
     val scanner = remember { BarcodeScanning.getClient() }

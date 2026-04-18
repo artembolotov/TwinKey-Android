@@ -55,6 +55,7 @@ fun AccountsExportScreen(
     val selected = remember { mutableStateMapOf<String, Boolean>() }
     val allSelected = accounts.all { selected[it.id] == true }
     var exporting by remember { mutableStateOf(false) }
+    val exportErrorMsg = stringResource(R.string.backup_export_error)
 
     val fileName = remember {
         val fmt = SimpleDateFormat("yyyy-MM-dd HH-mm", Locale.getDefault())
@@ -68,7 +69,7 @@ fun AccountsExportScreen(
         if (uri != null) {
             val selectedTokens = accounts.filter { selected[it.id] == true }
             val result = writeBackupFile(context, uri, selectedTokens)
-            if (result) onSuccess() else onError(context.getString(R.string.backup_export_error))
+            if (result) onSuccess() else onError(exportErrorMsg)
         }
     }
 
@@ -178,7 +179,7 @@ private fun writeBackupFile(context: Context, uri: Uri, tokens: List<Token>): Bo
             stream.write(json.toByteArray(Charsets.UTF_8))
         }
         true
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         false
     }
 }
