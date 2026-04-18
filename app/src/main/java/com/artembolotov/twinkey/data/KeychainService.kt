@@ -9,7 +9,6 @@ import com.artembolotov.twinkey.domain.CodableToken
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.domain.TokenUrlParser
 import androidx.core.content.edit
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
