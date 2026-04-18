@@ -13,7 +13,7 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.artembolotov.twinkey"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.artembolotov.twinkey"
