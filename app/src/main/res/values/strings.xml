@@ -4,6 +4,7 @@
     <!-- AccountsScreen (порт iOS локализации) -->
     <string name="accounts_no_codes">Add your first account to get started</string>
     <string name="accounts_add_account">Add Account</string>
+    <string name="accounts_restore_from_backup">Restore from backup</string>
     <string name="accounts_code_copied">Code copied</string>
     <string name="accounts_edit">Edit</string>
     <string name="accounts_done">Done</string>

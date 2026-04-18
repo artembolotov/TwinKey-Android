@@ -2,6 +2,7 @@ package com.artembolotov.twinkey.ui.accounts
 
 import android.app.Application
 import android.content.Context
+import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.artembolotov.twinkey.core.AppMode
@@ -18,16 +19,29 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+sealed class AccountsOverlay {
+    object None : AccountsOverlay()
+    object Scanner : AccountsOverlay()
+    object Manual : AccountsOverlay()
+    data class Added(val token: Token) : AccountsOverlay()
+    data class Editing(val token: Token) : AccountsOverlay()
+    object Settings : AccountsOverlay()
+    object ImportFromEmpty : AccountsOverlay()
+}
+
 // Порт AppState + TimerService из iOS
 class AccountsViewModel(application: Application) : AndroidViewModel(application) {
 
     data class UiState(
         val mode: AppMode = AppMode.Unknown,
         val accounts: List<Token> = emptyList(),
-        val codes: Map<String, String> = emptyMap(),          // id → текущий код
-        val secondsRemaining: Map<String, Int> = emptyMap(),  // id → секунды до смены
+        val codes: Map<String, String> = emptyMap(),
+        val secondsRemaining: Map<String, Int> = emptyMap(),
         val message: String? = null,
-        val welcomeSessionId: Int = 0
+        val welcomeSessionId: Int = 0,
+        val overlay: AccountsOverlay = AccountsOverlay.None,
+        val editMode: Boolean = false,
+        val searchQuery: String = ""
     )
 
     private val keychain = KeychainService(application)
@@ -45,13 +59,22 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
         _state.update { it.copy(mode = mode, accounts = accounts) }
         updateCodes()
 
-        // Порт TimerService: тик каждую секунду
         viewModelScope.launch {
             tickerFlow().collect { updateCodes() }
         }
     }
 
-    // MARK: - Actions (порт AccountAction)
+    // MARK: - Overlay
+
+    fun showOverlay(overlay: AccountsOverlay) = _state.update { it.copy(overlay = overlay) }
+    fun dismissOverlay() = _state.update { it.copy(overlay = AccountsOverlay.None) }
+
+    // MARK: - Edit mode / Search
+
+    fun setEditMode(enabled: Boolean) = _state.update { it.copy(editMode = enabled) }
+    fun setSearchQuery(query: String) = _state.update { it.copy(searchQuery = query) }
+
+    // MARK: - Accounts (порт AccountAction)
 
     fun addAccount(token: Token) {
         val updated = repository.add(token, _state.value.accounts)
@@ -61,7 +84,7 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
 
     fun deleteAccount(id: String) {
         val updated = repository.delete(id, _state.value.accounts)
-        _state.update { it.copy(accounts = updated) }
+        _state.update { it.copy(accounts = updated, editMode = if (updated.isEmpty()) false else it.editMode) }
     }
 
     fun updateAccount(token: Token) {
@@ -76,19 +99,22 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
 
     fun removeAll() {
         repository.removeAll()
-        _state.update { it.copy(accounts = emptyList(), codes = emptyMap(), secondsRemaining = emptyMap()) }
+        _state.update { it.copy(accounts = emptyList(), codes = emptyMap(), secondsRemaining = emptyMap(), editMode = false) }
     }
 
     fun eraseAll() {
         repository.removeAll()
-        settings.edit().remove("initialized").apply()
+        settings.edit { remove("initialized") }
         _state.update {
             it.copy(
                 accounts = emptyList(),
                 codes = emptyMap(),
                 secondsRemaining = emptyMap(),
                 mode = AppMode.Welcome,
-                welcomeSessionId = it.welcomeSessionId + 1
+                welcomeSessionId = it.welcomeSessionId + 1,
+                overlay = AccountsOverlay.None,
+                editMode = false,
+                searchQuery = ""
             )
         }
     }
@@ -100,9 +126,8 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
         updateCodes()
     }
 
-    // Порт CoreAction.resetSettings — завершение онбординга
     fun completeWelcome() {
-        settings.edit().putBoolean("initialized", true).apply()
+        settings.edit { putBoolean("initialized", true) }
         _state.update { it.copy(mode = AppMode.Accounts) }
     }
 
@@ -124,7 +149,6 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
         _state.update { it.copy(codes = codes, secondsRemaining = remaining) }
     }
 
-    // Порт TimerService: паблишер раз в секунду
     private fun tickerFlow() = flow {
         while (true) {
             delay(1_000L)

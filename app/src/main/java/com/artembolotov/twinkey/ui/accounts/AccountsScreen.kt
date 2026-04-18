@@ -28,12 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -41,28 +38,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.GoogleAuthMigrationParser
-import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.domain.TokenUrlParser
 import com.artembolotov.twinkey.ui.add.AccountAddedScreen
 import com.artembolotov.twinkey.ui.add.AddManuallyScreen
 import com.artembolotov.twinkey.ui.add.QrScannerScreen
+import com.artembolotov.twinkey.ui.settings.AccountsImportScreen
 import com.artembolotov.twinkey.ui.settings.SettingsScreen
 import kotlinx.coroutines.launch
-
-sealed class AddFlow {
-    object None : AddFlow()
-    object Scanner : AddFlow()
-    object Manual : AddFlow()
-    data class Added(val token: Token) : AddFlow()
-}
 
 /**
  * Порт AccountsScreen.swift.
  *
- * Поиск фильтрует список по issuer/name.
- * FAB → QR-сканер. Ячейки: свайп влево → удалить, ручка → перетащить.
- * Нажатие → редактировать (BottomSheet).
- * Settings → BottomSheet с настройками.
+ * Весь UI-стейт (активный оверлей, editMode, searchQuery) живёт во ViewModel.
+ * Composable не содержит var-переменных: только читает state и вызывает методы VM.
+ * ModalBottomSheetState остаётся в composable — это чисто анимационный UI-concern.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,35 +60,28 @@ fun AccountsScreen(
 ) {
     val state by vm.state.collectAsState()
     val context = LocalContext.current
-    val copiedMessage = stringResource(R.string.accounts_code_copied)
-    val invalidQrMessage = stringResource(R.string.scan_invalid_qr)
     val scope = rememberCoroutineScope()
 
-    var addFlow by remember { mutableStateOf<AddFlow>(AddFlow.None) }
-    var editingToken by remember { mutableStateOf<Token?>(null) }
-    var showSettings by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
-    var editMode by remember { mutableStateOf(false) }
+    val copiedMessage = stringResource(R.string.accounts_code_copied)
+    val invalidQrMessage = stringResource(R.string.scan_invalid_qr)
+    val importSuccess = stringResource(R.string.backup_import_success)
 
-    val accountsEmpty by remember { derivedStateOf { state.accounts.isEmpty() } }
-    LaunchedEffect(accountsEmpty) {
-        if (accountsEmpty) editMode = false
-    }
-
-    val filteredAccounts by remember {
-        derivedStateOf {
-            if (searchQuery.isBlank()) state.accounts
-            else state.accounts.filter {
-                it.issuer.contains(searchQuery, ignoreCase = true) ||
-                it.name.contains(searchQuery, ignoreCase = true)
-            }
-        }
-    }
-
+    // Анимационные состояния шторок — UI-concern, не переживают config change
     val manualSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val addedSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val editSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val settingsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val importFromEmptySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // Фильтрация пересчитывается только при изменении списка или запроса,
+    // а не при каждом тике таймера (codes обновляются каждую секунду)
+    val filteredAccounts = remember(state.accounts, state.searchQuery) {
+        if (state.searchQuery.isBlank()) state.accounts
+        else state.accounts.filter {
+            it.issuer.contains(state.searchQuery, ignoreCase = true) ||
+            it.name.contains(state.searchQuery, ignoreCase = true)
+        }
+    }
 
     LaunchedEffect(state.message) {
         state.message?.let {
@@ -109,7 +91,7 @@ fun AccountsScreen(
     }
 
     // Полноэкранный QR-сканер
-    if (addFlow is AddFlow.Scanner) {
+    if (state.overlay is AccountsOverlay.Scanner) {
         QrScannerScreen(
             onScanned = { url ->
                 when {
@@ -118,7 +100,7 @@ fun AccountsScreen(
                             GoogleAuthMigrationParser.parse(url)
                         }.getOrElse { Pair(emptyList(), emptyList()) }
 
-                        addFlow = AddFlow.None
+                        vm.dismissOverlay()
                         if (tokens.isNotEmpty()) {
                             vm.addMultiple(tokens)
                             val msg = if (skipped.isEmpty())
@@ -134,16 +116,16 @@ fun AccountsScreen(
                         val token = runCatching { TokenUrlParser.parse(url) }.getOrNull()
                         if (token != null) {
                             vm.addAccount(token)
-                            addFlow = AddFlow.Added(token)
+                            vm.showOverlay(AccountsOverlay.Added(token))
                         } else {
-                            addFlow = AddFlow.None
+                            vm.dismissOverlay()
                             vm.showMessage(invalidQrMessage)
                         }
                     }
                 }
             },
-            onAddManually = { addFlow = AddFlow.Manual },
-            onCancel = { addFlow = AddFlow.None }
+            onAddManually = { vm.showOverlay(AccountsOverlay.Manual) },
+            onCancel = { vm.dismissOverlay() }
         )
         return
     }
@@ -153,15 +135,15 @@ fun AccountsScreen(
             TopAppBar(
                 title = { Text("TwinKey") },
                 actions = {
-                    if (editMode) {
-                        TextButton(onClick = { editMode = false }) {
+                    if (state.editMode) {
+                        TextButton(onClick = { vm.setEditMode(false) }) {
                             Text(
                                 stringResource(R.string.accounts_done),
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     } else {
-                        IconButton(onClick = { showSettings = true }) {
+                        IconButton(onClick = { vm.showOverlay(AccountsOverlay.Settings) }) {
                             Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                         }
                     }
@@ -169,8 +151,8 @@ fun AccountsScreen(
             )
         },
         floatingActionButton = {
-            if (!editMode) {
-                FloatingActionButton(onClick = { addFlow = AddFlow.Scanner }) {
+            if (!state.editMode) {
+                FloatingActionButton(onClick = { vm.showOverlay(AccountsOverlay.Scanner) }) {
                     Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
                 }
             }
@@ -178,7 +160,7 @@ fun AccountsScreen(
     ) { padding ->
         if (state.accounts.isEmpty()) {
             AccountsEmptyView(
-                onAddAccount = { addFlow = AddFlow.Scanner },
+                onRestoreFromBackup = { vm.showOverlay(AccountsOverlay.ImportFromEmpty) },
                 modifier = Modifier.padding(padding)
             )
         } else {
@@ -187,17 +169,16 @@ fun AccountsScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                // Поиск
                 OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
+                    value = state.searchQuery,
+                    onValueChange = { vm.setSearchQuery(it) },
                     placeholder = { Text(stringResource(R.string.accounts_search)) },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null)
                     },
                     trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
+                        if (state.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { vm.setSearchQuery("") }) {
                                 Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.accounts_search_clear))
                             }
                         }
@@ -220,12 +201,13 @@ fun AccountsScreen(
                         }
                     },
                     onEditAccount = { id ->
-                        editingToken = state.accounts.find { it.id == id }
+                        val token = state.accounts.find { it.id == id } ?: return@AccountsListView
+                        vm.showOverlay(AccountsOverlay.Editing(token))
                     },
                     onDeleteAccount = { id -> vm.deleteAccount(id) },
                     onMove = { from, to -> vm.moveAccount(from, to) },
-                    isDraggable = editMode && searchQuery.isBlank(),
-                    isEditMode = editMode,
+                    isDraggable = state.editMode && state.searchQuery.isBlank(),
+                    isEditMode = state.editMode,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -233,9 +215,9 @@ fun AccountsScreen(
     }
 
     // BottomSheet: ручной ввод
-    if (addFlow is AddFlow.Manual) {
+    if (state.overlay is AccountsOverlay.Manual) {
         ModalBottomSheet(
-            onDismissRequest = { addFlow = AddFlow.None },
+            onDismissRequest = { vm.dismissOverlay() },
             sheetState = manualSheetState,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -244,13 +226,13 @@ fun AccountsScreen(
                     scope.launch {
                         manualSheetState.hide()
                         vm.addAccount(token)
-                        addFlow = AddFlow.Added(token)
+                        vm.showOverlay(AccountsOverlay.Added(token))
                     }
                 },
                 onCancel = {
                     scope.launch {
                         manualSheetState.hide()
-                        addFlow = AddFlow.None
+                        vm.dismissOverlay()
                     }
                 }
             )
@@ -258,10 +240,10 @@ fun AccountsScreen(
     }
 
     // BottomSheet: аккаунт добавлен
-    if (addFlow is AddFlow.Added) {
-        val token = (addFlow as AddFlow.Added).token
+    if (state.overlay is AccountsOverlay.Added) {
+        val token = (state.overlay as AccountsOverlay.Added).token
         ModalBottomSheet(
-            onDismissRequest = { addFlow = AddFlow.None },
+            onDismissRequest = { vm.dismissOverlay() },
             sheetState = addedSheetState
         ) {
             AccountAddedScreen(
@@ -271,7 +253,7 @@ fun AccountsScreen(
                 onDone = {
                     scope.launch {
                         addedSheetState.hide()
-                        addFlow = AddFlow.None
+                        vm.dismissOverlay()
                     }
                 },
                 onCopied = {
@@ -284,9 +266,10 @@ fun AccountsScreen(
     }
 
     // BottomSheet: редактирование
-    editingToken?.let { token ->
+    if (state.overlay is AccountsOverlay.Editing) {
+        val token = (state.overlay as AccountsOverlay.Editing).token
         ModalBottomSheet(
-            onDismissRequest = { editingToken = null },
+            onDismissRequest = { vm.dismissOverlay() },
             sheetState = editSheetState
         ) {
             AccountEditScreen(
@@ -295,20 +278,52 @@ fun AccountsScreen(
                     scope.launch {
                         editSheetState.hide()
                         vm.updateAccount(updated)
-                        editingToken = null
+                        vm.dismissOverlay()
                     }
                 },
                 onDelete = { id ->
                     scope.launch {
                         editSheetState.hide()
                         vm.deleteAccount(id)
-                        editingToken = null
+                        vm.dismissOverlay()
                     }
                 },
                 onCancel = {
                     scope.launch {
                         editSheetState.hide()
-                        editingToken = null
+                        vm.dismissOverlay()
+                    }
+                }
+            )
+        }
+    }
+
+    // BottomSheet: импорт из пустого экрана
+    if (state.overlay is AccountsOverlay.ImportFromEmpty) {
+        ModalBottomSheet(
+            onDismissRequest = { vm.dismissOverlay() },
+            sheetState = importFromEmptySheetState
+        ) {
+            AccountsImportScreen(
+                onImport = { tokens ->
+                    scope.launch {
+                        importFromEmptySheetState.hide()
+                        vm.addMultiple(tokens)
+                        vm.dismissOverlay()
+                        vm.showMessage(importSuccess)
+                    }
+                },
+                onError = { msg ->
+                    scope.launch {
+                        importFromEmptySheetState.hide()
+                        vm.dismissOverlay()
+                        vm.showMessage(msg)
+                    }
+                },
+                onDismiss = {
+                    scope.launch {
+                        importFromEmptySheetState.hide()
+                        vm.dismissOverlay()
                     }
                 }
             )
@@ -316,9 +331,9 @@ fun AccountsScreen(
     }
 
     // BottomSheet: настройки
-    if (showSettings) {
+    if (state.overlay is AccountsOverlay.Settings) {
         ModalBottomSheet(
-            onDismissRequest = { showSettings = false },
+            onDismissRequest = { vm.dismissOverlay() },
             sheetState = settingsSheetState
         ) {
             SettingsScreen(
@@ -328,7 +343,6 @@ fun AccountsScreen(
                 onEraseAll = {
                     scope.launch {
                         settingsSheetState.hide()
-                        showSettings = false
                         vm.eraseAll()
                     }
                 },
@@ -336,14 +350,14 @@ fun AccountsScreen(
                 onDismiss = {
                     scope.launch {
                         settingsSheetState.hide()
-                        showSettings = false
+                        vm.dismissOverlay()
                     }
                 },
                 onEditAccounts = {
                     scope.launch {
                         settingsSheetState.hide()
-                        showSettings = false
-                        editMode = true
+                        vm.dismissOverlay()
+                        vm.setEditMode(true)
                     }
                 }
             )
