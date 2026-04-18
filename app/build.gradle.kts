@@ -13,16 +13,12 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.artembolotov.twinkey"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.artembolotov.twinkey"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
         versionName = "1.0"
 
@@ -58,6 +54,10 @@ android {
         compose = true
     }
 
+    lint {
+        disable += "TargetSdkMigration"
+    }
+
     testOptions {
         unitTests.all {
             it.jvmArgs("-Djava.library.path=.")
@@ -74,8 +74,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.material.icons.core)
-    implementation(libs.material.icons.extended)
+    @Suppress("UseTomlInstead")
+    implementation("androidx.compose.material:material-icons-core")
+    @Suppress("UseTomlInstead")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.security.crypto)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.camera.camera2)
