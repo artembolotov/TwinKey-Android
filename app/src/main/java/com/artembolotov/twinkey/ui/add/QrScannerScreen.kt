@@ -2,6 +2,7 @@ package com.artembolotov.twinkey.ui.add
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -67,6 +68,8 @@ fun QrScannerScreen(
     onAddManually: () -> Unit,
     onCancel: () -> Unit
 ) {
+    BackHandler(onBack = onCancel)
+
     val context = LocalContext.current
     val state = remember {
         QrScannerState(
