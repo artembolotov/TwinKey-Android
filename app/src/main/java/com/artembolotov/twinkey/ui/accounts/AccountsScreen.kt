@@ -25,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.text.font.FontWeight
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -81,6 +82,10 @@ fun AccountsScreen(
             it.issuer.contains(state.searchQuery, ignoreCase = true) ||
             it.name.contains(state.searchQuery, ignoreCase = true)
         }
+    }
+
+    BackHandler(enabled = state.searchQuery.isNotEmpty()) {
+        vm.setSearchQuery("")
     }
 
     LaunchedEffect(state.message) {
