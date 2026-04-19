@@ -68,23 +68,23 @@ fun QrScannerScreen(
     onCancel: () -> Unit
 ) {
     val context = LocalContext.current
-    var hasCameraPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                PackageManager.PERMISSION_GRANTED
+    val state = remember {
+        QrScannerState(
+            hasCameraPermission = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
         )
     }
-    var scanned by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted -> hasCameraPermission = granted }
+    ) { granted -> state.hasCameraPermission = granted }
 
     // Выбор изображения из галереи
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        if (uri != null && !scanned) {
+        if (uri != null && !state.scanned) {
             val image = runCatching { InputImage.fromFilePath(context, uri) }.getOrNull()
                 ?: return@rememberLauncherForActivityResult
             BarcodeScanning.getClient().process(image)
@@ -92,7 +92,7 @@ fun QrScannerScreen(
                     barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
                         ?.rawValue
                         ?.let { url ->
-                            scanned = true
+                            state.scanned = true
                             onScanned(url)
                         }
                 }
@@ -100,7 +100,7 @@ fun QrScannerScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
+        if (!state.hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
     Scaffold(
@@ -144,12 +144,12 @@ fun QrScannerScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (hasCameraPermission) {
+            if (state.hasCameraPermission) {
                 CameraPreview(
                     modifier = Modifier.fillMaxSize(),
                     onQrCodeDetected = { url ->
-                        if (!scanned) {
-                            scanned = true
+                        if (!state.scanned) {
+                            state.scanned = true
                             onScanned(url)
                         }
                     }
@@ -176,6 +176,11 @@ fun QrScannerScreen(
             }
         }
     }
+}
+
+private class QrScannerState(hasCameraPermission: Boolean) {
+    var hasCameraPermission by mutableStateOf(hasCameraPermission)
+    var scanned by mutableStateOf(false)
 }
 
 @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)

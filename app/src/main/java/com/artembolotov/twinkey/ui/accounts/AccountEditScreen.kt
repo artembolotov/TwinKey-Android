@@ -58,12 +58,10 @@ fun AccountEditScreen(
     onDelete: (String) -> Unit,
     onCancel: () -> Unit
 ) {
-    var issuer by remember { mutableStateOf(token.issuer) }
-    var name by remember { mutableStateOf(token.name) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    val state = remember { AccountEditState(token.issuer, token.name) }
 
-    val hasChanges = issuer != token.issuer || name != token.name
-    val canDone = issuer.isNotBlank() && hasChanges
+    val hasChanges = state.issuer != token.issuer || state.name != token.name
+    val canDone = state.issuer.isNotBlank() && hasChanges
 
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
@@ -85,8 +83,8 @@ fun AccountEditScreen(
 
         // Editable: Service name
         OutlinedTextField(
-            value = issuer,
-            onValueChange = { issuer = it },
+            value = state.issuer,
+            onValueChange = { state.issuer = it },
             label = { Text(stringResource(R.string.edit_issuer)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -98,8 +96,8 @@ fun AccountEditScreen(
 
         // Editable: Account (email / username)
         OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
+            value = state.name,
+            onValueChange = { state.name = it },
             label = { Text(stringResource(R.string.edit_account)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -153,7 +151,7 @@ fun AccountEditScreen(
             }
             Button(
                 onClick = {
-                    onDone(token.copy(issuer = issuer.trim(), name = name.trim()))
+                    onDone(token.copy(issuer = state.issuer.trim(), name = state.name.trim()))
                 },
                 enabled = canDone
             ) {
@@ -165,7 +163,7 @@ fun AccountEditScreen(
 
         // Delete — деструктивная
         Button(
-            onClick = { showDeleteDialog = true },
+            onClick = { state.showDeleteDialog = true },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -179,9 +177,9 @@ fun AccountEditScreen(
     }
 
     // Диалог подтверждения удаления
-    if (showDeleteDialog) {
+    if (state.showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { state.showDeleteDialog = false },
             title = { Text(stringResource(R.string.edit_delete_confirm_title)) },
             text = { Text(stringResource(R.string.edit_delete_confirm_message, token.issuer.ifEmpty { token.name })) },
             confirmButton = {
@@ -195,12 +193,18 @@ fun AccountEditScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                TextButton(onClick = { state.showDeleteDialog = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             }
         )
     }
+}
+
+private class AccountEditState(issuer: String, name: String) {
+    var issuer by mutableStateOf(issuer)
+    var name by mutableStateOf(name)
+    var showDeleteDialog by mutableStateOf(false)
 }
 
 @Composable

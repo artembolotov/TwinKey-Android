@@ -54,7 +54,7 @@ fun AccountsExportScreen(
     val context = LocalContext.current
     val selected = remember { mutableStateMapOf<String, Boolean>() }
     val allSelected = accounts.all { selected[it.id] == true }
-    var exporting by remember { mutableStateOf(false) }
+    val exportState = remember { ExportState() }
     val exportErrorMsg = stringResource(R.string.backup_export_error)
 
     val fileName = remember {
@@ -65,7 +65,7 @@ fun AccountsExportScreen(
     val createFileLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri ->
-        exporting = false
+        exportState.exporting = false
         if (uri != null) {
             val selectedTokens = accounts.filter { selected[it.id] == true }
             val result = writeBackupFile(context, uri, selectedTokens)
@@ -159,10 +159,10 @@ fun AccountsExportScreen(
             }
             Button(
                 onClick = {
-                    exporting = true
+                    exportState.exporting = true
                     createFileLauncher.launch(fileName)
                 },
-                enabled = selectedCount > 0 && !exporting
+                enabled = selectedCount > 0 && !exportState.exporting
             ) {
                 Text(stringResource(R.string.backup_export_button, selectedCount))
             }
@@ -170,6 +170,10 @@ fun AccountsExportScreen(
 
         Spacer(Modifier.height(8.dp))
     }
+}
+
+private class ExportState {
+    var exporting by mutableStateOf(false)
 }
 
 private fun writeBackupFile(context: Context, uri: Uri, tokens: List<Token>): Boolean {
