@@ -21,10 +21,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
+import com.artembolotov.twinkey.ui.components.rememberAppSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,8 +62,8 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val state = remember { SettingsState() }
-    val exportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val importSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val exportSheetState = rememberAppSheetState()
+    val importSheetState = rememberAppSheetState()
 
     val exportSuccess = stringResource(R.string.backup_export_success)
     val importSuccess = stringResource(R.string.backup_import_success)
@@ -209,9 +209,9 @@ fun SettingsScreen(
 
     // BottomSheet: Export
     if (state.showExport) {
-        ModalBottomSheet(
-            onDismissRequest = { state.showExport = false },
-            sheetState = exportSheetState
+        AppModalBottomSheet(
+            appSheetState = exportSheetState,
+            onDismissRequest = { state.showExport = false }
         ) {
             AccountsExportScreen(
                 accounts = accounts,
@@ -242,9 +242,9 @@ fun SettingsScreen(
 
     // BottomSheet: Import
     if (state.showImport) {
-        ModalBottomSheet(
-            onDismissRequest = { state.showImport = false },
-            sheetState = importSheetState
+        AppModalBottomSheet(
+            appSheetState = importSheetState,
+            onDismissRequest = { state.showImport = false }
         ) {
             AccountsImportScreen(
                 onImport = { tokens ->

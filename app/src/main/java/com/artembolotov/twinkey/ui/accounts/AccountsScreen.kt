@@ -19,13 +19,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
+import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
+import com.artembolotov.twinkey.ui.components.rememberAppSheetState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
@@ -88,11 +88,11 @@ fun AccountsScreen(
     val importSuccess = stringResource(R.string.backup_import_success)
 
     // Анимационные состояния шторок — UI-concern, не переживают config change
-    val manualSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val addedSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val editSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val settingsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val importFromEmptySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val manualSheetState = rememberAppSheetState()
+    val addedSheetState = rememberAppSheetState()
+    val editSheetState = rememberAppSheetState()
+    val settingsSheetState = rememberAppSheetState()
+    val importFromEmptySheetState = rememberAppSheetState()
 
     // Фильтрация пересчитывается только при изменении списка или запроса,
     // а не при каждом тике таймера (codes обновляются каждую секунду)
@@ -251,9 +251,9 @@ fun AccountsScreen(
 
     // BottomSheet: ручной ввод
     if (state.overlay is AccountsOverlay.Manual) {
-        ModalBottomSheet(
+        AppModalBottomSheet(
+            appSheetState = manualSheetState,
             onDismissRequest = { vm.dismissOverlay() },
-            sheetState = manualSheetState,
             modifier = Modifier.fillMaxWidth()
         ) {
             AddManuallyScreen(
@@ -277,9 +277,9 @@ fun AccountsScreen(
     // BottomSheet: аккаунт добавлен
     if (state.overlay is AccountsOverlay.Added) {
         val token = (state.overlay as AccountsOverlay.Added).token
-        ModalBottomSheet(
-            onDismissRequest = { vm.dismissOverlay() },
-            sheetState = addedSheetState
+        AppModalBottomSheet(
+            appSheetState = addedSheetState,
+            onDismissRequest = { vm.dismissOverlay() }
         ) {
             AccountAddedScreen(
                 token = token,
@@ -303,9 +303,9 @@ fun AccountsScreen(
     // BottomSheet: редактирование
     if (state.overlay is AccountsOverlay.Editing) {
         val token = (state.overlay as AccountsOverlay.Editing).token
-        ModalBottomSheet(
-            onDismissRequest = { vm.dismissOverlay() },
-            sheetState = editSheetState
+        AppModalBottomSheet(
+            appSheetState = editSheetState,
+            onDismissRequest = { vm.dismissOverlay() }
         ) {
             AccountEditScreen(
                 token = token,
@@ -335,9 +335,9 @@ fun AccountsScreen(
 
     // BottomSheet: импорт из пустого экрана
     if (state.overlay is AccountsOverlay.ImportFromEmpty) {
-        ModalBottomSheet(
-            onDismissRequest = { vm.dismissOverlay() },
-            sheetState = importFromEmptySheetState
+        AppModalBottomSheet(
+            appSheetState = importFromEmptySheetState,
+            onDismissRequest = { vm.dismissOverlay() }
         ) {
             AccountsImportScreen(
                 onImport = { tokens ->
@@ -367,9 +367,9 @@ fun AccountsScreen(
 
     // BottomSheet: настройки
     if (state.overlay is AccountsOverlay.Settings) {
-        ModalBottomSheet(
-            onDismissRequest = { vm.dismissOverlay() },
-            sheetState = settingsSheetState
+        AppModalBottomSheet(
+            appSheetState = settingsSheetState,
+            onDismissRequest = { vm.dismissOverlay() }
         ) {
             SettingsScreen(
                 accounts = state.accounts,
