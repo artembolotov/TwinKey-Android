@@ -63,6 +63,14 @@ fun AccountsEmptyView(
             Text(stringResource(R.string.accounts_restore_from_backup))
         }
 
+        Text(
+            text = stringResource(R.string.accounts_google_auth_import_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        )
+
         Spacer(Modifier.height(32.dp))
     }
 }
