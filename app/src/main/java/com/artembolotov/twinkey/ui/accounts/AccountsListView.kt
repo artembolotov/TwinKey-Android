@@ -1,6 +1,7 @@
 package com.artembolotov.twinkey.ui.accounts
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
@@ -29,10 +32,16 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.OtpCodeView
@@ -43,7 +52,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
  * Порт AccountsListView.swift + AccountCell.
  * Свайп влево → удалить (только в edit mode). Долгое нажатие на ручку → перетаскивать (только в edit mode).
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AccountsListView(
     accounts: List<Token>,
@@ -62,41 +71,73 @@ fun AccountsListView(
         onMove(from.index, to.index)
     }
 
-    LazyColumn(
-        state = lazyListState,
-        modifier = modifier
-    ) {
-        items(accounts, key = { it.id }) { token ->
-            ReorderableItem(reorderState, key = token.id) { isDragging ->
-                val cell: @Composable () -> Unit = {
-                    AccountCell(
-                        token = token,
-                        code = codes[token.id] ?: "",
-                        secondsRemaining = secondsRemaining[token.id] ?: 30,
-                        onCopyCode = onCopyCode,
-                        onEdit = { onEditAccount(token.id) },
-                        isEditMode = isEditMode,
-                        dragHandle = if (isDraggable) {
-                            {
-                                Icon(
-                                    imageVector = Icons.Default.DragHandle,
-                                    contentDescription = "Drag to reorder",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .draggableHandle()
-                                )
-                            }
-                        } else null,
-                        isDragging = isDragging
-                    )
-                }
-                if (isEditMode) {
-                    SwipeToDeleteCell(onDelete = { onDeleteAccount(token.id) }) { cell() }
+    val overscrollEffect = rememberOverscrollEffect()
+    val nestedScrollConnection = remember(overscrollEffect) {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                return if (!lazyListState.canScrollForward && !lazyListState.canScrollBackward) {
+                    overscrollEffect?.applyToScroll(available, source) { Offset.Zero } ?: Offset.Zero
                 } else {
-                    cell()
+                    Offset.Zero
                 }
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                return if (!lazyListState.canScrollForward && !lazyListState.canScrollBackward) {
+                    overscrollEffect?.applyToFling(available) { Velocity.Zero }
+                    available
+                } else {
+                    Velocity.Zero
+                }
+            }
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .nestedScroll(nestedScrollConnection)
+            .then(if (overscrollEffect != null) Modifier.overscroll(overscrollEffect) else Modifier)
+    ) {
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(accounts, key = { it.id }) { token ->
+                ReorderableItem(reorderState, key = token.id) { isDragging ->
+                    val cell: @Composable () -> Unit = {
+                        AccountCell(
+                            token = token,
+                            code = codes[token.id] ?: "",
+                            secondsRemaining = secondsRemaining[token.id] ?: 30,
+                            onCopyCode = onCopyCode,
+                            onEdit = { onEditAccount(token.id) },
+                            isEditMode = isEditMode,
+                            dragHandle = if (isDraggable) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.DragHandle,
+                                        contentDescription = "Drag to reorder",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .draggableHandle()
+                                    )
+                                }
+                            } else null,
+                            isDragging = isDragging
+                        )
+                    }
+                    if (isEditMode) {
+                        SwipeToDeleteCell(onDelete = { onDeleteAccount(token.id) }) { cell() }
+                    } else {
+                        cell()
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                }
             }
         }
     }
