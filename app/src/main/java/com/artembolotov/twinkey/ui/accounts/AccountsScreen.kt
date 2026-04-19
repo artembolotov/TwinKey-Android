@@ -84,8 +84,9 @@ fun AccountsScreen(
         }
     }
 
-    BackHandler(enabled = state.searchQuery.isNotEmpty()) {
-        vm.setSearchQuery("")
+    BackHandler(enabled = state.searchQuery.isNotEmpty() || state.editMode) {
+        if (state.searchQuery.isNotEmpty()) vm.setSearchQuery("")
+        else vm.setEditMode(false)
     }
 
     LaunchedEffect(state.message) {
