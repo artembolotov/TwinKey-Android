@@ -23,7 +23,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
 import com.artembolotov.twinkey.ui.components.rememberAppSheetState
 import androidx.compose.ui.text.font.FontWeight
@@ -82,6 +84,8 @@ fun AccountsScreen(
                 if (bottom == 0) focusManager.clearFocus()
             }
     }
+
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val copiedMessage = stringResource(R.string.accounts_code_copied)
     val invalidQrMessage = stringResource(R.string.scan_invalid_qr)
@@ -158,8 +162,9 @@ fun AccountsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            MediumTopAppBar(
                 title = { Text("TwinKey") },
+                scrollBehavior = scrollBehavior,
                 actions = {
                     if (state.editMode) {
                         TextButton(onClick = { vm.setEditMode(false) }) {
@@ -194,6 +199,7 @@ fun AccountsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
             ) {
                 OutlinedTextField(
                     value = state.searchQuery,
