@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,6 +58,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.GoogleAuthMigrationParser
@@ -206,25 +208,37 @@ fun AccountsScreen(
                     enter = expandVertically() + fadeIn(),
                     exit = shrinkVertically() + fadeOut()
                 ) {
-                    MediumTopAppBar(
-                        title = { Text("TwinKey") },
-                        windowInsets = WindowInsets(0, 0, 0, 0),
-                        scrollBehavior = scrollBehavior,
-                        actions = {
-                            if (state.editMode) {
-                                TextButton(onClick = { vm.setEditMode(false) }) {
-                                    Text(
-                                        stringResource(R.string.accounts_done),
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            } else {
-                                IconButton(onClick = { vm.showOverlay(AccountsOverlay.Settings) }) {
-                                    Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                    MaterialTheme(
+                        typography = MaterialTheme.typography.copy(
+                            headlineSmall = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 34.sp
+                            )
+                        )
+                    ) {
+                        MediumTopAppBar(
+                            title = { Text("TwinKey") },
+                            windowInsets = WindowInsets(0, 0, 0, 0),
+                            scrollBehavior = scrollBehavior,
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                scrolledContainerColor = MaterialTheme.colorScheme.background
+                            ),
+                            actions = {
+                                if (state.editMode) {
+                                    TextButton(onClick = { vm.setEditMode(false) }) {
+                                        Text(
+                                            stringResource(R.string.accounts_done),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                } else {
+                                    IconButton(onClick = { vm.showOverlay(AccountsOverlay.Settings) }) {
+                                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                                    }
                                 }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
 
                 BasicTextField(
