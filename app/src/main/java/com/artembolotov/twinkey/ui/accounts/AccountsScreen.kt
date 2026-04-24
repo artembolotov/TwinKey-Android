@@ -273,8 +273,11 @@ fun AccountsScreen(
                                 Icon(Icons.Default.Search, contentDescription = null)
                             },
                             trailingIcon = {
-                                if (state.searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { vm.setSearchQuery("") }) {
+                                if (searchActive) {
+                                    IconButton(onClick = {
+                                        vm.setSearchQuery("")
+                                        focusManager.clearFocus()
+                                    }) {
                                         Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.accounts_search_clear))
                                     }
                                 }
