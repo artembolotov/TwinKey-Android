@@ -30,8 +30,10 @@ import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -225,31 +227,45 @@ fun AccountsScreen(
                     )
                 }
 
-                TextField(
+                BasicTextField(
                     value = state.searchQuery,
                     onValueChange = { vm.setSearchQuery(it) },
-                    placeholder = { Text(stringResource(R.string.accounts_search)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null)
-                    },
-                    trailingIcon = {
-                        if (state.searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { vm.setSearchQuery("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.accounts_search_clear))
-                            }
-                        }
-                    },
                     singleLine = true,
-                    shape = CircleShape,
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .onFocusChanged { searchActive = it.isFocused }
+                        .onFocusChanged { searchActive = it.isFocused },
+                    decorationBox = { innerTextField ->
+                        TextFieldDefaults.DecorationBox(
+                            value = state.searchQuery,
+                            innerTextField = innerTextField,
+                            enabled = true,
+                            singleLine = true,
+                            visualTransformation = VisualTransformation.None,
+                            interactionSource = remember { MutableInteractionSource() },
+                            placeholder = { Text(stringResource(R.string.accounts_search)) },
+                            leadingIcon = {
+                                Icon(Icons.Default.Search, contentDescription = null)
+                            },
+                            trailingIcon = {
+                                if (state.searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { vm.setSearchQuery("") }) {
+                                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.accounts_search_clear))
+                                    }
+                                }
+                            },
+                            shape = CircleShape,
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent,
+                            ),
+                            contentPadding = TextFieldDefaults.contentPaddingWithoutLabel(
+                                top = 12.dp,
+                                bottom = 12.dp,
+                            ),
+                        )
+                    }
                 )
 
                 AccountsListView(
