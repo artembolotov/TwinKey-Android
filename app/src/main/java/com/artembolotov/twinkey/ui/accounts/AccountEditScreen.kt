@@ -19,7 +19,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -82,7 +82,7 @@ fun AccountEditScreen(
         )
 
         // Editable: Service name
-        OutlinedTextField(
+        TextField(
             value = state.issuer,
             onValueChange = { state.issuer = it },
             label = { Text(stringResource(R.string.edit_issuer)) },
@@ -95,7 +95,7 @@ fun AccountEditScreen(
         )
 
         // Editable: Account (email / username)
-        OutlinedTextField(
+        TextField(
             value = state.name,
             onValueChange = { state.name = it },
             label = { Text(stringResource(R.string.edit_account)) },

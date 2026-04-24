@@ -14,7 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -96,7 +96,7 @@ fun AddManuallyScreen(
 
         // Service Provider
         SectionHeader(stringResource(R.string.add_manually_section_service))
-        OutlinedTextField(
+        TextField(
             value = issuer,
             onValueChange = { issuer = it },
             label = { Text(stringResource(R.string.add_manually_issuer)) },
@@ -110,7 +110,7 @@ fun AddManuallyScreen(
 
         // Secret
         SectionHeader(stringResource(R.string.add_manually_section_secret))
-        OutlinedTextField(
+        TextField(
             value = secretRaw,
             onValueChange = { secretRaw = it.uppercase() },
             label = { Text(stringResource(R.string.add_manually_secret)) },
@@ -129,7 +129,7 @@ fun AddManuallyScreen(
 
         // Account (optional)
         SectionHeader(stringResource(R.string.add_manually_section_account))
-        OutlinedTextField(
+        TextField(
             value = account,
             onValueChange = { account = it },
             label = { Text(stringResource(R.string.add_manually_account)) },

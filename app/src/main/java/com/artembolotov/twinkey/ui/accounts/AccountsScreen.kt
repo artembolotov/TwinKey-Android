@@ -4,12 +4,19 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
@@ -19,33 +26,34 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
-import com.artembolotov.twinkey.ui.components.rememberAppSheetState
-import androidx.compose.ui.text.font.FontWeight
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.flow.drop
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
@@ -54,15 +62,18 @@ import com.artembolotov.twinkey.domain.TokenUrlParser
 import com.artembolotov.twinkey.ui.add.AccountAddedScreen
 import com.artembolotov.twinkey.ui.add.AddManuallyScreen
 import com.artembolotov.twinkey.ui.add.QrScannerScreen
+import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
+import com.artembolotov.twinkey.ui.components.rememberAppSheetState
 import com.artembolotov.twinkey.ui.settings.AccountsImportScreen
 import com.artembolotov.twinkey.ui.settings.SettingsScreen
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 /**
  * Порт AccountsScreen.swift.
  *
  * Весь UI-стейт (активный оверлей, editMode, searchQuery) живёт во ViewModel.
- * Composable не содержит var-переменных: только читает state и вызывает методы VM.
+ * searchActive — локальный UI-стейт фокуса, не переживает config change (intentionally).
  * ModalBottomSheetState остаётся в composable — это чисто анимационный UI-concern.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,6 +95,8 @@ fun AccountsScreen(
                 if (bottom == 0) focusManager.clearFocus()
             }
     }
+
+    var searchActive by remember { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -161,28 +174,13 @@ fun AccountsScreen(
     }
 
     Scaffold(
-        topBar = {
-            MediumTopAppBar(
-                title = { Text("TwinKey") },
-                scrollBehavior = scrollBehavior,
-                actions = {
-                    if (state.editMode) {
-                        TextButton(onClick = { vm.setEditMode(false) }) {
-                            Text(
-                                stringResource(R.string.accounts_done),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    } else {
-                        IconButton(onClick = { vm.showOverlay(AccountsOverlay.Settings) }) {
-                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
-                        }
-                    }
-                }
-            )
-        },
+        topBar = {},
         floatingActionButton = {
-            if (!state.editMode) {
+            AnimatedVisibility(
+                visible = !state.editMode && !searchActive,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
                 FloatingActionButton(onClick = { vm.showOverlay(AccountsOverlay.Scanner) }) {
                     Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
                 }
@@ -199,9 +197,35 @@ fun AccountsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .then(if (!searchActive) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier)
             ) {
-                OutlinedTextField(
+                AnimatedVisibility(
+                    visible = !searchActive,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    MediumTopAppBar(
+                        title = { Text("TwinKey") },
+                        windowInsets = WindowInsets(0, 0, 0, 0),
+                        scrollBehavior = scrollBehavior,
+                        actions = {
+                            if (state.editMode) {
+                                TextButton(onClick = { vm.setEditMode(false) }) {
+                                    Text(
+                                        stringResource(R.string.accounts_done),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            } else {
+                                IconButton(onClick = { vm.showOverlay(AccountsOverlay.Settings) }) {
+                                    Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                                }
+                            }
+                        }
+                    )
+                }
+
+                TextField(
                     value = state.searchQuery,
                     onValueChange = { vm.setSearchQuery(it) },
                     placeholder = { Text(stringResource(R.string.accounts_search)) },
@@ -216,9 +240,16 @@ fun AccountsScreen(
                         }
                     },
                     singleLine = true,
+                    shape = CircleShape,
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .onFocusChanged { searchActive = it.isFocused }
                 )
 
                 AccountsListView(
