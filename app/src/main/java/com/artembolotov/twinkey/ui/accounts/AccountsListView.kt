@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberOverscrollEffect
@@ -35,14 +35,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.OtpCodeView
 import sh.calvin.reorderable.ReorderableItem
@@ -106,37 +110,59 @@ fun AccountsListView(
             state = lazyListState,
             modifier = Modifier.fillMaxSize()
         ) {
-            items(accounts, key = { it.id }) { token ->
+            itemsIndexed(accounts, key = { _, token -> token.id }) { index, token ->
+                val shape: Shape = when {
+                    accounts.size == 1 -> RoundedCornerShape(16.dp)
+                    index == 0 -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                    index == accounts.size - 1 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                    else -> RectangleShape
+                }
+
                 ReorderableItem(reorderState, key = token.id) { isDragging ->
-                    val cell: @Composable () -> Unit = {
-                        AccountCell(
-                            token = token,
-                            code = codes[token.id] ?: "",
-                            secondsRemaining = secondsRemaining[token.id] ?: 30,
-                            onCopyCode = onCopyCode,
-                            onEdit = { onEditAccount(token.id) },
-                            isEditMode = isEditMode,
-                            dragHandle = if (isDraggable) {
-                                {
-                                    Icon(
-                                        imageVector = Icons.Default.DragHandle,
-                                        contentDescription = "Drag to reorder",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .draggableHandle()
-                                    )
-                                }
-                            } else null,
-                            isDragging = isDragging
-                        )
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .background(
+                                if (isDragging) MaterialTheme.colorScheme.surfaceVariant
+                                else MaterialTheme.colorScheme.surface,
+                                shape
+                            )
+                            .clip(shape)
+                    ) {
+                        if (index > 0) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                            )
+                        }
+                        val cell: @Composable () -> Unit = {
+                            AccountCell(
+                                token = token,
+                                code = codes[token.id] ?: "",
+                                secondsRemaining = secondsRemaining[token.id] ?: 30,
+                                onCopyCode = onCopyCode,
+                                onEdit = { onEditAccount(token.id) },
+                                isEditMode = isEditMode,
+                                dragHandle = if (isDraggable) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Default.DragHandle,
+                                            contentDescription = "Drag to reorder",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .draggableHandle()
+                                        )
+                                    }
+                                } else null
+                            )
+                        }
+                        if (isEditMode) {
+                            SwipeToDeleteCell(onDelete = { onDeleteAccount(token.id) }) { cell() }
+                        } else {
+                            cell()
+                        }
                     }
-                    if (isEditMode) {
-                        SwipeToDeleteCell(onDelete = { onDeleteAccount(token.id) }) { cell() }
-                    } else {
-                        cell()
-                    }
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
         }
@@ -201,16 +227,11 @@ fun AccountCell(
     onEdit: () -> Unit,
     modifier: Modifier = Modifier,
     isEditMode: Boolean = false,
-    dragHandle: (@Composable () -> Unit)? = null,
-    isDragging: Boolean = false
+    dragHandle: (@Composable () -> Unit)? = null
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                if (isDragging) MaterialTheme.colorScheme.surfaceVariant
-                else MaterialTheme.colorScheme.surface
-            )
             .clickable(enabled = isEditMode) { onEdit() }
             .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically

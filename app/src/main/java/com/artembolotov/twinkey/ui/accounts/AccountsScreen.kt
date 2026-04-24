@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -61,6 +62,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
+import com.artembolotov.twinkey.ui.theme.PageBackgroundDark
+import com.artembolotov.twinkey.ui.theme.PageBackgroundLight
 import com.artembolotov.twinkey.domain.GoogleAuthMigrationParser
 import com.artembolotov.twinkey.domain.TokenUrlParser
 import com.artembolotov.twinkey.ui.add.AccountAddedScreen
@@ -177,7 +180,10 @@ fun AccountsScreen(
         return
     }
 
+    val pageBackground = if (isSystemInDarkTheme()) PageBackgroundDark else PageBackgroundLight
+
     Scaffold(
+        containerColor = pageBackground,
         topBar = {},
         floatingActionButton = {
             AnimatedVisibility(
@@ -221,7 +227,8 @@ fun AccountsScreen(
                             windowInsets = WindowInsets(0, 0, 0, 0),
                             scrollBehavior = scrollBehavior,
                             colors = TopAppBarDefaults.topAppBarColors(
-                                scrolledContainerColor = MaterialTheme.colorScheme.background
+                                containerColor = pageBackground,
+                                scrolledContainerColor = pageBackground
                             ),
                             actions = {
                                 if (state.editMode) {
