@@ -3,6 +3,7 @@ package com.artembolotov.twinkey.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -17,9 +18,12 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.artembolotov.twinkey.ui.theme.OtpExpired
-import com.artembolotov.twinkey.ui.theme.OtpExpires
-import com.artembolotov.twinkey.ui.theme.OtpNormal
+import com.artembolotov.twinkey.ui.theme.OtpExpiredDark
+import com.artembolotov.twinkey.ui.theme.OtpExpiredLight
+import com.artembolotov.twinkey.ui.theme.OtpExpiresDark
+import com.artembolotov.twinkey.ui.theme.OtpExpiresLight
+import com.artembolotov.twinkey.ui.theme.OtpNormalDark
+import com.artembolotov.twinkey.ui.theme.OtpNormalLight
 
 /**
  * Порт OTPCodeView.swift.
@@ -35,7 +39,7 @@ fun OtpCodeView(
     onTap: ((String) -> Unit)? = null
 ) {
     val color by animateColorAsState(
-        targetValue = otpColor(secondsRemaining),
+        targetValue = otpColor(secondsRemaining, isSystemInDarkTheme()),
         animationSpec = tween(durationMillis = 500),
         label = "otp_color"
     )
@@ -71,10 +75,10 @@ fun OtpCodeView(
     }
 }
 
-fun otpColor(secondsRemaining: Int): Color = when {
-    secondsRemaining <= 3 -> OtpExpired
-    secondsRemaining <= 5 -> OtpExpires
-    else -> OtpNormal
+fun otpColor(secondsRemaining: Int, isDark: Boolean): Color = when {
+    secondsRemaining <= 3 -> if (isDark) OtpExpiredDark else OtpExpiredLight
+    secondsRemaining <= 5 -> if (isDark) OtpExpiresDark else OtpExpiresLight
+    else                  -> if (isDark) OtpNormalDark  else OtpNormalLight
 }
 
 fun String.formatOtpCode(): String {
