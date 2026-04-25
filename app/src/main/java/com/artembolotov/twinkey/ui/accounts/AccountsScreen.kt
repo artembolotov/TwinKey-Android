@@ -311,7 +311,6 @@ fun AccountsScreen(
                         val token = state.accounts.find { it.id == id } ?: return@AccountsListView
                         vm.showOverlay(AccountsOverlay.Editing(token))
                     },
-                    onDeleteAccount = { id -> vm.deleteAccount(id) },
                     onMove = { from, to -> vm.moveAccount(from, to) },
                     isDraggable = state.editMode && state.searchQuery.isBlank(),
                     isEditMode = state.editMode,
