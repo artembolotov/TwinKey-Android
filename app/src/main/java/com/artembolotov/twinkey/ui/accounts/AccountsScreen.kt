@@ -68,6 +68,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
+import com.artembolotov.twinkey.ui.theme.CardBackgroundDark
+import com.artembolotov.twinkey.ui.theme.CardBackgroundLight
 import com.artembolotov.twinkey.ui.theme.PageBackgroundDark
 import com.artembolotov.twinkey.ui.theme.PageBackgroundLight
 import com.artembolotov.twinkey.domain.GoogleAuthMigrationParser
@@ -298,6 +300,8 @@ fun AccountsScreen(
                                 },
                                 shape = CircleShape,
                                 colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = if (isSystemInDarkTheme()) CardBackgroundDark else CardBackgroundLight,
+                                    unfocusedContainerColor = if (isSystemInDarkTheme()) CardBackgroundDark else CardBackgroundLight,
                                     focusedIndicatorColor = Color.Transparent,
                                     unfocusedIndicatorColor = Color.Transparent,
                                     disabledIndicatorColor = Color.Transparent,

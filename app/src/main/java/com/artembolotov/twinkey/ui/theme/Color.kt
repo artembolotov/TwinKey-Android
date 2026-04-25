@@ -20,4 +20,7 @@ val OtpExpiredLight = Color(0xFFEC6143)
 val OtpExpiredDark  = Color(0xFFE96D53)
 
 val PageBackgroundLight = Color(0xFFF2F2F7)
-val PageBackgroundDark  = Color(0xFF1C1C1E)
+val PageBackgroundDark  = Color(0xFF000000)
+
+val CardBackgroundLight = Color(0xFFFFFFFF)
+val CardBackgroundDark  = Color(0xFF2C2C2E)

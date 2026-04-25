@@ -38,8 +38,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.artembolotov.twinkey.domain.Token
+import com.artembolotov.twinkey.ui.theme.CardBackgroundDark
+import com.artembolotov.twinkey.ui.theme.CardBackgroundLight
 import com.artembolotov.twinkey.ui.components.OtpCodeView
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -111,7 +114,7 @@ fun AccountsListView(
                             .padding(horizontal = 16.dp)
                             .background(
                                 if (isDragging) MaterialTheme.colorScheme.surfaceVariant
-                                else MaterialTheme.colorScheme.surface,
+                                else if (isSystemInDarkTheme()) CardBackgroundDark else CardBackgroundLight,
                                 shape
                             )
                             .clip(shape)
