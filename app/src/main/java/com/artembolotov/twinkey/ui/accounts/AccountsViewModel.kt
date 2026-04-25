@@ -151,7 +151,8 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
 
     private fun tickerFlow() = flow {
         while (true) {
-            delay(1_000L)
+            val now = System.currentTimeMillis()
+            delay(1_000L - (now % 1_000L))
             emit(Unit)
         }
     }

@@ -109,6 +109,12 @@ class TotpCodeGeneratorTest {
         assertEquals(1, TotpCodeGenerator.secondsRemaining(30, 59_000L))
     }
 
+    @Test
+    fun `secondsRemaining rounds half-second to next period`() {
+        // 29.5 s rounds to 30 s → start of new period → 30 remaining (matches iOS rounded())
+        assertEquals(30, TotpCodeGenerator.secondsRemaining(30, 29_500L))
+    }
+
     // ---- TokenUrlParser ----
 
     @Test

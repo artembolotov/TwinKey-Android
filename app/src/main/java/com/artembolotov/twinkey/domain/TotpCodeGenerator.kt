@@ -2,6 +2,7 @@ package com.artembolotov.twinkey.domain
 
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import kotlin.math.roundToLong
 
 /**
  * Порт Generator.swift (OneTimePassword/Generator.swift).
@@ -31,8 +32,8 @@ object TotpCodeGenerator {
      * Например: при period=30 и текущей секунде=45 → остаток = 15
      */
     fun secondsRemaining(period: Int, timestampMs: Long = System.currentTimeMillis()): Int {
-        val seconds = timestampMs / 1000
-        return period - (seconds % period).toInt()
+        val seconds = (timestampMs / 1000.0).roundToLong()
+        return (period - (seconds % period)).toInt()
     }
 
     // --- Внутренние функции ---
