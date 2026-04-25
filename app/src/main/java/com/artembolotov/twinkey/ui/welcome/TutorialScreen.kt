@@ -4,11 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.graphics.drawable.toBitmap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,7 +33,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,13 +49,6 @@ fun TutorialScreen(
     val showButtons by vm.showButtons
     val depth by vm.depth
     val listState = rememberLazyListState()
-    val context = LocalContext.current
-    val appIcon = remember {
-        BitmapPainter(
-            context.packageManager.getApplicationIcon(context.packageName).toBitmap().asImageBitmap()
-        )
-    }
-
     LaunchedEffect(sessionId) {
         vm.reset()
         vm.startGreeting()
@@ -78,9 +69,13 @@ fun TutorialScreen(
             item {
                 Spacer(Modifier.height(24.dp))
                 Image(
-                    painter = appIcon,
+                    painter = painterResource(R.drawable.ic_launcher_foreground),
                     contentDescription = null,
-                    modifier = Modifier.size(96.dp)
+                    // Scale 1.5x so the 72dp safe zone fills the 108dp canvas display area.
+                    // clip=true trims the overflow at the layout bounds.
+                    modifier = Modifier
+                        .size(108.dp)
+                        .graphicsLayer(scaleX = 1.5f, scaleY = 1.5f, clip = true)
                 )
                 Spacer(Modifier.height(24.dp))
             }
