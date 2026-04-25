@@ -2,6 +2,7 @@ package com.artembolotov.twinkey.ui.accounts
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.res.Configuration
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -11,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,6 +50,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
@@ -55,6 +58,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -106,6 +110,7 @@ fun AccountsScreen(
     }
 
     var searchActive by remember { mutableStateOf(false) }
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -212,7 +217,7 @@ fun AccountsScreen(
                     .then(if (!searchActive) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier)
             ) {
                 AnimatedVisibility(
-                    visible = !searchActive,
+                    visible = !searchActive && !isLandscape,
                     enter = expandVertically() + fadeIn(),
                     exit = shrinkVertically() + fadeOut()
                 ) {
@@ -250,51 +255,78 @@ fun AccountsScreen(
                     }
                 }
 
-                BasicTextField(
-                    value = state.searchQuery,
-                    onValueChange = { vm.setSearchQuery(it) },
-                    singleLine = true,
-                    textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .onFocusChanged { searchActive = it.isFocused },
-                    decorationBox = { innerTextField ->
-                        TextFieldDefaults.DecorationBox(
-                            value = state.searchQuery,
-                            innerTextField = innerTextField,
-                            enabled = true,
-                            singleLine = true,
-                            visualTransformation = VisualTransformation.None,
-                            interactionSource = remember { MutableInteractionSource() },
-                            placeholder = { Text(stringResource(R.string.accounts_search)) },
-                            leadingIcon = {
-                                Icon(Icons.Default.Search, contentDescription = null)
-                            },
-                            trailingIcon = {
-                                if (searchActive) {
-                                    IconButton(onClick = {
-                                        vm.setSearchQuery("")
-                                        focusManager.clearFocus()
-                                    }) {
-                                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.accounts_search_clear))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BasicTextField(
+                        value = state.searchQuery,
+                        onValueChange = { vm.setSearchQuery(it) },
+                        singleLine = true,
+                        textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(
+                                start = 16.dp,
+                                end = if (isLandscape) 8.dp else 16.dp,
+                                top = 8.dp,
+                                bottom = 8.dp
+                            )
+                            .onFocusChanged { searchActive = it.isFocused },
+                        decorationBox = { innerTextField ->
+                            TextFieldDefaults.DecorationBox(
+                                value = state.searchQuery,
+                                innerTextField = innerTextField,
+                                enabled = true,
+                                singleLine = true,
+                                visualTransformation = VisualTransformation.None,
+                                interactionSource = remember { MutableInteractionSource() },
+                                placeholder = { Text(stringResource(R.string.accounts_search)) },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Search, contentDescription = null)
+                                },
+                                trailingIcon = {
+                                    if (searchActive) {
+                                        IconButton(onClick = {
+                                            vm.setSearchQuery("")
+                                            focusManager.clearFocus()
+                                        }) {
+                                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.accounts_search_clear))
+                                        }
                                     }
-                                }
-                            },
-                            shape = CircleShape,
-                            colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                            ),
-                            contentPadding = TextFieldDefaults.contentPaddingWithoutLabel(
-                                top = 12.dp,
-                                bottom = 12.dp,
-                            ),
-                        )
+                                },
+                                shape = CircleShape,
+                                colors = TextFieldDefaults.colors(
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent,
+                                ),
+                                contentPadding = TextFieldDefaults.contentPaddingWithoutLabel(
+                                    top = 12.dp,
+                                    bottom = 12.dp,
+                                ),
+                            )
+                        }
+                    )
+                    if (isLandscape) {
+                        if (state.editMode) {
+                            TextButton(
+                                onClick = { vm.setEditMode(false) },
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                Text(stringResource(R.string.accounts_done), fontWeight = FontWeight.Bold)
+                            }
+                        } else {
+                            IconButton(
+                                onClick = { vm.showOverlay(AccountsOverlay.Settings) },
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                            }
+                        }
                     }
-                )
+                }
 
                 AccountsListView(
                     accounts = filteredAccounts,
