@@ -181,17 +181,17 @@ fun AccountCell(
                 if (token.issuer.isNotEmpty()) {
                     Text(
                         text = token.issuer,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                     )
                     if (token.name.isNotEmpty()) {
                         Text(
                             text = "  ${token.name}",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 } else {
-                    Text(text = token.name, style = MaterialTheme.typography.bodyMedium)
+                    Text(text = token.name, style = MaterialTheme.typography.bodyLarge)
                 }
             }
             if (!isEditMode) {
@@ -199,6 +199,7 @@ fun AccountCell(
                 OtpCodeView(
                     code = code,
                     secondsRemaining = secondsRemaining,
+                    fullWidth = true,
                     onTap = onCopyCode
                 )
             }

@@ -36,6 +36,7 @@ fun OtpCodeView(
     code: String,
     secondsRemaining: Int,
     modifier: Modifier = Modifier,
+    fullWidth: Boolean = false,
     onTap: ((String) -> Unit)? = null
 ) {
     val color by animateColorAsState(
@@ -47,7 +48,7 @@ fun OtpCodeView(
     val haptic = LocalHapticFeedback.current
 
     Row(
-        verticalAlignment = Alignment.Bottom,
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.then(
             if (onTap != null) {
                 Modifier.clickable {
@@ -59,12 +60,12 @@ fun OtpCodeView(
     ) {
         Text(
             text = code.formatOtpCode(),
-            fontSize = 42.sp,
+            fontSize = 38.sp,
             fontWeight = FontWeight.Normal,
             color = color
         )
 
-        Spacer(Modifier.width(8.dp))
+        if (fullWidth) Spacer(Modifier.weight(1f)) else Spacer(Modifier.width(8.dp))
 
         Text(
             text = "$secondsRemaining",

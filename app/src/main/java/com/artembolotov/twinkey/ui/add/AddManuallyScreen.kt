@@ -10,18 +10,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,13 +42,12 @@ import com.artembolotov.twinkey.domain.OtpGenerator
 import com.artembolotov.twinkey.domain.Token
 import org.apache.commons.codec.binary.Base32
 import java.util.UUID
-import kotlin.math.roundToInt
 
 /**
  * Порт AddAccountManuallyView.swift.
  *
  * Форма: Issuer (сервис), Secret (Base32), Account (email),
- * Period (слайдер 5..180 шаг 5), Digits (6/7/8), Algorithm (SHA1/SHA256/SHA512).
+ * Period (Stepper 5..180 шаг 5), Digits (6/7/8), Algorithm (SHA1/SHA256/SHA512).
  * Кнопка Done активна только при непустых Issuer + валидном Secret.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +59,7 @@ fun AddManuallyScreen(
     var issuer by remember { mutableStateOf("") }
     var secretRaw by remember { mutableStateOf("") }
     var account by remember { mutableStateOf("") }
-    var periodFloat by remember { mutableFloatStateOf(30f) }
+    var period by remember { mutableIntStateOf(30) }
     var digits by remember { mutableStateOf(6) }
     var algorithm by remember { mutableStateOf(OtpAlgorithm.SHA1) }
 
@@ -143,19 +142,25 @@ fun AddManuallyScreen(
 
         // Time Interval — порт Stepper(value: $timeInterval, in: 5...180, step: 5)
         SectionHeader(stringResource(R.string.add_manually_section_period))
-        val period = (periodFloat / 5).roundToInt() * 5
-        Text(
-            text = stringResource(R.string.add_manually_period_seconds, period),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Slider(
-            value = periodFloat,
-            onValueChange = { periodFloat = it },
-            valueRange = 5f..180f,
-            steps = 34, // (180-5)/5 - 1 = 34
-            modifier = Modifier.fillMaxWidth()
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.add_manually_period_seconds, period),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            AssistChip(
+                onClick = { period -= 5 },
+                enabled = period > 5,
+                label = { Text("−") }
+            )
+            AssistChip(
+                onClick = { period += 5 },
+                enabled = period < 180,
+                label = { Text("+") }
+            )
+        }
 
         // Digits — порт Picker (сегментированный: 6 / 7 / 8)
         SectionHeader(stringResource(R.string.add_manually_section_digits))
