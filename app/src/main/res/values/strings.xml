@@ -68,14 +68,20 @@
 
     <!-- SettingsScreen -->
     <string name="settings_title">Settings</string>
-    <string name="settings_section_data">Data</string>
-    <string name="settings_delete_all">Delete All Accounts</string>
-    <string name="settings_delete_all_title">Delete All Accounts?</string>
+    <string name="settings_section_data">Data Management</string>
+    <string name="settings_delete_all">Delete Accounts…</string>
+    <string name="settings_delete_all_title">Delete Accounts?</string>
     <string name="settings_delete_all_message">All accounts will be permanently removed from this device.</string>
     <string name="settings_erase_all">Erase All…</string>
     <string name="settings_erase_all_title">Erase everything?</string>
     <string name="settings_erase_all_message">This will permanently delete all accounts and settings.</string>
     <string name="settings_erase_all_confirm">Erase All</string>
+    <string name="settings_section_feedback">Feedback</string>
+    <string name="settings_rate_on_google_play">Rate on Google Play</string>
+    <string name="settings_report_problem">Report a Problem</string>
+    <string name="settings_report_problem_message">If you encounter any difficulties with TwinKey or have any suggestions, please write to support@twinkey.app</string>
+    <string name="settings_report_send_email">Send Email</string>
+    <string name="settings_report_copy_address">Copy Address</string>
     <string name="settings_section_info">Info</string>
     <string name="settings_website">Website</string>
     <string name="settings_terms">Terms of Use</string>
@@ -83,9 +89,9 @@
     <string name="settings_version">Version</string>
     <string name="settings_done">Done</string>
     <string name="settings_section_accounts">Accounts</string>
-    <string name="settings_edit_accounts">Edit Accounts</string>
-    <string name="settings_export">Export Accounts</string>
-    <string name="settings_import">Import Accounts</string>
+    <string name="settings_edit_accounts">Edit</string>
+    <string name="settings_export">Export to File</string>
+    <string name="settings_import">Import from File</string>
 
     <!-- Backup Export -->
     <string name="backup_export_title">Export Accounts</string>

@@ -1,5 +1,8 @@
 package com.artembolotov.twinkey.ui.settings
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.net.toUri
@@ -127,6 +130,24 @@ fun SettingsScreen(
         HorizontalDivider()
         Spacer(Modifier.height(16.dp))
 
+        // Секция: Feedback
+        SectionLabel(stringResource(R.string.settings_section_feedback))
+
+        SettingsRow(
+            title = stringResource(R.string.settings_rate_on_google_play),
+            isLink = true,
+            onClick = { openUrl(context, "https://play.google.com/store/apps/details?id=${context.packageName}") }
+        )
+
+        SettingsRow(
+            title = stringResource(R.string.settings_report_problem),
+            onClick = { state.showReportProblem = true }
+        )
+
+        Spacer(Modifier.height(16.dp))
+        HorizontalDivider()
+        Spacer(Modifier.height(16.dp))
+
         // Секция: Info
         SectionLabel(stringResource(R.string.settings_section_info))
 
@@ -203,6 +224,30 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { state.showEraseAll = false }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
+    // Диалог: сообщить о проблеме
+    if (state.showReportProblem) {
+        val supportEmail = "support@twinkey.app"
+        AlertDialog(
+            onDismissRequest = { state.showReportProblem = false },
+            text = { Text(stringResource(R.string.settings_report_problem_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    state.showReportProblem = false
+                    context.startActivity(Intent(Intent.ACTION_SENDTO).apply {
+                        data = "mailto:$supportEmail".toUri()
+                    })
+                }) { Text(stringResource(R.string.settings_report_send_email)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    state.showReportProblem = false
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("email", supportEmail))
+                }) { Text(stringResource(R.string.settings_report_copy_address)) }
             }
         )
     }
@@ -351,8 +396,9 @@ private class SettingsState {
     var showEraseAll by mutableStateOf(false)
     var showExport by mutableStateOf(false)
     var showImport by mutableStateOf(false)
+    var showReportProblem by mutableStateOf(false)
 }
 
-private fun openUrl(context: android.content.Context, url: String) {
+private fun openUrl(context: Context, url: String) {
     context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
 }
