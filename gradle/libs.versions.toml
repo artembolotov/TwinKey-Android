@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.0"
+agp = "9.2.1"
 coreKtx = "1.18.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -17,6 +17,7 @@ lifecycleViewmodelCompose = "2.10.0"
 commonsCodec = "1.21.0"
 reorderable = "3.0.0"
 coreSplashscreen = "1.0.1"
+appmetrica = "8.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,6 +46,7 @@ androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lif
 commons-codec = { group = "commons-codec", name = "commons-codec", version.ref = "commonsCodec" }
 reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
+appmetrica-analytics = { group = "io.appmetrica.analytics", name = "analytics", version.ref = "appmetrica" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
