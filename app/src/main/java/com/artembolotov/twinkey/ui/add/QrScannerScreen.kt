@@ -2,6 +2,7 @@ package com.artembolotov.twinkey.ui.add
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -241,7 +242,9 @@ private fun CameraPreview(
                     cameraProvider.bindToLifecycle(
                         lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageAnalysis
                     )
-                } catch (e: Exception) { e.printStackTrace() }
+                } catch (e: Exception) {
+                    Log.w("QrScannerScreen", "Camera bind failed", e)
+                }
             }, ContextCompat.getMainExecutor(ctx))
 
             previewView

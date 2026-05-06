@@ -1,6 +1,8 @@
 package com.artembolotov.twinkey.domain
 
-import androidx.core.net.toUri
+import java.net.URI
+import java.net.URLDecoder
+import java.util.Base64
 import java.util.UUID
 
 /**
@@ -31,13 +33,15 @@ object GoogleAuthMigrationParser {
      * Пропущенные — HOTP аккаунты (не поддерживаются).
      */
     fun parse(url: String): Pair<List<Token>, List<String>> {
-        val data = url.toUri().getQueryParameter("data")
+        val uri = try { URI(url) } catch (_: Exception) {
+            throw IllegalArgumentException("Invalid migration URL")
+        }
+        val data = uri.queryParam("data")
             ?: throw IllegalArgumentException("Missing 'data' parameter in migration URL")
 
-        // Base64URL → bytes
-        val bytes = android.util.Base64.decode(
-            data.replace('-', '+').replace('_', '/'),
-            android.util.Base64.DEFAULT
+        // Base64URL → стандартный Base64 → bytes
+        val bytes = Base64.getDecoder().decode(
+            data.replace('-', '+').replace('_', '/')
         )
 
         val params = decodeMigrationPayload(bytes)
@@ -166,6 +170,19 @@ object GoogleAuthMigrationParser {
             }
         }
         return p
+    }
+
+    private fun URI.queryParam(name: String): String? {
+        val query = rawQuery ?: return null
+        for (param in query.split("&")) {
+            val eq = param.indexOf('=')
+            if (eq < 0) continue
+            val key = URLDecoder.decode(param.substring(0, eq), "UTF-8")
+            if (key == name) {
+                return URLDecoder.decode(param.substring(eq + 1), "UTF-8")
+            }
+        }
+        return null
     }
 
     /** Читает varint из bytes начиная с offset. Возвращает (value, bytesRead). */

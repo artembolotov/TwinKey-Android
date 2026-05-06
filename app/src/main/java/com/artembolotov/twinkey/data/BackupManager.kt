@@ -3,7 +3,6 @@ package com.artembolotov.twinkey.data
 import com.artembolotov.twinkey.domain.CodableToken
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.domain.TokenUrlParser
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
@@ -25,8 +24,14 @@ object BackupManager {
 
     /**
      * Десериализует JSON из .twinkey файла.
-     * Возвращает Pair(успешные, пропущенные).
-     * Пропущенные — токены с невалидным URL или неподдерживаемого типа.
+     *
+     * Контракт ошибок:
+     *  - Невалидный JSON или пустой массив → бросает [IllegalArgumentException].
+     *    Эти случаи означают, что файл целиком нечитаем как backup, и caller
+     *    показывает пользователю общую ошибку чтения.
+     *  - Отдельный элемент с невалидным URL или неподдерживаемого типа (HOTP) →
+     *    попадает в [ImportResult.skipped], остальные элементы возвращаются
+     *    в [ImportResult.successful].
      */
     fun import(jsonString: String): ImportResult {
         val codableList = try {
@@ -52,7 +57,7 @@ object BackupManager {
                 } else {
                     successful += token
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Попытаться извлечь имя из URL для отображения в skipped
                 val displayName = extractDisplayName(codable.url)
                 skipped += SkippedAccount(
@@ -70,7 +75,7 @@ object BackupManager {
             val path = url.substringAfter("://").substringAfter("/").substringBefore("?")
             java.net.URLDecoder.decode(path, "UTF-8")
                 .substringAfter(":").ifEmpty { path }
-        } catch (e: Exception) { url }
+        } catch (_: Exception) { url }
     }
 }
 

@@ -3,6 +3,7 @@
 package com.artembolotov.twinkey.data
 
 import android.content.Context
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.artembolotov.twinkey.domain.CodableToken
@@ -51,7 +52,9 @@ class KeychainService(context: Context) {
 
         return ids.mapNotNull { id ->
             data[id]?.let { codable ->
-                runCatching { TokenUrlParser.fromCodableToken(codable, id) }.getOrNull()
+                runCatching { TokenUrlParser.fromCodableToken(codable, id) }
+                    .onFailure { Log.w("KeychainService", "Skipping unparseable token id=$id", it) }
+                    .getOrNull()
             }
         }
     }
