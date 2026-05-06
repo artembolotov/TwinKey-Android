@@ -31,6 +31,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -73,6 +74,7 @@ fun AddManuallyScreen(
     }
     val canDone by remember { derivedStateOf { issuer.isNotBlank() && secretValid } }
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = Modifier
@@ -84,6 +86,7 @@ fun AddManuallyScreen(
                     while (true) {
                         val event = awaitPointerEvent(PointerEventPass.Initial)
                         if (event.type == PointerEventType.Press) {
+                            keyboardController?.hide()
                             focusManager.clearFocus()
                         }
                     }
