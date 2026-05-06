@@ -2,7 +2,7 @@
     <string name="app_name">TwinKey</string>
 
     <!-- AccountsScreen (порт iOS локализации) -->
-    <string name="accounts_no_codes">Add your first account to get started</string>
+    <string name="accounts_no_codes">Looks like there aren\'t any accounts here yet.</string>
     <string name="accounts_add_account">Add Account</string>
     <string name="accounts_restore_from_backup">Restore from backup</string>
     <string name="accounts_google_auth_import_hint">You can also scan a QR code from Google Authenticator to transfer your accounts</string>
@@ -15,7 +15,7 @@
     <string name="tutorial_greeting_1">Hi! I\'m TwinKey — your two-factor authentication app. 🔐</string>
     <string name="tutorial_greeting_2">I keep your one-time codes safe and generate them right on your device. Ready to add your first account?</string>
     <string name="tutorial_get_started">Get Started</string>
-    <string name="tutorial_more_about_2fa">Tell me more about 2FA</string>
+    <string name="tutorial_more_about_2fa">Tell more</string>
     <string name="tutorial_more_info_text">Two-factor authentication (2FA) adds an extra layer of security. Even if someone knows your password, they still need the one-time code from your device to log in.</string>
     <string name="tutorial_typing">TwinKey is typing</string>
 
@@ -28,14 +28,14 @@
     <string name="cancel">Cancel</string>
 
     <!-- AddManuallyScreen -->
-    <string name="add_manually_title">Add Account</string>
-    <string name="add_manually_section_service">Service Provider</string>
-    <string name="add_manually_issuer">Service name (e.g. Google)</string>
-    <string name="add_manually_section_secret">Secret Key</string>
-    <string name="add_manually_secret">Secret (Base32)</string>
+    <string name="add_manually_title">New Account</string>
+    <string name="add_manually_section_service">Service Provider / Issuer</string>
+    <string name="add_manually_issuer">Google, Microsoft, X, …</string>
+    <string name="add_manually_section_secret">Key</string>
+    <string name="add_manually_secret">OZSXEYTBORUW22DK</string>
     <string name="add_manually_secret_invalid">Invalid Base32 secret</string>
     <string name="add_manually_section_account">Account</string>
-    <string name="add_manually_account">Account (e.g. user@example.com)</string>
+    <string name="add_manually_account">hello@twinkey.app</string>
     <string name="add_manually_section_period">Time Interval</string>
     <string name="add_manually_period_seconds">%d seconds</string>
     <string name="add_manually_section_digits">Digits</string>
@@ -48,23 +48,23 @@
 
     <!-- QR Scanner -->
     <string name="scan_invalid_qr">Invalid QR code — not an OTP account</string>
-    <string name="accounts_search">Search accounts…</string>
+    <string name="accounts_search">Search</string>
     <string name="accounts_search_clear">Clear search</string>
 
     <!-- AccountEditScreen -->
     <string name="edit_title">Edit Account</string>
-    <string name="edit_issuer">Service name</string>
-    <string name="edit_account">Account (email)</string>
-    <string name="edit_secret">Secret Key</string>
+    <string name="edit_issuer">Service Provider / Issuer</string>
+    <string name="edit_account">Username</string>
+    <string name="edit_secret">Key</string>
     <string name="edit_copy_secret">Copy secret key</string>
-    <string name="edit_digits">Digits</string>
+    <string name="edit_digits">Number of digits</string>
     <string name="edit_period">Time interval</string>
     <string name="edit_period_seconds">%d sec</string>
     <string name="edit_algorithm">Algorithm</string>
-    <string name="edit_done">Save</string>
-    <string name="edit_delete">Delete Account</string>
+    <string name="edit_done">Done</string>
+    <string name="edit_delete">Delete account…</string>
     <string name="edit_delete_confirm_title">Delete Account?</string>
-    <string name="edit_delete_confirm_message">"%s" will be removed. Make sure you have another way to access your account.</string>
+    <string name="edit_delete_confirm_message">Are you sure you want to delete the account?</string>
 
     <!-- SettingsScreen -->
     <string name="settings_title">Settings</string>
