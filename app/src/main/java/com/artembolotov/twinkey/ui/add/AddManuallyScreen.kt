@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -81,8 +82,10 @@ fun AddManuallyScreen(
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
-                        awaitPointerEvent(PointerEventPass.Initial)
-                        focusManager.clearFocus()
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.type == PointerEventType.Press) {
+                            focusManager.clearFocus()
+                        }
                     }
                 }
             },
