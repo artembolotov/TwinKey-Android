@@ -80,29 +80,11 @@ fun AddManuallyScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
             .pointerInput(Unit) {
-                val slop = viewConfiguration.touchSlop
                 awaitPointerEventScope {
                     while (true) {
-                        val down = awaitPointerEvent(PointerEventPass.Initial)
-                        if (down.type != PointerEventType.Press) continue
-                        val start = down.changes.firstOrNull()?.position ?: continue
-                        var dragging = false
-                        loop@ while (true) {
-                            val next = awaitPointerEvent(PointerEventPass.Initial)
-                            when (next.type) {
-                                PointerEventType.Move -> {
-                                    val pos = next.changes.firstOrNull()?.position ?: break@loop
-                                    if ((pos - start).getDistance() > slop) {
-                                        dragging = true
-                                        break@loop
-                                    }
-                                }
-                                PointerEventType.Release -> {
-                                    if (!dragging) focusManager.clearFocus()
-                                    break@loop
-                                }
-                                else -> break@loop
-                            }
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.type == PointerEventType.Press) {
+                            focusManager.clearFocus()
                         }
                     }
                 }
