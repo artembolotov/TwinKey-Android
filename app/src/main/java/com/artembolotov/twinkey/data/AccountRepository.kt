@@ -10,11 +10,11 @@ import com.artembolotov.twinkey.domain.Token
  */
 class AccountRepository(private val keychain: KeychainService) {
 
-    // MARK: - Read
+    // --- Read ---
 
     fun loadAll(): List<Token> = keychain.loadAll()
 
-    // MARK: - Write
+    // --- Write ---
 
     fun add(token: Token, current: List<Token>): List<Token> {
         val updated = current + token

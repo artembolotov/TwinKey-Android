@@ -22,37 +22,37 @@ object TokenUrlParser {
     private const val FACTOR_HOTP = "hotp"
 
     sealed class ParseError(message: String) : Exception(message) {
-        object BadUrl : ParseError("Bad URL")
-        object InvalidScheme : ParseError("Invalid URL scheme, expected otpauth://")
-        object MissingFactor : ParseError("Missing factor (host must be 'totp' or 'hotp')")
-        data class InvalidFactor(val value: String) : ParseError("Invalid factor: $value")
-        object MissingSecret : ParseError("Missing secret")
-        data class InvalidSecret(val value: String) : ParseError("Invalid Base32 secret: $value")
-        data class InvalidAlgorithm(val value: String) : ParseError("Unknown algorithm: $value")
+        class BadUrl : ParseError("Bad URL")
+        class InvalidScheme : ParseError("Invalid URL scheme, expected otpauth://")
+        class MissingFactor : ParseError("Missing factor (host must be 'totp' or 'hotp')")
+        class InvalidFactor(val value: String) : ParseError("Invalid factor: $value")
+        class MissingSecret : ParseError("Missing secret")
+        class InvalidSecret(val value: String) : ParseError("Invalid Base32 secret: $value")
+        class InvalidAlgorithm(val value: String) : ParseError("Unknown algorithm: $value")
     }
 
-    // MARK: - Parse
+    // --- Parse ---
 
     fun parse(urlString: String): Token {
-        val uri = try { URI(urlString) } catch (e: Exception) { throw ParseError.BadUrl }
-        if (uri.scheme != OTP_SCHEME) throw ParseError.InvalidScheme
+        val uri = try { URI(urlString) } catch (_: Exception) { throw ParseError.BadUrl() }
+        if (uri.scheme != OTP_SCHEME) throw ParseError.InvalidScheme()
 
         val params = uri.queryParams()
 
         val factor: OtpFactor = when (uri.host?.lowercase()) {
             FACTOR_TOTP -> OtpFactor.Timer(params["period"]?.toIntOrNull() ?: 30)
             FACTOR_HOTP -> OtpFactor.Counter(params["counter"]?.toLongOrNull() ?: 0L)
-            null -> throw ParseError.MissingFactor
+            null -> throw ParseError.MissingFactor()
             else -> throw ParseError.InvalidFactor(uri.host!!)
         }
 
-        val secretParam = params["secret"] ?: throw ParseError.MissingSecret
+        val secretParam = params["secret"] ?: throw ParseError.MissingSecret()
         val secret = try {
             Base32().decode(secretParam.uppercase())
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             throw ParseError.InvalidSecret(secretParam)
         }
-        if (secret.isEmpty()) throw ParseError.MissingSecret
+        if (secret.isEmpty()) throw ParseError.MissingSecret()
 
         val algorithm = when (params["algorithm"]?.uppercase()) {
             null, "SHA1" -> OtpAlgorithm.SHA1
@@ -87,7 +87,7 @@ object TokenUrlParser {
         return Token(name = name, issuer = issuer, generator = generator)
     }
 
-    // MARK: - Serialize
+    // --- Serialize ---
 
     /**
      * Сериализует Token в otpauth:// URL без секрета (как iOS urlForToken).
@@ -119,7 +119,7 @@ object TokenUrlParser {
                 "&$factorParam"
     }
 
-    // MARK: - CodableToken ↔ Token (совместимость с iOS backup)
+    // --- CodableToken ↔ Token (совместимость с iOS backup) ---
 
     fun toCodableToken(token: Token): CodableToken = CodableToken(
         url = toUrl(token),
@@ -134,7 +134,7 @@ object TokenUrlParser {
         return parsed.copy(id = id)
     }
 
-    // MARK: - Private helpers
+    // --- Private helpers ---
 
     private fun URI.queryParams(): Map<String, String> =
         (rawQuery ?: "").split("&").mapNotNull { param ->

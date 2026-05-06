@@ -40,7 +40,7 @@ class KeychainService(context: Context) {
         const val ACCOUNTS_KEY = "accounts"
     }
 
-    // MARK: - Load
+    // --- Load ---
 
     fun loadAll(): List<Token> {
         val orderJson = prefs.getString(ORDER_KEY, null) ?: return emptyList()
@@ -56,7 +56,7 @@ class KeychainService(context: Context) {
         }
     }
 
-    // MARK: - Save
+    // --- Save ---
 
     fun saveAll(tokens: List<Token>) {
         val ids = tokens.map { it.id }
@@ -69,7 +69,7 @@ class KeychainService(context: Context) {
         }
     }
 
-    // MARK: - Clear
+    // --- Clear ---
 
     fun clear() {
         prefs.edit {

@@ -1,6 +1,6 @@
 package com.artembolotov.twinkey.domain
 
-import android.net.Uri
+import androidx.core.net.toUri
 import java.util.UUID
 
 /**
@@ -31,7 +31,7 @@ object GoogleAuthMigrationParser {
      * Пропущенные — HOTP аккаунты (не поддерживаются).
      */
     fun parse(url: String): Pair<List<Token>, List<String>> {
-        val data = Uri.parse(url).getQueryParameter("data")
+        val data = url.toUri().getQueryParameter("data")
             ?: throw IllegalArgumentException("Missing 'data' parameter in migration URL")
 
         // Base64URL → bytes
@@ -75,16 +75,16 @@ object GoogleAuthMigrationParser {
         return Pair(tokens, skipped)
     }
 
-    // MARK: - Protobuf decoder
+    // --- Protobuf decoder ---
 
-    private data class OtpParams(
+    private class OtpParams(
         var secret: ByteArray = ByteArray(0),
         var name: String = "",
         var issuer: String = "",
         var algorithm: Int = 1,
         var digitCount: Int = 1,
         var type: Int = 2,
-        var counter: Long = 0L
+        var counter: Long = 0L,
     )
 
     private fun decodeMigrationPayload(bytes: ByteArray): List<OtpParams> {

@@ -2,15 +2,16 @@ package com.artembolotov.twinkey.ui.settings
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,13 +33,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.data.BackupManager
 import com.artembolotov.twinkey.data.ImportResult
 import com.artembolotov.twinkey.data.SkipReason
 import com.artembolotov.twinkey.domain.Token
+import com.artembolotov.twinkey.ui.components.CheckableTokenRow
 
 /**
  * Порт AccountsImportScreen.swift.
@@ -166,35 +166,14 @@ fun AccountsImportScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(280.dp)
+                        .heightIn(max = 280.dp)
                 ) {
                     items(result.successful, key = { it.id }) { token ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { selected[token.id] = !(selected[token.id] ?: false) }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = selected[token.id] ?: false,
-                                onCheckedChange = { checked -> selected[token.id] = checked }
-                            )
-                            Column(modifier = Modifier.padding(start = 8.dp)) {
-                                Text(
-                                    text = token.issuer.ifEmpty { token.name },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                if (token.name.isNotEmpty() && token.name != token.issuer) {
-                                    Text(
-                                        text = token.name,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
+                        CheckableTokenRow(
+                            token = token,
+                            checked = selected[token.id] ?: false,
+                            onCheckedChange = { checked -> selected[token.id] = checked }
+                        )
                     }
                 }
             }
@@ -253,7 +232,8 @@ private fun readBackupFile(context: Context, uri: Uri): ImportResult? {
             stream.readBytes().toString(Charsets.UTF_8)
         } ?: return null
         BackupManager.import(json)
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        Log.w("AccountsImport", "Failed to read backup file", e)
         null
     }
 }

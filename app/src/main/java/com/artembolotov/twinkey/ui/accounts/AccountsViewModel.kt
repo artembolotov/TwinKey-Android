@@ -64,17 +64,17 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // MARK: - Overlay
+    // --- Overlay ---
 
     fun showOverlay(overlay: AccountsOverlay) = _state.update { it.copy(overlay = overlay) }
     fun dismissOverlay() = _state.update { it.copy(overlay = AccountsOverlay.None) }
 
-    // MARK: - Edit mode / Search
+    // --- Edit mode / Search ---
 
     fun setEditMode(enabled: Boolean) = _state.update { it.copy(editMode = enabled) }
     fun setSearchQuery(query: String) = _state.update { it.copy(searchQuery = query) }
 
-    // MARK: - Accounts (порт AccountAction)
+    // --- Accounts (порт AccountAction) ---
 
     fun addAccount(token: Token) {
         val updated = repository.add(token, _state.value.accounts)
@@ -134,7 +134,7 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
     fun showMessage(text: String) = _state.update { it.copy(message = text) }
     fun clearMessage() = _state.update { it.copy(message = null) }
 
-    // MARK: - Private
+    // --- Private ---
 
     private fun updateCodes() {
         val now = System.currentTimeMillis()
