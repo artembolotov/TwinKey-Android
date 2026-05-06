@@ -11,9 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -28,16 +26,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,7 +42,6 @@ import com.artembolotov.twinkey.domain.TokenUrlParser
 import com.artembolotov.twinkey.ui.add.QrScannerScreen
 import com.artembolotov.twinkey.ui.theme.PageBackgroundDark
 import com.artembolotov.twinkey.ui.theme.PageBackgroundLight
-import kotlinx.coroutines.flow.drop
 
 /**
  * Порт AccountsScreen.swift.
@@ -64,16 +58,6 @@ fun AccountsScreen(
     val state by vm.state.collectAsState()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-    val density = LocalDensity.current
-    val imeBottomPx by rememberUpdatedState(WindowInsets.ime.getBottom(density))
-
-    LaunchedEffect(density) {
-        snapshotFlow { imeBottomPx }
-            .drop(1)
-            .collect { bottom ->
-                if (bottom == 0) focusManager.clearFocus()
-            }
-    }
 
     var searchActive by remember { mutableStateOf(false) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
