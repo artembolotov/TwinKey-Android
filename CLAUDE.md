@@ -19,11 +19,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 
 Lint rules (app/build.gradle.kts): `OldTargetApi` and `GradleDependency` are disabled.  
-JVM target: Java 11. Min SDK: 26. Target/Compile SDK: 36/37.
+JVM target: Java 11. Kotlin 2.3.20, AGP 9.2.1. Min SDK: 26. Target/Compile SDK: 36/37.
+
+Release signing reads from `keystore.properties` at the repo root; if absent, the release build runs unsigned (no signingConfig). `isMinifyEnabled = false` in release.
 
 ## Architecture
 
 Android port of an iOS TOTP authenticator. Layers are intentionally mirrored after the iOS app — screen names, service names, and storage keys match their Swift counterparts.
+
+`TwinKeyApplication` is the `Application` subclass; it initializes AppMetrica analytics on startup (API key hard-coded, activity auto-tracking enabled).
 
 ### Data flow
 
@@ -33,12 +37,14 @@ domain/ (pure Kotlin, no Android deps)
 data/   (Repository, KeychainService, BackupManager)
     ↓
 ui/     (ViewModel → StateFlow → Composable screens)
+
+core/   AppState + AppMode enum (shared root state shape)
 ```
 
 ### domain/
 Pure Kotlin business logic with no Android dependencies (designed for JVM testability).
-- `Token` + `OtpGenerator` — core models
-- `TotpCodeGenerator` — RFC 4226/6238 HMAC-based OTP; algorithm is SHA1/256/512, truncation follows the RFC dynamic truncation spec
+- `Token` — core model; `CodableToken` — serialization shape stored in the keychain
+- `OtpGenerator` (interface) + `TotpCodeGenerator` — RFC 4226/6238 HMAC-based OTP; `OtpAlgorithm` enum (SHA1/256/512), `OtpFactor` enum (TOTP/HOTP). Truncation follows the RFC dynamic truncation spec.
 - `TokenUrlParser` — parses/serializes `otpauth://` URIs using `java.net.URI` (not `android.net.Uri`)
 - `GoogleAuthMigrationParser` — decodes Google Authenticator migration QR payloads
 
@@ -52,10 +58,11 @@ State management pattern used throughout:
 - ViewModel holds `_state: MutableStateFlow<UiState>`, exposes `state: StateFlow<UiState>`
 - Composables observe via `state.collectAsState()` and call ViewModel methods — no direct state mutations in UI
 - `ModalBottomSheetState` animation state lives in the Composable (UI-only concern, not in ViewModel)
+- `ui/components/` provides shared building blocks: `AppModalBottomSheet` + `rememberAppSheetState` (wrappers used by every overlay), `OtpCodeView`, `CheckableTokenRow`
 
-**Overlay system** (`AccountsScreen`): a sealed class `AccountsOverlay` drives which bottom sheet is visible (Scanner, Manual, Added, Editing, Settings, ImportFromEmpty). Composable renders sheets conditionally based on overlay state.
+**Overlay system** (`AccountsScreen`): a sealed class `AccountsOverlay` drives which bottom sheet is visible (`None`, `Scanner`, `Manual`, `Added(token)`, `Editing(token)`, `Settings`, `ImportFromEmpty`). `AccountsSheets` renders sheets conditionally based on overlay state.
 
-**Navigation**: no NavController. `WelcomeScreen` acts as a root router via `AppMode` enum (Unknown → splash, Welcome → TutorialScreen, Accounts → AccountsScreen). All state survives config changes via ViewModel.
+**Navigation**: no NavController. `WelcomeScreen` acts as a root router via `AppMode` enum in `core/` (`Unknown` → splash, `Welcome` → `TutorialScreen`, `Accounts` → `AccountsScreen`). All state survives config changes via ViewModel. System splash uses `androidx.core.splashscreen`.
 
 **Keyboard / focus pattern** (`AccountsScreen`):
 - `rememberUpdatedState(WindowInsets.ime.getBottom(density))` captures IME height in composable context
@@ -75,3 +82,5 @@ State management pattern used throughout:
 | Apache Commons Codec | Base32 decoding |
 | Calvin Reorderable | Drag-to-reorder list |
 | kotlinx.serialization | JSON backup format |
+| androidx.core.splashscreen | System splash screen |
+| AppMetrica analytics | Usage analytics (initialized in `TwinKeyApplication`) |
