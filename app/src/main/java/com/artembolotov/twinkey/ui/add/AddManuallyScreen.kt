@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,10 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -45,13 +40,6 @@ import com.artembolotov.twinkey.domain.Token
 import org.apache.commons.codec.binary.Base32
 import java.util.UUID
 
-/**
- * Порт AddAccountManuallyView.swift.
- *
- * Форма: Issuer (сервис), Secret (Base32), Account (email),
- * Period (Stepper 5..180 шаг 5), Digits (6/7/8), Algorithm (SHA1/SHA256/SHA512).
- * Кнопка Done активна только при непустых Issuer + валидном Secret.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddManuallyScreen(
@@ -73,25 +61,12 @@ fun AddManuallyScreen(
         }
     }
     val canDone by remember { derivedStateOf { issuer.isNotBlank() && secretValid } }
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-            .imePadding()
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Main)
-                        if (event.type == PointerEventType.Press &&
-                            event.changes.none { it.isConsumed }) {
-                            keyboardController?.hide()
-                        }
-                    }
-                }
-            },
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
@@ -146,7 +121,7 @@ fun AddManuallyScreen(
             )
         )
 
-        // Time Interval — порт Stepper(value: $timeInterval, in: 5...180, step: 5)
+        // Time Interval
         SectionHeader(stringResource(R.string.add_manually_section_period))
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -168,7 +143,7 @@ fun AddManuallyScreen(
             )
         }
 
-        // Digits — порт Picker (сегментированный: 6 / 7 / 8)
+        // Digits
         SectionHeader(stringResource(R.string.add_manually_section_digits))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(6, 7, 8).forEach { d ->
@@ -194,7 +169,6 @@ fun AddManuallyScreen(
 
         Spacer(Modifier.height(8.dp))
 
-        // Кнопки
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
