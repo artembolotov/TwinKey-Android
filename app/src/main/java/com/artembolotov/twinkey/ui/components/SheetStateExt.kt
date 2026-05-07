@@ -7,17 +7,10 @@ import androidx.compose.material3.SheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 class AppSheetState internal constructor(
@@ -54,28 +47,10 @@ fun AppModalBottomSheet(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    // Captured here (main-window composition context) so hide() targets the correct window token.
-    // Applied via modifier so it covers the entire sheet surface including the drag handle area.
-    val keyboardController = LocalSoftwareKeyboardController.current
     ModalBottomSheet(
         sheetState = appSheetState.sheetState,
         onDismissRequest = onDismissRequest,
-        modifier = modifier.pointerInput(Unit) {
-            coroutineScope {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Main)
-                        if (event.type == PointerEventType.Press &&
-                            event.changes.none { it.isConsumed }) {
-                            this@coroutineScope.launch {
-                                delay(300)
-                                keyboardController?.hide()
-                            }
-                        }
-                    }
-                }
-            }
-        },
+        modifier = modifier,
         content = content,
     )
 }

@@ -30,9 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -83,17 +80,12 @@ fun AddManuallyScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
             .pointerInput(Unit) {
-                coroutineScope {
-                    awaitPointerEventScope {
-                        while (true) {
-                            val event = awaitPointerEvent(PointerEventPass.Main)
-                            if (event.type == PointerEventType.Press &&
-                                event.changes.none { it.isConsumed }) {
-                                this@coroutineScope.launch {
-                                    delay(300)
-                                    keyboardController?.hide()
-                                }
-                            }
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Main)
+                        if (event.type == PointerEventType.Press &&
+                            event.changes.none { it.isConsumed }) {
+                            keyboardController?.hide()
                         }
                     }
                 }
