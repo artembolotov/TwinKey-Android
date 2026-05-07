@@ -90,7 +90,7 @@ fun AddManuallyScreen(
                             if (event.type == PointerEventType.Press &&
                                 event.changes.none { it.isConsumed }) {
                                 this@coroutineScope.launch {
-                                    delay(50)
+                                    delay(300)
                                     keyboardController?.hide()
                                 }
                             }
