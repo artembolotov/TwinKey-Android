@@ -1,11 +1,15 @@
 package com.artembolotov.twinkey.ui.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -55,15 +59,26 @@ fun AppModalBottomSheet(
     ModalBottomSheet(
         sheetState = appSheetState.sheetState,
         onDismissRequest = onDismissRequest,
-        modifier = modifier.pointerInput(Unit) {
-            awaitPointerEventScope {
-                while (true) {
-                    val event = awaitPointerEvent(PointerEventPass.Main)
-                    if (event.type == PointerEventType.Press &&
-                        event.changes.none { it.isConsumed }) {
-                        keyboardController?.hide()
-                    }
-                }
+        modifier = modifier,
+        dragHandle = {
+            // Full-width box so touches anywhere in the drag handle row are caught,
+            // not just on the pill itself.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                if (event.type == PointerEventType.Press) {
+                                    keyboardController?.hide()
+                                }
+                            }
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                BottomSheetDefaults.DragHandle()
             }
         },
         content = content,

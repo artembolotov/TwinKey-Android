@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,6 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -68,12 +73,25 @@ fun AddManuallyScreen(
         }
     }
     val canDone by remember { derivedStateOf { issuer.isNotBlank() && secretValid } }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .imeNestedScroll()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(16.dp)
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Main)
+                        if (event.type == PointerEventType.Press &&
+                            event.changes.none { it.isConsumed }) {
+                            keyboardController?.hide()
+                        }
+                    }
+                }
+            },
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
