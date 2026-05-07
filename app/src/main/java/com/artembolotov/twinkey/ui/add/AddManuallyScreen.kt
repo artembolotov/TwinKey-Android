@@ -1,5 +1,6 @@
 package com.artembolotov.twinkey.ui.add
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,7 +53,7 @@ import java.util.UUID
  * Period (Stepper 5..180 шаг 5), Digits (6/7/8), Algorithm (SHA1/SHA256/SHA512).
  * Кнопка Done активна только при непустых Issuer + валидном Secret.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AddManuallyScreen(
     onDone: (Token) -> Unit,
