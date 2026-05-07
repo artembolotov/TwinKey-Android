@@ -14,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -55,23 +58,26 @@ fun AppModalBottomSheet(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
     ModalBottomSheet(
         sheetState = appSheetState.sheetState,
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         dragHandle = {
-            // Full-width box so touches anywhere in the drag handle row are caught,
-            // not just on the pill itself.
+            val keyboardController = LocalSoftwareKeyboardController.current
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .pointerInput(Unit) {
-                        awaitPointerEventScope {
-                            while (true) {
-                                val event = awaitPointerEvent(PointerEventPass.Initial)
-                                if (event.type == PointerEventType.Press) {
-                                    keyboardController?.hide()
+                        coroutineScope {
+                            awaitPointerEventScope {
+                                while (true) {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    if (event.type == PointerEventType.Press) {
+                                        this@coroutineScope.launch {
+                                            delay(50)
+                                            keyboardController?.hide()
+                                        }
+                                    }
                                 }
                             }
                         }
