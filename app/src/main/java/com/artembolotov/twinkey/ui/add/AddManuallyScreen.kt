@@ -84,8 +84,9 @@ fun AddManuallyScreen(
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Initial)
-                        if (event.type == PointerEventType.Press) {
+                        val event = awaitPointerEvent(PointerEventPass.Main)
+                        if (event.type == PointerEventType.Press &&
+                            event.changes.none { it.isConsumed }) {
                             keyboardController?.hide()
                             focusManager.clearFocus()
                         }
