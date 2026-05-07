@@ -1,13 +1,11 @@
 package com.artembolotov.twinkey.ui.add
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -53,7 +51,7 @@ import java.util.UUID
  * Period (Stepper 5..180 шаг 5), Digits (6/7/8), Algorithm (SHA1/SHA256/SHA512).
  * Кнопка Done активна только при непустых Issuer + валидном Secret.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddManuallyScreen(
     onDone: (Token) -> Unit,
@@ -79,7 +77,6 @@ fun AddManuallyScreen(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .imeNestedScroll()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
             .pointerInput(Unit) {
