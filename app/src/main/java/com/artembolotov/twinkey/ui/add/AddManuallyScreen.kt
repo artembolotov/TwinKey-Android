@@ -1,8 +1,9 @@
 package com.artembolotov.twinkey.ui.add
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +32,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -85,64 +89,79 @@ fun AddManuallyScreen(
 
         // Service Provider
         SectionHeader(stringResource(R.string.add_manually_section_service))
-        Box {
-            TextField(
-                value = issuer,
-                onValueChange = {},
-                label = { Text(stringResource(R.string.add_manually_issuer)) },
-                singleLine = true,
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions.Default
-            )
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable { activeField = AddManuallyField.Issuer }
-            )
-        }
+        TextField(
+            value = issuer,
+            onValueChange = {},
+            label = { Text(stringResource(R.string.add_manually_issuer)) },
+            singleLine = true,
+            readOnly = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusProperties { canFocus = false }
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
+                        val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                        if (up != null) {
+                            up.consume()
+                            activeField = AddManuallyField.Issuer
+                        }
+                    }
+                },
+            keyboardOptions = KeyboardOptions.Default
+        )
 
         // Secret
         SectionHeader(stringResource(R.string.add_manually_section_secret))
-        Box {
-            TextField(
-                value = secretRaw,
-                onValueChange = {},
-                label = { Text(stringResource(R.string.add_manually_secret)) },
-                singleLine = true,
-                readOnly = true,
-                isError = secretRaw.isNotEmpty() && !secretValid,
-                supportingText = if (secretRaw.isNotEmpty() && !secretValid) {
-                    { Text(stringResource(R.string.add_manually_secret_invalid)) }
-                } else null,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions.Default
-            )
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable { activeField = AddManuallyField.Secret }
-            )
-        }
+        TextField(
+            value = secretRaw,
+            onValueChange = {},
+            label = { Text(stringResource(R.string.add_manually_secret)) },
+            singleLine = true,
+            readOnly = true,
+            isError = secretRaw.isNotEmpty() && !secretValid,
+            supportingText = if (secretRaw.isNotEmpty() && !secretValid) {
+                { Text(stringResource(R.string.add_manually_secret_invalid)) }
+            } else null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusProperties { canFocus = false }
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
+                        val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                        if (up != null) {
+                            up.consume()
+                            activeField = AddManuallyField.Secret
+                        }
+                    }
+                },
+            keyboardOptions = KeyboardOptions.Default
+        )
 
         // Account (optional)
         SectionHeader(stringResource(R.string.add_manually_section_account))
-        Box {
-            TextField(
-                value = account,
-                onValueChange = {},
-                label = { Text(stringResource(R.string.add_manually_account)) },
-                singleLine = true,
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions.Default
-            )
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable { activeField = AddManuallyField.Account }
-            )
-        }
+        TextField(
+            value = account,
+            onValueChange = {},
+            label = { Text(stringResource(R.string.add_manually_account)) },
+            singleLine = true,
+            readOnly = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusProperties { canFocus = false }
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
+                        val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                        if (up != null) {
+                            up.consume()
+                            activeField = AddManuallyField.Account
+                        }
+                    }
+                },
+            keyboardOptions = KeyboardOptions.Default
+        )
 
         // Time Interval
         SectionHeader(stringResource(R.string.add_manually_section_period))
