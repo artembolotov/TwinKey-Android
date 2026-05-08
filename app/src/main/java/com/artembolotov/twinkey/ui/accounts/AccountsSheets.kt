@@ -1,13 +1,10 @@
 package com.artembolotov.twinkey.ui.accounts
 
 import android.os.Build
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import com.artembolotov.twinkey.ui.add.AccountAddedScreen
-import com.artembolotov.twinkey.ui.add.AddManuallyScreen
 import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
 import com.artembolotov.twinkey.ui.components.AppSheetState
 import com.artembolotov.twinkey.ui.components.rememberAppSheetState
@@ -17,9 +14,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 class AccountsSheetStates internal constructor(
-    val manual: AppSheetState,
     val added: AppSheetState,
-    val edit: AppSheetState,
     val settings: AppSheetState,
     val importFromEmpty: AppSheetState,
 )
@@ -27,9 +22,7 @@ class AccountsSheetStates internal constructor(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun rememberAccountsSheetStates(): AccountsSheetStates = AccountsSheetStates(
-    manual = rememberAppSheetState(),
     added = rememberAppSheetState(),
-    edit = rememberAppSheetState(),
     settings = rememberAppSheetState(),
     importFromEmpty = rememberAppSheetState(),
 )
@@ -46,30 +39,6 @@ fun AccountsSheets(
     val scope = rememberCoroutineScope()
 
     when (val overlay = state.overlay) {
-        AccountsOverlay.Manual -> {
-            AppModalBottomSheet(
-                appSheetState = sheetStates.manual,
-                onDismissRequest = { vm.dismissOverlay() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                AddManuallyScreen(
-                    onDone = { token ->
-                        scope.launch {
-                            sheetStates.manual.hide()
-                            vm.addAccount(token)
-                            vm.showOverlay(AccountsOverlay.Added(token))
-                        }
-                    },
-                    onCancel = {
-                        scope.launch {
-                            sheetStates.manual.hide()
-                            vm.dismissOverlay()
-                        }
-                    }
-                )
-            }
-        }
-
         is AccountsOverlay.Added -> {
             val token = overlay.token
             AppModalBottomSheet(
@@ -89,38 +58,6 @@ fun AccountsSheets(
                     onCopied = {
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                             vm.showMessage(copiedMessage)
-                        }
-                    }
-                )
-            }
-        }
-
-        is AccountsOverlay.Editing -> {
-            val token = overlay.token
-            AppModalBottomSheet(
-                appSheetState = sheetStates.edit,
-                onDismissRequest = { vm.dismissOverlay() }
-            ) {
-                AccountEditScreen(
-                    token = token,
-                    onDone = { updated ->
-                        scope.launch {
-                            sheetStates.edit.hide()
-                            vm.updateAccount(updated)
-                            vm.dismissOverlay()
-                        }
-                    },
-                    onDelete = { id ->
-                        scope.launch {
-                            sheetStates.edit.hide()
-                            vm.deleteAccount(id)
-                            vm.dismissOverlay()
-                        }
-                    },
-                    onCancel = {
-                        scope.launch {
-                            sheetStates.edit.hide()
-                            vm.dismissOverlay()
                         }
                     }
                 )
@@ -192,6 +129,8 @@ fun AccountsSheets(
         }
 
         AccountsOverlay.None,
+        AccountsOverlay.Manual,
+        is AccountsOverlay.Editing,
         AccountsOverlay.Scanner -> Unit
     }
 }

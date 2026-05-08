@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.GoogleAuthMigrationParser
 import com.artembolotov.twinkey.domain.TokenUrlParser
+import com.artembolotov.twinkey.ui.add.AddManuallyScreen
 import com.artembolotov.twinkey.ui.add.QrScannerScreen
 import com.artembolotov.twinkey.ui.theme.PageBackgroundDark
 import com.artembolotov.twinkey.ui.theme.PageBackgroundLight
@@ -70,6 +71,8 @@ fun AccountsScreen(
 
     val sheetStates = rememberAccountsSheetStates()
 
+    val pageBackground = if (isSystemInDarkTheme()) PageBackgroundDark else PageBackgroundLight
+
     // Фильтрация пересчитывается только при изменении списка или запроса,
     // а не при каждом тике таймера (codes обновляются каждую секунду)
     val filteredAccounts = remember(state.accounts, state.searchQuery) {
@@ -90,6 +93,38 @@ fun AccountsScreen(
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             vm.clearMessage()
         }
+    }
+
+    // Полноэкранный экран добавления вручную
+    if (state.overlay is AccountsOverlay.Manual) {
+        BackHandler { vm.dismissOverlay() }
+        AddManuallyScreen(
+            onDone = { token ->
+                vm.addAccount(token)
+                vm.showOverlay(AccountsOverlay.Added(token))
+            },
+            onCancel = { vm.dismissOverlay() }
+        )
+        return
+    }
+
+    // Полноэкранный экран редактирования
+    val editingOverlay = state.overlay as? AccountsOverlay.Editing
+    if (editingOverlay != null) {
+        BackHandler { vm.dismissOverlay() }
+        AccountEditScreen(
+            token = editingOverlay.token,
+            onDone = { updated ->
+                vm.updateAccount(updated)
+                vm.dismissOverlay()
+            },
+            onDelete = { id ->
+                vm.deleteAccount(id)
+                vm.dismissOverlay()
+            },
+            onCancel = { vm.dismissOverlay() }
+        )
+        return
     }
 
     // Полноэкранный QR-сканер
@@ -131,8 +166,6 @@ fun AccountsScreen(
         )
         return
     }
-
-    val pageBackground = if (isSystemInDarkTheme()) PageBackgroundDark else PageBackgroundLight
 
     Scaffold(
         containerColor = pageBackground,

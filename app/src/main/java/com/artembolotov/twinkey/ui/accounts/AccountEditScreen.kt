@@ -1,10 +1,12 @@
 package com.artembolotov.twinkey.ui.accounts
 
 import android.content.ClipData
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,18 +18,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,8 +52,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.TextInputScreen
@@ -56,14 +60,7 @@ import org.apache.commons.codec.binary.Base32
 
 private enum class AccountEditField { Issuer, Name }
 
-/**
- * Порт AccountEditScreen.swift.
- *
- * Редактируемые поля: issuer, name (account).
- * Read-only: secret (с кнопкой копировать), digits, period, algorithm.
- * Кнопка Done активна только при непустом issuer И наличии изменений.
- * Кнопка Delete — деструктивная, с подтверждением.
- */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountEditScreen(
     token: Token,
@@ -82,181 +79,134 @@ fun AccountEditScreen(
         Base32().encodeToString(token.generator.secret).trimEnd('=')
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.edit_title),
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        // Editable: Service name
-        TextField(
-            value = state.issuer,
-            onValueChange = {},
-            label = { Text(stringResource(R.string.edit_issuer)) },
-            singleLine = true,
-            readOnly = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusProperties { canFocus = false }
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
-                        val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                        if (up != null) {
-                            up.consume()
-                            state.activeField = AccountEditField.Issuer
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.edit_title)) },
+                    navigationIcon = {
+                        IconButton(onClick = onCancel) {
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+                        }
+                    },
+                    actions = {
+                        TextButton(
+                            onClick = { onDone(token.copy(issuer = state.issuer.trim(), name = state.name.trim())) },
+                            enabled = canDone
+                        ) {
+                            Text(stringResource(R.string.edit_done))
                         }
                     }
-                },
-            keyboardOptions = KeyboardOptions.Default
-        )
+                )
+            }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                TextField(
+                    value = state.issuer,
+                    onValueChange = {},
+                    label = { Text(stringResource(R.string.edit_issuer)) },
+                    singleLine = true,
+                    readOnly = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusProperties { canFocus = false }
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
+                                val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                                if (up != null) { up.consume(); state.activeField = AccountEditField.Issuer }
+                            }
+                        },
+                    keyboardOptions = KeyboardOptions.Default
+                )
 
-        // Editable: Account (email / username)
-        TextField(
-            value = state.name,
-            onValueChange = {},
-            label = { Text(stringResource(R.string.edit_account)) },
-            singleLine = true,
-            readOnly = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusProperties { canFocus = false }
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
-                        val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                        if (up != null) {
-                            up.consume()
-                            state.activeField = AccountEditField.Name
+                TextField(
+                    value = state.name,
+                    onValueChange = {},
+                    label = { Text(stringResource(R.string.edit_account)) },
+                    singleLine = true,
+                    readOnly = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusProperties { canFocus = false }
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
+                                val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                                if (up != null) { up.consume(); state.activeField = AccountEditField.Name }
+                            }
+                        },
+                    keyboardOptions = KeyboardOptions.Default
+                )
+
+                HorizontalDivider()
+
+                ReadOnlyRow(
+                    label = stringResource(R.string.edit_secret),
+                    value = secretBase32,
+                    trailing = {
+                        IconButton(onClick = {
+                            scope.launch {
+                                clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", secretBase32)))
+                            }
+                        }) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.edit_copy_secret))
                         }
                     }
-                },
-            keyboardOptions = KeyboardOptions.Default
-        )
+                )
 
-        HorizontalDivider()
+                ReadOnlyRow(label = stringResource(R.string.edit_digits), value = token.generator.digits.toString())
+                ReadOnlyRow(label = stringResource(R.string.edit_period), value = stringResource(R.string.edit_period_seconds, token.generator.periodOrDefault))
+                ReadOnlyRow(label = stringResource(R.string.edit_algorithm), value = token.generator.algorithm.name)
 
-        // Read-only: Secret key с кнопкой копирования
-        ReadOnlyRow(
-            label = stringResource(R.string.edit_secret),
-            value = secretBase32,
-            trailing = {
-                IconButton(onClick = {
-                    scope.launch {
-                        clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", secretBase32)))
-                    }
-                }) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.edit_copy_secret))
+                HorizontalDivider()
+
+                Spacer(Modifier.height(8.dp))
+
+                Button(
+                    onClick = { state.showDeleteDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Text(stringResource(R.string.edit_delete))
                 }
             }
-        )
-
-        // Read-only: Digits
-        ReadOnlyRow(
-            label = stringResource(R.string.edit_digits),
-            value = token.generator.digits.toString()
-        )
-
-        // Read-only: Period
-        ReadOnlyRow(
-            label = stringResource(R.string.edit_period),
-            value = stringResource(R.string.edit_period_seconds, token.generator.periodOrDefault)
-        )
-
-        // Read-only: Algorithm
-        ReadOnlyRow(
-            label = stringResource(R.string.edit_algorithm),
-            value = token.generator.algorithm.name
-        )
-
-        HorizontalDivider()
-
-        // Кнопки Done / Cancel
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-        ) {
-            TextButton(onClick = onCancel) {
-                Text(stringResource(R.string.cancel))
-            }
-            Button(
-                onClick = {
-                    onDone(token.copy(issuer = state.issuer.trim(), name = state.name.trim()))
-                },
-                enabled = canDone
-            ) {
-                Text(stringResource(R.string.edit_done))
-            }
         }
 
-        Spacer(Modifier.height(8.dp))
-
-        // Delete — деструктивная
-        Button(
-            onClick = { state.showDeleteDialog = true },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer
-            )
-        ) {
-            Text(stringResource(R.string.edit_delete))
-        }
-
-        Spacer(Modifier.height(8.dp))
-    }
-
-    // Full-screen dialog for single-field editing — mirrors iOS UIViewController push
-    val currentField = state.activeField
-    if (currentField != null) {
-        Dialog(
-            onDismissRequest = { state.activeField = null },
-            properties = DialogProperties(
-                usePlatformDefaultWidth = false,
-                dismissOnBackPress = true,
-                dismissOnClickOutside = false
-            )
-        ) {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-            ) {
+        val currentField = state.activeField
+        if (currentField != null) {
+            BackHandler { state.activeField = null }
+            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                 when (currentField) {
                     AccountEditField.Issuer -> TextInputScreen(
                         label = stringResource(R.string.edit_issuer),
                         initialValue = state.issuer,
                         placeholder = "",
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Words
-                        ),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                         doneLabel = stringResource(R.string.edit_done),
                         cancelLabel = stringResource(R.string.cancel),
-                        onDone = { value ->
-                            state.issuer = value
-                            state.activeField = null
-                        },
+                        onDone = { value -> state.issuer = value; state.activeField = null },
                         onCancel = { state.activeField = null }
                     )
                     AccountEditField.Name -> TextInputScreen(
                         label = stringResource(R.string.edit_account),
                         initialValue = state.name,
                         placeholder = "",
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email
-                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         doneLabel = stringResource(R.string.edit_done),
                         cancelLabel = stringResource(R.string.cancel),
                         allowBlankDone = true,
-                        onDone = { value ->
-                            state.name = value
-                            state.activeField = null
-                        },
+                        onDone = { value -> state.name = value; state.activeField = null },
                         onCancel = { state.activeField = null }
                     )
                 }
@@ -264,7 +214,6 @@ fun AccountEditScreen(
         }
     }
 
-    // Диалог подтверждения удаления
     if (state.showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { state.showDeleteDialog = false },
@@ -273,9 +222,7 @@ fun AccountEditScreen(
             confirmButton = {
                 TextButton(
                     onClick = { onDelete(token.id) },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
                     Text(stringResource(R.string.edit_delete))
                 }
@@ -308,16 +255,8 @@ private fun ReadOnlyRow(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
+            Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
         }
         trailing?.invoke()
     }
