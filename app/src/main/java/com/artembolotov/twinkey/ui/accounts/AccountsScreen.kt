@@ -41,6 +41,7 @@ import com.artembolotov.twinkey.domain.GoogleAuthMigrationParser
 import com.artembolotov.twinkey.domain.TokenUrlParser
 import com.artembolotov.twinkey.ui.add.AddManuallyScreen
 import com.artembolotov.twinkey.ui.add.QrScannerScreen
+import com.artembolotov.twinkey.ui.settings.SettingsScreen
 import com.artembolotov.twinkey.ui.theme.PageBackgroundDark
 import com.artembolotov.twinkey.ui.theme.PageBackgroundLight
 
@@ -123,6 +124,21 @@ fun AccountsScreen(
                 vm.dismissOverlay()
             },
             onCancel = { vm.dismissOverlay() }
+        )
+        return
+    }
+
+    // Полноэкранный экран настроек
+    if (state.overlay is AccountsOverlay.Settings) {
+        BackHandler { vm.dismissOverlay() }
+        SettingsScreen(
+            accounts = state.accounts,
+            onImportAccounts = { tokens -> vm.addMultiple(tokens) },
+            onDeleteAll = { vm.removeAll() },
+            onEraseAll = { vm.eraseAll() },
+            onMessage = { msg -> vm.showMessage(msg) },
+            onDismiss = { vm.dismissOverlay() },
+            onEditAccounts = { vm.dismissOverlay(); vm.setEditMode(true) }
         )
         return
     }

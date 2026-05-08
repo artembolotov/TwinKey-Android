@@ -1,21 +1,29 @@
 package com.artembolotov.twinkey.ui.accounts
 
 import android.os.Build
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import com.artembolotov.twinkey.data.ImportResult
 import com.artembolotov.twinkey.ui.add.AccountAddedScreen
 import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
 import com.artembolotov.twinkey.ui.components.AppSheetState
 import com.artembolotov.twinkey.ui.components.rememberAppSheetState
-import com.artembolotov.twinkey.ui.settings.AccountsImportScreen
-import com.artembolotov.twinkey.ui.settings.SettingsScreen
+import com.artembolotov.twinkey.ui.settings.AccountsImportPickerSheet
+import com.artembolotov.twinkey.ui.settings.AccountsImportSelectionScreen
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 class AccountsSheetStates internal constructor(
     val added: AppSheetState,
-    val settings: AppSheetState,
     val importFromEmpty: AppSheetState,
 )
 
@@ -23,7 +31,6 @@ class AccountsSheetStates internal constructor(
 @Composable
 fun rememberAccountsSheetStates(): AccountsSheetStates = AccountsSheetStates(
     added = rememberAppSheetState(),
-    settings = rememberAppSheetState(),
     importFromEmpty = rememberAppSheetState(),
 )
 
@@ -65,17 +72,17 @@ fun AccountsSheets(
         }
 
         AccountsOverlay.ImportFromEmpty -> {
+            var importResult by remember { mutableStateOf<ImportResult?>(null) }
+
             AppModalBottomSheet(
                 appSheetState = sheetStates.importFromEmpty,
                 onDismissRequest = { vm.dismissOverlay() }
             ) {
-                AccountsImportScreen(
-                    onImport = { tokens ->
+                AccountsImportPickerSheet(
+                    onFileParsed = { result ->
                         scope.launch {
                             sheetStates.importFromEmpty.hide()
-                            vm.addMultiple(tokens)
-                            vm.dismissOverlay()
-                            vm.showMessage(importSuccess)
+                            importResult = result
                         }
                     },
                     onError = { msg ->
@@ -93,42 +100,24 @@ fun AccountsSheets(
                     }
                 )
             }
-        }
 
-        AccountsOverlay.Settings -> {
-            AppModalBottomSheet(
-                appSheetState = sheetStates.settings,
-                onDismissRequest = { vm.dismissOverlay() }
-            ) {
-                SettingsScreen(
-                    accounts = state.accounts,
-                    onImportAccounts = { tokens -> vm.addMultiple(tokens) },
-                    onDeleteAll = { vm.removeAll() },
-                    onEraseAll = {
-                        scope.launch {
-                            sheetStates.settings.hide()
-                            vm.eraseAll()
-                        }
-                    },
-                    onMessage = { msg -> vm.showMessage(msg) },
-                    onDismiss = {
-                        scope.launch {
-                            sheetStates.settings.hide()
+            importResult?.let { result ->
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                    AccountsImportSelectionScreen(
+                        importResult = result,
+                        onImport = { tokens ->
+                            vm.addMultiple(tokens)
                             vm.dismissOverlay()
-                        }
-                    },
-                    onEditAccounts = {
-                        scope.launch {
-                            sheetStates.settings.hide()
-                            vm.dismissOverlay()
-                            vm.setEditMode(true)
-                        }
-                    }
-                )
+                            vm.showMessage(importSuccess)
+                        },
+                        onDismiss = { vm.dismissOverlay() }
+                    )
+                }
             }
         }
 
         AccountsOverlay.None,
+        AccountsOverlay.Settings,
         AccountsOverlay.Manual,
         is AccountsOverlay.Editing,
         AccountsOverlay.Scanner -> Unit

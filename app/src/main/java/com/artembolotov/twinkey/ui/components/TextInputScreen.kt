@@ -78,7 +78,7 @@ fun TextInputScreen(
                 .padding(horizontal = 16.dp)
                 .focusRequester(focusRequester),
             keyboardOptions = keyboardOptions.copy(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { onDone(value.text) })
+            keyboardActions = KeyboardActions(onDone = { if (allowBlankDone || value.text.isNotBlank()) onDone(value.text) })
         )
     }
 }

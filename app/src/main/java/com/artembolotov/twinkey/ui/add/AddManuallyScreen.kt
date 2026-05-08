@@ -138,8 +138,7 @@ fun AddManuallyScreen(
                                 val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
                                 if (up != null) { up.consume(); activeField = AddManuallyField.Issuer }
                             }
-                        },
-                    keyboardOptions = KeyboardOptions.Default
+                        }
                 )
 
                 SectionHeader(stringResource(R.string.add_manually_section_secret))
@@ -162,8 +161,7 @@ fun AddManuallyScreen(
                                 val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
                                 if (up != null) { up.consume(); activeField = AddManuallyField.Secret }
                             }
-                        },
-                    keyboardOptions = KeyboardOptions.Default
+                        }
                 )
 
                 SectionHeader(stringResource(R.string.add_manually_section_account))
@@ -182,8 +180,7 @@ fun AddManuallyScreen(
                                 val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
                                 if (up != null) { up.consume(); activeField = AddManuallyField.Account }
                             }
-                        },
-                    keyboardOptions = KeyboardOptions.Default
+                        }
                 )
 
                 SectionHeader(stringResource(R.string.add_manually_section_period))

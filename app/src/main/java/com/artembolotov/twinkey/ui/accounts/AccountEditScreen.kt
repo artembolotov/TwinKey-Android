@@ -123,8 +123,7 @@ fun AccountEditScreen(
                                 val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
                                 if (up != null) { up.consume(); state.activeField = AccountEditField.Issuer }
                             }
-                        },
-                    keyboardOptions = KeyboardOptions.Default
+                        }
                 )
 
                 TextField(
@@ -142,8 +141,7 @@ fun AccountEditScreen(
                                 val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
                                 if (up != null) { up.consume(); state.activeField = AccountEditField.Name }
                             }
-                        },
-                    keyboardOptions = KeyboardOptions.Default
+                        }
                 )
 
                 HorizontalDivider()
