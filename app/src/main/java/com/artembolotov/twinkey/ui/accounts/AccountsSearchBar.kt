@@ -1,5 +1,10 @@
 package com.artembolotov.twinkey.ui.accounts
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
@@ -82,7 +87,11 @@ fun AccountsSearchBar(
                         Icon(Icons.Default.Search, contentDescription = null)
                     },
                     trailingIcon = {
-                        if (searchActive) {
+                        AnimatedVisibility(
+                            visible = searchActive,
+                            enter = fadeIn() + scaleIn(initialScale = 0.7f),
+                            exit = fadeOut() + scaleOut(targetScale = 0.7f)
+                        ) {
                             IconButton(onClick = {
                                 onClearQuery()
                                 focusManager.clearFocus()

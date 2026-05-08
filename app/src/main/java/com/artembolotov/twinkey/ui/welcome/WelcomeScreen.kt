@@ -1,5 +1,6 @@
 package com.artembolotov.twinkey.ui.welcome
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -27,20 +28,22 @@ fun WelcomeScreen(
 ) {
     val state by vm.state.collectAsState()
 
-    when (state.mode) {
-        AppMode.Unknown -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+    Crossfade(targetState = state.mode, label = "app_mode") { mode ->
+        when (mode) {
+            AppMode.Unknown -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        }
-        AppMode.Welcome -> {
-            TutorialScreen(
-                sessionId = state.welcomeSessionId,
-                onGetStarted = { vm.completeWelcome() }
-            )
-        }
-        AppMode.Accounts -> {
-            AccountsScreen(vm = vm)
+            AppMode.Welcome -> {
+                TutorialScreen(
+                    sessionId = state.welcomeSessionId,
+                    onGetStarted = { vm.completeWelcome() }
+                )
+            }
+            AppMode.Accounts -> {
+                AccountsScreen(vm = vm)
+            }
         }
     }
 }

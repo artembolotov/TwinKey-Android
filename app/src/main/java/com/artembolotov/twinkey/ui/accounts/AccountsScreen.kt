@@ -6,9 +6,13 @@ import android.content.res.Configuration
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -96,170 +100,191 @@ fun AccountsScreen(
         }
     }
 
-    // Полноэкранный экран добавления вручную
-    if (state.overlay is AccountsOverlay.Manual) {
-        BackHandler { vm.dismissOverlay() }
-        AddManuallyScreen(
-            onDone = { token ->
-                vm.addAccount(token)
-                vm.showOverlay(AccountsOverlay.Added(token))
-            },
-            onCancel = { vm.dismissOverlay() }
-        )
-        return
+    // Added и ImportFromEmpty — bottom sheet поверх основного экрана, не полноэкранные.
+    // Только эти четыре оверлея заменяют весь экран и анимируются как переходы.
+    val fullScreenOverlay: AccountsOverlay? = when (state.overlay) {
+        is AccountsOverlay.Scanner,
+        is AccountsOverlay.Manual,
+        is AccountsOverlay.Editing,
+        is AccountsOverlay.Settings -> state.overlay
+        else -> null
     }
 
-    // Полноэкранный экран редактирования
-    val editingOverlay = state.overlay as? AccountsOverlay.Editing
-    if (editingOverlay != null) {
-        BackHandler { vm.dismissOverlay() }
-        AccountEditScreen(
-            token = editingOverlay.token,
-            onDone = { updated ->
-                vm.updateAccount(updated)
-                vm.dismissOverlay()
-            },
-            onDelete = { id ->
-                vm.deleteAccount(id)
-                vm.dismissOverlay()
-            },
-            onCancel = { vm.dismissOverlay() }
-        )
-        return
-    }
-
-    // Полноэкранный экран настроек
-    if (state.overlay is AccountsOverlay.Settings) {
-        BackHandler { vm.dismissOverlay() }
-        SettingsScreen(
-            accounts = state.accounts,
-            onImportAccounts = { tokens -> vm.addMultiple(tokens) },
-            onDeleteAll = { vm.removeAll() },
-            onEraseAll = { vm.eraseAll() },
-            onMessage = { msg -> vm.showMessage(msg) },
-            onDismiss = { vm.dismissOverlay() },
-            onEditAccounts = { vm.dismissOverlay(); vm.setEditMode(true) }
-        )
-        return
-    }
-
-    // Полноэкранный QR-сканер
-    if (state.overlay is AccountsOverlay.Scanner) {
-        QrScannerScreen(
-            onScanned = { url ->
-                when {
-                    GoogleAuthMigrationParser.isMigrationUrl(url) -> {
-                        val (tokens, skipped) = runCatching {
-                            GoogleAuthMigrationParser.parse(url)
-                        }.getOrElse { Pair(emptyList(), emptyList()) }
-
-                        vm.dismissOverlay()
-                        if (tokens.isNotEmpty()) {
-                            vm.addMultiple(tokens)
-                            val msg = if (skipped.isEmpty())
-                                "${tokens.size} account(s) imported from Google Authenticator"
-                            else
-                                "${tokens.size} imported, ${skipped.size} skipped (HOTP)"
-                            vm.showMessage(msg)
-                        } else {
-                            vm.showMessage(invalidQrMessage)
-                        }
-                    }
-                    else -> {
-                        val token = runCatching { TokenUrlParser.parse(url) }.getOrNull()
-                        if (token != null) {
-                            vm.addAccount(token)
-                            vm.showOverlay(AccountsOverlay.Added(token))
-                        } else {
-                            vm.dismissOverlay()
-                            vm.showMessage(invalidQrMessage)
-                        }
-                    }
-                }
-            },
-            onAddManually = { vm.showOverlay(AccountsOverlay.Manual) },
-            onCancel = { vm.dismissOverlay() }
-        )
-        return
-    }
-
-    Scaffold(
-        containerColor = pageBackground,
-        topBar = {},
-        floatingActionButton = {
-            AnimatedVisibility(
-                visible = !state.editMode && !searchActive,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                FloatingActionButton(onClick = { vm.showOverlay(AccountsOverlay.Scanner) }) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
-                }
-            }
+    AnimatedContent(
+        targetState = fullScreenOverlay,
+        transitionSpec = {
+            if (initialState is AccountsOverlay.Scanner && targetState is AccountsOverlay.Manual)
+                fadeIn() togetherWith fadeOut()
+            else if (targetState == null)
+                fadeIn() togetherWith (slideOutVertically { it } + fadeOut())
+            else
+                (slideInVertically { it } + fadeIn()) togetherWith fadeOut()
         },
-    ) { padding ->
-        if (state.accounts.isEmpty()) {
-            AccountsEmptyView(
-                onRestoreFromBackup = { vm.showOverlay(AccountsOverlay.ImportFromEmpty) },
-                modifier = Modifier.padding(padding)
-            )
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .then(if (!searchActive) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier)
-            ) {
-                AccountsTopBar(
-                    visible = !searchActive && !isLandscape,
-                    editMode = state.editMode,
-                    pageBackground = pageBackground,
-                    scrollBehavior = scrollBehavior,
-                    onDoneClick = { vm.setEditMode(false) },
-                    onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) }
-                )
-
-                AccountsSearchBar(
-                    query = state.searchQuery,
-                    searchActive = searchActive,
-                    editMode = state.editMode,
-                    isLandscape = isLandscape,
-                    onQueryChange = { vm.setSearchQuery(it) },
-                    onSearchActiveChange = { searchActive = it },
-                    onClearQuery = { vm.setSearchQuery("") },
-                    onDoneClick = { vm.setEditMode(false) },
-                    onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) }
-                )
-
-                AccountsListView(
-                    accounts = filteredAccounts,
-                    codes = state.codes,
-                    secondsRemaining = state.secondsRemaining,
-                    onCopyCode = { code ->
-                        context.getSystemService(ClipboardManager::class.java)
-                            .setPrimaryClip(ClipData.newPlainText("", code))
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                            vm.showMessage(copiedMessage)
-                        }
+        label = "overlay_transition"
+    ) { overlay ->
+        when (overlay) {
+            is AccountsOverlay.Manual -> {
+                BackHandler { vm.dismissOverlay() }
+                AddManuallyScreen(
+                    onDone = { token ->
+                        vm.addAccount(token)
+                        vm.showOverlay(AccountsOverlay.Added(token))
                     },
-                    onEditAccount = { id ->
-                        val token = state.accounts.find { it.id == id } ?: return@AccountsListView
-                        vm.showOverlay(AccountsOverlay.Editing(token))
+                    onCancel = { vm.dismissOverlay() }
+                )
+            }
+
+            is AccountsOverlay.Editing -> {
+                BackHandler { vm.dismissOverlay() }
+                AccountEditScreen(
+                    token = overlay.token,
+                    onDone = { updated ->
+                        vm.updateAccount(updated)
+                        vm.dismissOverlay()
                     },
-                    onMove = { from, to -> vm.moveAccount(from, to) },
-                    isDraggable = state.editMode && state.searchQuery.isBlank(),
-                    isEditMode = state.editMode,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(Unit) {
-                            awaitPointerEventScope {
-                                while (true) {
-                                    awaitPointerEvent(PointerEventPass.Initial)
-                                    focusManager.clearFocus()
+                    onDelete = { id ->
+                        vm.deleteAccount(id)
+                        vm.dismissOverlay()
+                    },
+                    onCancel = { vm.dismissOverlay() }
+                )
+            }
+
+            is AccountsOverlay.Settings -> {
+                BackHandler { vm.dismissOverlay() }
+                SettingsScreen(
+                    accounts = state.accounts,
+                    onImportAccounts = { tokens -> vm.addMultiple(tokens) },
+                    onDeleteAll = { vm.removeAll() },
+                    onEraseAll = { vm.eraseAll() },
+                    onMessage = { msg -> vm.showMessage(msg) },
+                    onDismiss = { vm.dismissOverlay() },
+                    onEditAccounts = {
+                        vm.dismissOverlay()
+                        vm.setEditMode(true)
+                    }
+                )
+            }
+
+            is AccountsOverlay.Scanner -> {
+                QrScannerScreen(
+                    onScanned = { url ->
+                        when {
+                            GoogleAuthMigrationParser.isMigrationUrl(url) -> {
+                                val (tokens, skipped) = runCatching {
+                                    GoogleAuthMigrationParser.parse(url)
+                                }.getOrElse { Pair(emptyList(), emptyList()) }
+
+                                vm.dismissOverlay()
+                                if (tokens.isNotEmpty()) {
+                                    vm.addMultiple(tokens)
+                                    val msg = if (skipped.isEmpty())
+                                        "${tokens.size} account(s) imported from Google Authenticator"
+                                    else
+                                        "${tokens.size} imported, ${skipped.size} skipped (HOTP)"
+                                    vm.showMessage(msg)
+                                } else {
+                                    vm.showMessage(invalidQrMessage)
+                                }
+                            }
+                            else -> {
+                                val token = runCatching { TokenUrlParser.parse(url) }.getOrNull()
+                                if (token != null) {
+                                    vm.addAccount(token)
+                                    vm.showOverlay(AccountsOverlay.Added(token))
+                                } else {
+                                    vm.dismissOverlay()
+                                    vm.showMessage(invalidQrMessage)
                                 }
                             }
                         }
+                    },
+                    onAddManually = { vm.showOverlay(AccountsOverlay.Manual) },
+                    onCancel = { vm.dismissOverlay() }
                 )
+            }
+
+            else -> {
+                Scaffold(
+                    containerColor = pageBackground,
+                    topBar = {},
+                    floatingActionButton = {
+                        AnimatedVisibility(
+                            visible = !state.editMode && !searchActive,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            FloatingActionButton(onClick = { vm.showOverlay(AccountsOverlay.Scanner) }) {
+                                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
+                            }
+                        }
+                    },
+                ) { padding ->
+                    if (state.accounts.isEmpty()) {
+                        AccountsEmptyView(
+                            onRestoreFromBackup = { vm.showOverlay(AccountsOverlay.ImportFromEmpty) },
+                            modifier = Modifier.padding(padding)
+                        )
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding)
+                                .then(if (!searchActive) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier)
+                        ) {
+                            AccountsTopBar(
+                                visible = !searchActive && !isLandscape,
+                                editMode = state.editMode,
+                                pageBackground = pageBackground,
+                                scrollBehavior = scrollBehavior,
+                                onDoneClick = { vm.setEditMode(false) },
+                                onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) }
+                            )
+
+                            AccountsSearchBar(
+                                query = state.searchQuery,
+                                searchActive = searchActive,
+                                editMode = state.editMode,
+                                isLandscape = isLandscape,
+                                onQueryChange = { vm.setSearchQuery(it) },
+                                onSearchActiveChange = { searchActive = it },
+                                onClearQuery = { vm.setSearchQuery("") },
+                                onDoneClick = { vm.setEditMode(false) },
+                                onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) }
+                            )
+
+                            AccountsListView(
+                                accounts = filteredAccounts,
+                                codes = state.codes,
+                                secondsRemaining = state.secondsRemaining,
+                                onCopyCode = { code ->
+                                    context.getSystemService(ClipboardManager::class.java)
+                                        .setPrimaryClip(ClipData.newPlainText("", code))
+                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                        vm.showMessage(copiedMessage)
+                                    }
+                                },
+                                onEditAccount = { id ->
+                                    val token = state.accounts.find { it.id == id } ?: return@AccountsListView
+                                    vm.showOverlay(AccountsOverlay.Editing(token))
+                                },
+                                onMove = { from, to -> vm.moveAccount(from, to) },
+                                isDraggable = state.editMode && state.searchQuery.isBlank(),
+                                isEditMode = state.editMode,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .pointerInput(Unit) {
+                                        awaitPointerEventScope {
+                                            while (true) {
+                                                awaitPointerEvent(PointerEventPass.Initial)
+                                                focusManager.clearFocus()
+                                            }
+                                        }
+                                    }
+                            )
+                        }
+                    }
+                }
             }
         }
     }

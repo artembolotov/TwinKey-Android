@@ -6,8 +6,13 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.net.toUri
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,7 +34,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -51,6 +55,8 @@ import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
 import com.artembolotov.twinkey.ui.components.rememberAppSheetState
 import kotlinx.coroutines.launch
 
+private enum class SettingsSubScreen { None, Export, ImportSelection }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -70,121 +76,25 @@ fun SettingsScreen(
     val exportSuccess = stringResource(R.string.backup_export_success)
     val importSuccess = stringResource(R.string.backup_import_success)
 
-    Box(Modifier.fillMaxSize()) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(R.string.settings_title)) },
-                    navigationIcon = {
-                        IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
-                        }
-                    }
-                )
-            }
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                SectionLabel(stringResource(R.string.settings_section_accounts))
+    val subScreen = when {
+        state.showExport -> SettingsSubScreen.Export
+        state.importResult != null -> SettingsSubScreen.ImportSelection
+        else -> SettingsSubScreen.None
+    }
 
-                if (onEditAccounts != null) {
-                    SettingsRow(
-                        title = stringResource(R.string.settings_edit_accounts),
-                        enabled = accounts.isNotEmpty(),
-                        onClick = { onEditAccounts() }
-                    )
-                }
-
-                SettingsRow(
-                    title = stringResource(R.string.settings_export),
-                    enabled = accounts.isNotEmpty(),
-                    onClick = { state.showExport = true }
-                )
-
-                SettingsRow(
-                    title = stringResource(R.string.settings_import),
-                    onClick = { state.showImport = true }
-                )
-
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(16.dp))
-
-                SectionLabel(stringResource(R.string.settings_section_data))
-
-                SettingsRow(
-                    title = stringResource(R.string.settings_delete_all),
-                    enabled = accounts.isNotEmpty(),
-                    destructive = true,
-                    onClick = { state.showDeleteAll = true }
-                )
-
-                SettingsRow(
-                    title = stringResource(R.string.settings_erase_all),
-                    destructive = true,
-                    onClick = { state.showEraseAll = true }
-                )
-
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(16.dp))
-
-                SectionLabel(stringResource(R.string.settings_section_feedback))
-
-                SettingsRow(
-                    title = stringResource(R.string.settings_rate_on_google_play),
-                    isLink = true,
-                    onClick = { openUrl(context, "https://play.google.com/store/apps/details?id=${context.packageName}") }
-                )
-
-                SettingsRow(
-                    title = stringResource(R.string.settings_report_problem),
-                    onClick = { state.showReportProblem = true }
-                )
-
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(16.dp))
-
-                SectionLabel(stringResource(R.string.settings_section_info))
-
-                SettingsRow(
-                    title = stringResource(R.string.settings_website),
-                    isLink = true,
-                    onClick = { openUrl(context, "https://twinkey.app") }
-                )
-
-                SettingsRow(
-                    title = stringResource(R.string.settings_terms),
-                    isLink = true,
-                    onClick = { openUrl(context, "https://twinkey.app/terms") }
-                )
-
-                SettingsRow(
-                    title = stringResource(R.string.settings_privacy),
-                    isLink = true,
-                    onClick = { openUrl(context, "https://twinkey.app/privacy") }
-                )
-
-                val version = remember {
-                    try {
-                        val pi = context.packageManager.getPackageInfo(context.packageName, 0)
-                        "${pi.versionName} (${PackageInfoCompat.getLongVersionCode(pi)})"
-                    } catch (_: Exception) { "—" }
-                }
-                VersionRow(label = stringResource(R.string.settings_version), version = version)
-
-                Spacer(Modifier.height(8.dp))
-            }
-        }
-
-        if (state.showExport) {
-            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    AnimatedContent(
+        targetState = subScreen,
+        transitionSpec = {
+            if (targetState == SettingsSubScreen.None)
+                fadeIn() togetherWith (slideOutVertically { it } + fadeOut())
+            else
+                (slideInVertically { it } + fadeIn()) togetherWith fadeOut()
+        },
+        modifier = Modifier.fillMaxSize(),
+        label = "settings_sub_screen"
+    ) { screen ->
+        when (screen) {
+            SettingsSubScreen.Export -> {
                 AccountsExportScreen(
                     accounts = accounts,
                     onSuccess = {
@@ -199,10 +109,141 @@ fun SettingsScreen(
                     onDismiss = { state.showExport = false }
                 )
             }
-        }
 
+            SettingsSubScreen.ImportSelection -> {
+                // remember сохраняет снимок на время exit-анимации, когда importResult уже null
+                val result = remember { state.importResult }
+                if (result != null) {
+                    AccountsImportSelectionScreen(
+                        importResult = result,
+                        onImport = { tokens ->
+                            state.importResult = null
+                            onImportAccounts(tokens)
+                            onMessage(importSuccess)
+                            onDismiss()
+                        },
+                        onDismiss = { state.importResult = null }
+                    )
+                }
+            }
+
+            SettingsSubScreen.None -> {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text(stringResource(R.string.settings_title)) },
+                            navigationIcon = {
+                                IconButton(onClick = onDismiss) {
+                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+                                }
+                            }
+                        )
+                    }
+                ) { innerPadding ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(innerPadding)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        SectionLabel(stringResource(R.string.settings_section_accounts))
+
+                        if (onEditAccounts != null) {
+                            SettingsRow(
+                                title = stringResource(R.string.settings_edit_accounts),
+                                enabled = accounts.isNotEmpty(),
+                                onClick = onEditAccounts
+                            )
+                        }
+
+                        SettingsRow(
+                            title = stringResource(R.string.settings_export),
+                            enabled = accounts.isNotEmpty(),
+                            onClick = { state.showExport = true }
+                        )
+
+                        SettingsRow(
+                            title = stringResource(R.string.settings_import),
+                            onClick = { state.showImport = true }
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(Modifier.height(16.dp))
+
+                        SectionLabel(stringResource(R.string.settings_section_data))
+
+                        SettingsRow(
+                            title = stringResource(R.string.settings_delete_all),
+                            enabled = accounts.isNotEmpty(),
+                            destructive = true,
+                            onClick = { state.showDeleteAll = true }
+                        )
+
+                        SettingsRow(
+                            title = stringResource(R.string.settings_erase_all),
+                            destructive = true,
+                            onClick = { state.showEraseAll = true }
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(Modifier.height(16.dp))
+
+                        SectionLabel(stringResource(R.string.settings_section_feedback))
+
+                        SettingsRow(
+                            title = stringResource(R.string.settings_rate_on_google_play),
+                            isLink = true,
+                            onClick = { openUrl(context, "https://play.google.com/store/apps/details?id=${context.packageName}") }
+                        )
+
+                        SettingsRow(
+                            title = stringResource(R.string.settings_report_problem),
+                            onClick = { state.showReportProblem = true }
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(Modifier.height(16.dp))
+
+                        SectionLabel(stringResource(R.string.settings_section_info))
+
+                        SettingsRow(
+                            title = stringResource(R.string.settings_website),
+                            isLink = true,
+                            onClick = { openUrl(context, "https://twinkey.app") }
+                        )
+
+                        SettingsRow(
+                            title = stringResource(R.string.settings_terms),
+                            isLink = true,
+                            onClick = { openUrl(context, "https://twinkey.app/terms") }
+                        )
+
+                        SettingsRow(
+                            title = stringResource(R.string.settings_privacy),
+                            isLink = true,
+                            onClick = { openUrl(context, "https://twinkey.app/privacy") }
+                        )
+
+                        val version = remember {
+                            try {
+                                val pi = context.packageManager.getPackageInfo(context.packageName, 0)
+                                "${pi.versionName} (${PackageInfoCompat.getLongVersionCode(pi)})"
+                            } catch (_: Exception) { "—" }
+                        }
+                        VersionRow(label = stringResource(R.string.settings_version), version = version)
+
+                        Spacer(Modifier.height(8.dp))
+                    }
+                }
+            }
+        }
     }
 
+    // Bottom sheet и диалоги — за пределами AnimatedContent, рендерятся поверх
     if (state.showImport) {
         AppModalBottomSheet(
             appSheetState = importSheetState,
@@ -229,21 +270,6 @@ fun SettingsScreen(
                         state.showImport = false
                     }
                 }
-            )
-        }
-    }
-
-    state.importResult?.let { result ->
-        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            AccountsImportSelectionScreen(
-                importResult = result,
-                onImport = { tokens ->
-                    state.importResult = null
-                    onImportAccounts(tokens)
-                    onMessage(importSuccess)
-                    onDismiss()
-                },
-                onDismiss = { state.importResult = null }
             )
         }
     }
