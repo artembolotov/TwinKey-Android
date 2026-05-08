@@ -1,6 +1,5 @@
 package com.artembolotov.twinkey.ui.components
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,13 +32,12 @@ fun TextInputScreen(
     keyboardOptions: KeyboardOptions,
     doneLabel: String,
     cancelLabel: String,
+    allowBlankDone: Boolean = false,
     onDone: (String) -> Unit,
     onCancel: () -> Unit,
 ) {
     var value by remember { mutableStateOf(initialValue) }
     val focusRequester = remember { FocusRequester() }
-
-    BackHandler { onCancel() }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -60,7 +58,7 @@ fun TextInputScreen(
             Spacer(modifier = Modifier.weight(1f))
             TextButton(
                 onClick = { onDone(value) },
-                enabled = value.isNotBlank()
+                enabled = allowBlankDone || value.isNotBlank()
             ) {
                 Text(
                     text = doneLabel,

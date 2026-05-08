@@ -1,19 +1,13 @@
 package com.artembolotov.twinkey.ui.accounts
 
 import android.content.ClipData
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -47,6 +42,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.TextInputScreen
@@ -81,179 +78,179 @@ fun AccountEditScreen(
         Base32().encodeToString(token.generator.secret).trimEnd('=')
     }
 
-    BackHandler(enabled = state.activeField != null) {
-        state.activeField = null
-    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.edit_title),
+            style = MaterialTheme.typography.titleLarge
+        )
 
-    AnimatedContent(
-        targetState = state.activeField,
-        transitionSpec = {
-            if (targetState != null) {
-                slideInHorizontally { it } + fadeIn() togetherWith slideOutHorizontally { -it } + fadeOut()
-            } else {
-                slideInHorizontally { -it } + fadeIn() togetherWith slideOutHorizontally { it } + fadeOut()
-            }
-        },
-        label = "account_edit_field_anim"
-    ) { field ->
-        when (field) {
-            null -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.edit_title),
-                        style = MaterialTheme.typography.titleLarge
-                    )
+        // Editable: Service name
+        Box {
+            TextField(
+                value = state.issuer,
+                onValueChange = {},
+                label = { Text(stringResource(R.string.edit_issuer)) },
+                singleLine = true,
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions.Default
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable { state.activeField = AccountEditField.Issuer }
+            )
+        }
 
-                    // Editable: Service name
-                    Box {
-                        TextField(
-                            value = state.issuer,
-                            onValueChange = {},
-                            label = { Text(stringResource(R.string.edit_issuer)) },
-                            singleLine = true,
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions.Default
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { state.activeField = AccountEditField.Issuer }
-                        )
+        // Editable: Account (email / username)
+        Box {
+            TextField(
+                value = state.name,
+                onValueChange = {},
+                label = { Text(stringResource(R.string.edit_account)) },
+                singleLine = true,
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions.Default
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable { state.activeField = AccountEditField.Name }
+            )
+        }
+
+        HorizontalDivider()
+
+        // Read-only: Secret key с кнопкой копирования
+        ReadOnlyRow(
+            label = stringResource(R.string.edit_secret),
+            value = secretBase32,
+            trailing = {
+                IconButton(onClick = {
+                    scope.launch {
+                        clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", secretBase32)))
                     }
-
-                    // Editable: Account (email / username)
-                    Box {
-                        TextField(
-                            value = state.name,
-                            onValueChange = {},
-                            label = { Text(stringResource(R.string.edit_account)) },
-                            singleLine = true,
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions.Default
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { state.activeField = AccountEditField.Name }
-                        )
-                    }
-
-                    HorizontalDivider()
-
-                    // Read-only: Secret key с кнопкой копирования
-                    ReadOnlyRow(
-                        label = stringResource(R.string.edit_secret),
-                        value = secretBase32,
-                        trailing = {
-                            IconButton(onClick = {
-                                scope.launch {
-                                    clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", secretBase32)))
-                                }
-                            }) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.edit_copy_secret))
-                            }
-                        }
-                    )
-
-                    // Read-only: Digits
-                    ReadOnlyRow(
-                        label = stringResource(R.string.edit_digits),
-                        value = token.generator.digits.toString()
-                    )
-
-                    // Read-only: Period
-                    ReadOnlyRow(
-                        label = stringResource(R.string.edit_period),
-                        value = stringResource(R.string.edit_period_seconds, token.generator.periodOrDefault)
-                    )
-
-                    // Read-only: Algorithm
-                    ReadOnlyRow(
-                        label = stringResource(R.string.edit_algorithm),
-                        value = token.generator.algorithm.name
-                    )
-
-                    HorizontalDivider()
-
-                    // Кнопки Done / Cancel
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-                    ) {
-                        TextButton(onClick = onCancel) {
-                            Text(stringResource(R.string.cancel))
-                        }
-                        Button(
-                            onClick = {
-                                onDone(token.copy(issuer = state.issuer.trim(), name = state.name.trim()))
-                            },
-                            enabled = canDone
-                        ) {
-                            Text(stringResource(R.string.edit_done))
-                        }
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-
-                    // Delete — деструктивная
-                    Button(
-                        onClick = { state.showDeleteDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    ) {
-                        Text(stringResource(R.string.edit_delete))
-                    }
-
-                    Spacer(Modifier.height(8.dp))
+                }) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.edit_copy_secret))
                 }
             }
+        )
 
-            AccountEditField.Issuer -> TextInputScreen(
-                label = stringResource(R.string.edit_issuer),
-                initialValue = state.issuer,
-                placeholder = "",
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words
-                ),
-                doneLabel = stringResource(R.string.edit_done),
-                cancelLabel = stringResource(R.string.cancel),
-                onDone = { value ->
-                    state.issuer = value
-                    state.activeField = null
-                },
-                onCancel = { state.activeField = null }
-            )
+        // Read-only: Digits
+        ReadOnlyRow(
+            label = stringResource(R.string.edit_digits),
+            value = token.generator.digits.toString()
+        )
 
-            AccountEditField.Name -> TextInputScreen(
-                label = stringResource(R.string.edit_account),
-                initialValue = state.name,
-                placeholder = "",
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email
-                ),
-                doneLabel = stringResource(R.string.edit_done),
-                cancelLabel = stringResource(R.string.cancel),
-                onDone = { value ->
-                    state.name = value
-                    state.activeField = null
+        // Read-only: Period
+        ReadOnlyRow(
+            label = stringResource(R.string.edit_period),
+            value = stringResource(R.string.edit_period_seconds, token.generator.periodOrDefault)
+        )
+
+        // Read-only: Algorithm
+        ReadOnlyRow(
+            label = stringResource(R.string.edit_algorithm),
+            value = token.generator.algorithm.name
+        )
+
+        HorizontalDivider()
+
+        // Кнопки Done / Cancel
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+        ) {
+            TextButton(onClick = onCancel) {
+                Text(stringResource(R.string.cancel))
+            }
+            Button(
+                onClick = {
+                    onDone(token.copy(issuer = state.issuer.trim(), name = state.name.trim()))
                 },
-                onCancel = { state.activeField = null }
+                enabled = canDone
+            ) {
+                Text(stringResource(R.string.edit_done))
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Delete — деструктивная
+        Button(
+            onClick = { state.showDeleteDialog = true },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer
             )
+        ) {
+            Text(stringResource(R.string.edit_delete))
+        }
+
+        Spacer(Modifier.height(8.dp))
+    }
+
+    // Full-screen dialog for single-field editing — mirrors iOS UIViewController push
+    val currentField = state.activeField
+    if (currentField != null) {
+        Dialog(
+            onDismissRequest = { state.activeField = null },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false
+            )
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                when (currentField) {
+                    AccountEditField.Issuer -> TextInputScreen(
+                        label = stringResource(R.string.edit_issuer),
+                        initialValue = state.issuer,
+                        placeholder = "",
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words
+                        ),
+                        doneLabel = stringResource(R.string.edit_done),
+                        cancelLabel = stringResource(R.string.cancel),
+                        onDone = { value ->
+                            state.issuer = value
+                            state.activeField = null
+                        },
+                        onCancel = { state.activeField = null }
+                    )
+                    AccountEditField.Name -> TextInputScreen(
+                        label = stringResource(R.string.edit_account),
+                        initialValue = state.name,
+                        placeholder = "",
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        ),
+                        doneLabel = stringResource(R.string.edit_done),
+                        cancelLabel = stringResource(R.string.cancel),
+                        allowBlankDone = true,
+                        onDone = { value ->
+                            state.name = value
+                            state.activeField = null
+                        },
+                        onCancel = { state.activeField = null }
+                    )
+                }
+            }
         }
     }
 
-    // Диалог подтверждения удаления (outside AnimatedContent — overlay, not a slide target)
+    // Диалог подтверждения удаления
     if (state.showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { state.showDeleteDialog = false },
