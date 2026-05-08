@@ -162,7 +162,12 @@ fun AccountsScreen(
                     onEditAccounts = {
                         vm.dismissOverlay()
                         vm.setEditMode(true)
-                    }
+                    },
+                    settingsExportVisible = state.settingsExportVisible,
+                    settingsImportResult = state.settingsImportResult,
+                    onShowExport = { vm.showSettingsExport() },
+                    onHideExport = { vm.hideSettingsExport() },
+                    onSetImportResult = { vm.setSettingsImportResult(it) }
                 )
             }
 

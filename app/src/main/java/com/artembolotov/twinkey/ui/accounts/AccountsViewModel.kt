@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.artembolotov.twinkey.core.AppMode
 import com.artembolotov.twinkey.data.AccountRepository
+import com.artembolotov.twinkey.data.ImportResult
 import com.artembolotov.twinkey.data.KeychainService
 import com.artembolotov.twinkey.domain.OtpFactor
 import com.artembolotov.twinkey.domain.Token
@@ -41,7 +42,9 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
         val welcomeSessionId: Int = 0,
         val overlay: AccountsOverlay = AccountsOverlay.None,
         val editMode: Boolean = false,
-        val searchQuery: String = ""
+        val searchQuery: String = "",
+        val settingsExportVisible: Boolean = false,
+        val settingsImportResult: ImportResult? = null
     )
 
     private val keychain = KeychainService(application)
@@ -67,7 +70,13 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
     // --- Overlay ---
 
     fun showOverlay(overlay: AccountsOverlay) = _state.update { it.copy(overlay = overlay) }
-    fun dismissOverlay() = _state.update { it.copy(overlay = AccountsOverlay.None) }
+    fun dismissOverlay() = _state.update {
+        it.copy(overlay = AccountsOverlay.None, settingsExportVisible = false, settingsImportResult = null)
+    }
+
+    fun showSettingsExport() = _state.update { it.copy(settingsExportVisible = true) }
+    fun hideSettingsExport() = _state.update { it.copy(settingsExportVisible = false) }
+    fun setSettingsImportResult(result: ImportResult?) = _state.update { it.copy(settingsImportResult = result) }
 
     // --- Edit mode / Search ---
 

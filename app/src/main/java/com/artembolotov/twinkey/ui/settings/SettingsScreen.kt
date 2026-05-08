@@ -38,11 +38,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -66,19 +65,27 @@ fun SettingsScreen(
     onEraseAll: () -> Unit,
     onMessage: (String) -> Unit,
     onDismiss: () -> Unit,
-    onEditAccounts: (() -> Unit)? = null
+    onEditAccounts: (() -> Unit)? = null,
+    settingsExportVisible: Boolean = false,
+    settingsImportResult: ImportResult? = null,
+    onShowExport: () -> Unit = {},
+    onHideExport: () -> Unit = {},
+    onSetImportResult: (ImportResult?) -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val state = remember { SettingsState() }
+    val showDeleteAll = rememberSaveable { mutableStateOf(false) }
+    val showEraseAll = rememberSaveable { mutableStateOf(false) }
+    val showImport = rememberSaveable { mutableStateOf(false) }
+    val showReportProblem = rememberSaveable { mutableStateOf(false) }
     val importSheetState = rememberAppSheetState()
 
     val exportSuccess = stringResource(R.string.backup_export_success)
     val importSuccess = stringResource(R.string.backup_import_success)
 
     val subScreen = when {
-        state.showExport -> SettingsSubScreen.Export
-        state.importResult != null -> SettingsSubScreen.ImportSelection
+        settingsExportVisible -> SettingsSubScreen.Export
+        settingsImportResult != null -> SettingsSubScreen.ImportSelection
         else -> SettingsSubScreen.None
     }
 
@@ -98,31 +105,31 @@ fun SettingsScreen(
                 AccountsExportScreen(
                     accounts = accounts,
                     onSuccess = {
-                        state.showExport = false
+                        onHideExport()
                         onMessage(exportSuccess)
                         onDismiss()
                     },
                     onError = { msg ->
-                        state.showExport = false
+                        onHideExport()
                         onMessage(msg)
                     },
-                    onDismiss = { state.showExport = false }
+                    onDismiss = { onHideExport() }
                 )
             }
 
             SettingsSubScreen.ImportSelection -> {
                 // remember сохраняет снимок на время exit-анимации, когда importResult уже null
-                val result = remember { state.importResult }
+                val result = remember { settingsImportResult }
                 if (result != null) {
                     AccountsImportSelectionScreen(
                         importResult = result,
                         onImport = { tokens ->
-                            state.importResult = null
+                            onSetImportResult(null)
                             onImportAccounts(tokens)
                             onMessage(importSuccess)
                             onDismiss()
                         },
-                        onDismiss = { state.importResult = null }
+                        onDismiss = { onSetImportResult(null) }
                     )
                 }
             }
@@ -160,12 +167,12 @@ fun SettingsScreen(
                         SettingsRow(
                             title = stringResource(R.string.settings_export),
                             enabled = accounts.isNotEmpty(),
-                            onClick = { state.showExport = true }
+                            onClick = { onShowExport() }
                         )
 
                         SettingsRow(
                             title = stringResource(R.string.settings_import),
-                            onClick = { state.showImport = true }
+                            onClick = { showImport.value = true }
                         )
 
                         Spacer(Modifier.height(16.dp))
@@ -178,13 +185,13 @@ fun SettingsScreen(
                             title = stringResource(R.string.settings_delete_all),
                             enabled = accounts.isNotEmpty(),
                             destructive = true,
-                            onClick = { state.showDeleteAll = true }
+                            onClick = { showDeleteAll.value = true }
                         )
 
                         SettingsRow(
                             title = stringResource(R.string.settings_erase_all),
                             destructive = true,
-                            onClick = { state.showEraseAll = true }
+                            onClick = { showEraseAll.value = true }
                         )
 
                         Spacer(Modifier.height(16.dp))
@@ -201,7 +208,7 @@ fun SettingsScreen(
 
                         SettingsRow(
                             title = stringResource(R.string.settings_report_problem),
-                            onClick = { state.showReportProblem = true }
+                            onClick = { showReportProblem.value = true }
                         )
 
                         Spacer(Modifier.height(16.dp))
@@ -244,78 +251,78 @@ fun SettingsScreen(
     }
 
     // Bottom sheet и диалоги — за пределами AnimatedContent, рендерятся поверх
-    if (state.showImport) {
+    if (showImport.value) {
         AppModalBottomSheet(
             appSheetState = importSheetState,
-            onDismissRequest = { state.showImport = false }
+            onDismissRequest = { showImport.value = false }
         ) {
             AccountsImportPickerSheet(
                 onFileParsed = { result ->
                     scope.launch {
                         importSheetState.hide()
-                        state.showImport = false
-                        state.importResult = result
+                        showImport.value = false
+                        onSetImportResult(result)
                     }
                 },
                 onError = { msg ->
                     scope.launch {
                         importSheetState.hide()
-                        state.showImport = false
+                        showImport.value = false
                     }
                     onMessage(msg)
                 },
                 onDismiss = {
                     scope.launch {
                         importSheetState.hide()
-                        state.showImport = false
+                        showImport.value = false
                     }
                 }
             )
         }
     }
 
-    if (state.showDeleteAll) {
+    if (showDeleteAll.value) {
         AlertDialog(
-            onDismissRequest = { state.showDeleteAll = false },
+            onDismissRequest = { showDeleteAll.value = false },
             title = { Text(stringResource(R.string.settings_delete_all_title)) },
             text = { Text(stringResource(R.string.settings_delete_all_message)) },
             confirmButton = {
                 TextButton(
-                    onClick = { state.showDeleteAll = false; onDeleteAll(); onDismiss() },
+                    onClick = { showDeleteAll.value = false; onDeleteAll(); onDismiss() },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) { Text(stringResource(R.string.settings_delete_all)) }
             },
             dismissButton = {
-                TextButton(onClick = { state.showDeleteAll = false }) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = { showDeleteAll.value = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
 
-    if (state.showEraseAll) {
+    if (showEraseAll.value) {
         AlertDialog(
-            onDismissRequest = { state.showEraseAll = false },
+            onDismissRequest = { showEraseAll.value = false },
             title = { Text(stringResource(R.string.settings_erase_all_title)) },
             text = { Text(stringResource(R.string.settings_erase_all_message)) },
             confirmButton = {
                 TextButton(
-                    onClick = { state.showEraseAll = false; onEraseAll() },
+                    onClick = { showEraseAll.value = false; onEraseAll() },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) { Text(stringResource(R.string.settings_erase_all_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { state.showEraseAll = false }) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = { showEraseAll.value = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
 
-    if (state.showReportProblem) {
+    if (showReportProblem.value) {
         val supportEmail = "support@twinkey.app"
         AlertDialog(
-            onDismissRequest = { state.showReportProblem = false },
+            onDismissRequest = { showReportProblem.value = false },
             text = { Text(stringResource(R.string.settings_report_problem_message)) },
             confirmButton = {
                 TextButton(onClick = {
-                    state.showReportProblem = false
+                    showReportProblem.value = false
                     context.startActivity(Intent(Intent.ACTION_SENDTO).apply {
                         data = "mailto:$supportEmail".toUri()
                     })
@@ -323,7 +330,7 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = {
-                    state.showReportProblem = false
+                    showReportProblem.value = false
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.setPrimaryClip(ClipData.newPlainText("email", supportEmail))
                 }) { Text(stringResource(R.string.settings_report_copy_address)) }
@@ -398,15 +405,6 @@ private fun SettingsRow(
         }
     }
     HorizontalDivider()
-}
-
-private class SettingsState {
-    var showDeleteAll by mutableStateOf(false)
-    var showEraseAll by mutableStateOf(false)
-    var showExport by mutableStateOf(false)
-    var showImport by mutableStateOf(false)
-    var showReportProblem by mutableStateOf(false)
-    var importResult: ImportResult? by mutableStateOf(null)
 }
 
 private fun openUrl(context: Context, url: String) {
