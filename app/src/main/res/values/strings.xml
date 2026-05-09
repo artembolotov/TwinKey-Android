@@ -15,7 +15,7 @@
     <string name="tutorial_greeting_1">Hi! I\'m TwinKey — your two-factor authentication app. 🔐</string>
     <string name="tutorial_greeting_2">I keep your one-time codes safe and generate them right on your device. Ready to add your first account?</string>
     <string name="tutorial_get_started">Get Started</string>
-    <string name="tutorial_more_about_2fa">Tell more</string>
+    <string name="tutorial_more_about_2fa">Tell More</string>
     <string name="tutorial_more_info_text">Two-factor authentication (2FA) adds an extra layer of security. Even if someone knows your password, they still need the one-time code from your device to log in.</string>
     <string name="tutorial_typing">TwinKey is typing</string>
 
@@ -44,7 +44,7 @@
 
     <!-- AccountAddedScreen -->
     <string name="account_added_done">Done</string>
-    <string name="account_added_tap_to_copy_hint">Tap code to copy</string>
+    <string name="account_added_tap_to_copy_hint">Tap to Copy</string>
 
     <!-- QR Scanner -->
     <string name="scan_invalid_qr">Invalid QR code — not an OTP account</string>
@@ -57,12 +57,12 @@
     <string name="edit_account">Username</string>
     <string name="edit_secret">Key</string>
     <string name="edit_copy_secret">Copy secret key</string>
-    <string name="edit_digits">Number of digits</string>
-    <string name="edit_period">Time interval</string>
+    <string name="edit_digits">Number of Digits</string>
+    <string name="edit_period">Time Interval</string>
     <string name="edit_period_seconds">%d sec</string>
     <string name="edit_algorithm">Algorithm</string>
     <string name="edit_done">Done</string>
-    <string name="edit_delete">Delete account…</string>
+    <string name="edit_delete">Delete Account…</string>
     <string name="edit_delete_confirm_title">Delete Account?</string>
     <string name="edit_delete_confirm_message">Are you sure you want to delete the account?</string>
 
@@ -83,8 +83,8 @@
     <string name="settings_report_send_email">Send Email</string>
     <string name="settings_report_copy_address">Copy Address</string>
     <string name="settings_section_info">Info</string>
-    <string name="settings_website">Website</string>
-    <string name="settings_terms">Terms of Use</string>
+    <string name="settings_website">TwinKey's Website</string>
+    <string name="settings_terms">Terms and Conditions</string>
     <string name="settings_privacy">Privacy Policy</string>
     <string name="settings_version">Version</string>
     <string name="settings_done">Done</string>
