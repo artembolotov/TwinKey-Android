@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -52,6 +53,7 @@ fun AccountsSearchBar(
     onClearQuery: () -> Unit,
     onDoneClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onAddClick: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -59,6 +61,14 @@ fun AccountsSearchBar(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (isLandscape && !editMode) {
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+            }
+        }
         BasicTextField(
             value = query,
             onValueChange = onQueryChange,
@@ -68,7 +78,7 @@ fun AccountsSearchBar(
             modifier = Modifier
                 .weight(1f)
                 .padding(
-                    start = 16.dp,
+                    start = if (isLandscape && !editMode) 4.dp else 16.dp,
                     end = if (isLandscape) 8.dp else 16.dp,
                     top = 8.dp,
                     bottom = 8.dp
@@ -125,10 +135,10 @@ fun AccountsSearchBar(
                 }
             } else {
                 IconButton(
-                    onClick = onSettingsClick,
+                    onClick = onAddClick,
                     modifier = Modifier.padding(end = 8.dp)
                 ) {
-                    Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
                 }
             }
         }

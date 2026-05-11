@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +30,7 @@ fun AccountsTopBar(
     pageBackground: Color,
     onDoneClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onAddClick: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -42,6 +44,13 @@ fun AccountsTopBar(
                 containerColor = pageBackground,
                 scrolledContainerColor = pageBackground
             ),
+            navigationIcon = {
+                if (!editMode) {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                    }
+                }
+            },
             actions = {
                 if (editMode) {
                     TextButton(onClick = onDoneClick) {
@@ -51,8 +60,8 @@ fun AccountsTopBar(
                         )
                     }
                 } else {
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                    IconButton(onClick = onAddClick) {
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
                     }
                 }
             }

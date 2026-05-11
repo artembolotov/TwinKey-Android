@@ -7,7 +7,6 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -17,11 +16,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -209,37 +204,25 @@ fun AccountsScreen(
                 Scaffold(
                     containerColor = pageBackground,
                     topBar = {},
-                    floatingActionButton = {
-                        AnimatedVisibility(
-                            visible = !state.editMode && !searchActive,
-                            enter = fadeIn(),
-                            exit = fadeOut()
-                        ) {
-                            FloatingActionButton(onClick = { vm.showOverlay(AccountsOverlay.Scanner) }) {
-                                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
-                            }
-                        }
-                    },
                 ) { padding ->
-                    if (state.accounts.isEmpty()) {
-                        AccountsEmptyView(
-                            onRestoreFromBackup = { vm.showOverlay(AccountsOverlay.ImportFromEmpty) },
-                            modifier = Modifier.padding(padding)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                    ) {
+                        AccountsTopBar(
+                            visible = !searchActive && !isLandscape,
+                            editMode = state.editMode,
+                            pageBackground = pageBackground,
+                            onDoneClick = { vm.setEditMode(false) },
+                            onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) },
+                            onAddClick = { vm.showOverlay(AccountsOverlay.Scanner) }
                         )
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(padding)
-                        ) {
-                            AccountsTopBar(
-                                visible = !searchActive && !isLandscape,
-                                editMode = state.editMode,
-                                pageBackground = pageBackground,
-                                onDoneClick = { vm.setEditMode(false) },
-                                onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) }
+                        if (state.accounts.isEmpty()) {
+                            AccountsEmptyView(
+                                onRestoreFromBackup = { vm.showOverlay(AccountsOverlay.ImportFromEmpty) },
                             )
-
+                        } else {
                             AccountsSearchBar(
                                 query = state.searchQuery,
                                 searchActive = searchActive,
@@ -249,9 +232,9 @@ fun AccountsScreen(
                                 onSearchActiveChange = { searchActive = it },
                                 onClearQuery = { vm.setSearchQuery("") },
                                 onDoneClick = { vm.setEditMode(false) },
-                                onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) }
+                                onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) },
+                                onAddClick = { vm.showOverlay(AccountsOverlay.Scanner) }
                             )
-
                             AccountsListView(
                                 accounts = filteredAccounts,
                                 codes = state.codes,
