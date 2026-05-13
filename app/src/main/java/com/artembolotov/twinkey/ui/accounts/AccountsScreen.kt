@@ -2,7 +2,6 @@ package com.artembolotov.twinkey.ui.accounts
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.res.Configuration
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -39,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -74,7 +72,6 @@ fun AccountsScreen(
     val focusManager = LocalFocusManager.current
 
     var searchActive by remember { mutableStateOf(false) }
-    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val density = LocalDensity.current
 
     val copiedMessage = stringResource(R.string.accounts_code_copied)
@@ -270,7 +267,7 @@ fun AccountsScreen(
 
                     // TopBar — полупрозрачный фон для теста структуры слоёв
                     AccountsTopBar(
-                        visible = !searchActive && !isLandscape,
+                        visible = !searchActive,
                         editMode = state.editMode,
                         modifier = Modifier
                             .background(pageBackground.copy(alpha = 0.5f))
@@ -298,14 +295,9 @@ fun AccountsScreen(
                                 AccountsSearchBar(
                                     query = state.searchQuery,
                                     searchActive = searchActive,
-                                    editMode = state.editMode,
-                                    isLandscape = isLandscape,
                                     onQueryChange = { vm.setSearchQuery(it) },
                                     onSearchActiveChange = { searchActive = it },
                                     onClearQuery = { vm.setSearchQuery("") },
-                                    onDoneClick = { vm.setEditMode(false) },
-                                    onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) },
-                                    onAddClick = { vm.showOverlay(AccountsOverlay.Scanner) }
                                 )
                                 Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
                             }

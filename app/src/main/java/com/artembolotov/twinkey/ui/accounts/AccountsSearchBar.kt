@@ -18,17 +18,14 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -39,7 +36,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
@@ -51,14 +47,9 @@ import com.artembolotov.twinkey.ui.theme.CardBackgroundLight
 fun AccountsSearchBar(
     query: String,
     searchActive: Boolean,
-    editMode: Boolean,
-    isLandscape: Boolean,
     onQueryChange: (String) -> Unit,
     onSearchActiveChange: (Boolean) -> Unit,
     onClearQuery: () -> Unit,
-    onDoneClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onAddClick: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -68,14 +59,6 @@ fun AccountsSearchBar(
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (isLandscape && !editMode) {
-            IconButton(
-                onClick = onSettingsClick,
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
-            }
-        }
         BasicTextField(
             value = query,
             onValueChange = onQueryChange,
@@ -85,8 +68,8 @@ fun AccountsSearchBar(
             modifier = Modifier
                 .weight(1f)
                 .padding(
-                    start = if (isLandscape && !editMode) 4.dp else 16.dp,
-                    end = if (isLandscape) 8.dp else 16.dp,
+                    start = 16.dp,
+                    end = 16.dp,
                     top = 8.dp,
                     bottom = 8.dp
                 )
@@ -132,22 +115,5 @@ fun AccountsSearchBar(
                 )
             }
         )
-        if (isLandscape) {
-            if (editMode) {
-                TextButton(
-                    onClick = onDoneClick,
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Text(stringResource(R.string.accounts_done), fontWeight = FontWeight.Bold)
-                }
-            } else {
-                IconButton(
-                    onClick = onAddClick,
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.accounts_add_account))
-                }
-            }
-        }
     }
 }
