@@ -16,7 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,11 +85,11 @@ fun AccountsExportScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = {
-                        if (allSelected) accounts.forEach { selected[it.id] = false }
-                        else accounts.forEach { selected[it.id] = true }
-                    }) {
-                        Text(if (allSelected) stringResource(R.string.backup_select_none) else stringResource(R.string.backup_select_all))
+                    TextButton(
+                        onClick = { exportState.exporting = true; createFileLauncher.launch(fileName) },
+                        enabled = selectedCount > 0 && !exportState.exporting
+                    ) {
+                        Text(stringResource(R.string.backup_export_button, selectedCount))
                     }
                 }
             )
@@ -121,12 +121,14 @@ fun AccountsExportScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            Button(
-                onClick = { exportState.exporting = true; createFileLauncher.launch(fileName) },
-                enabled = selectedCount > 0 && !exportState.exporting,
+            OutlinedButton(
+                onClick = {
+                    if (allSelected) accounts.forEach { selected[it.id] = false }
+                    else accounts.forEach { selected[it.id] = true }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(stringResource(R.string.backup_export_button, selectedCount))
+                Text(if (allSelected) stringResource(R.string.backup_select_none) else stringResource(R.string.backup_select_all))
             }
 
             Spacer(Modifier.height(8.dp))
