@@ -42,6 +42,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
@@ -53,6 +55,9 @@ import com.artembolotov.twinkey.ui.settings.SettingsScreen
 import com.artembolotov.twinkey.ui.theme.PageBackgroundDark
 import com.artembolotov.twinkey.ui.theme.PageBackgroundLight
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 
 /**
@@ -215,8 +220,14 @@ fun AccountsScreen(
 
             else -> {
                 val hazeState = remember { HazeState() }
+                val hazeStyle = HazeStyle(
+                    backgroundColor = pageBackground,
+                    tints = listOf(HazeTint(pageBackground.copy(alpha = 0.55f))),
+                    blurRadius = 40.dp
+                )
                 var topBarHeightPx by remember { mutableIntStateOf(0) }
                 var searchBarHeightPx by remember { mutableIntStateOf(0) }
+
                 val topBarHeightDp = with(density) { topBarHeightPx.toDp() }
                 val searchBarHeightDp = with(density) { searchBarHeightPx.toDp() }
                 val listTopSpacing = 8.dp
@@ -265,12 +276,16 @@ fun AccountsScreen(
                         )
                     }
 
-                    // TopBar — полупрозрачный фон для теста структуры слоёв
                     AccountsTopBar(
                         visible = !searchActive,
                         editMode = state.editMode,
                         modifier = Modifier
-                            .background(pageBackground.copy(alpha = 0.5f))
+                            .hazeEffect(state = hazeState, style = hazeStyle) {
+                                mask = Brush.verticalGradient(
+                                    0.0f to Color.Black,
+                                    1.0f to Color.Transparent
+                                )
+                            }
                             .onSizeChanged { topBarHeightPx = it.height },
                         onDoneClick = { vm.setEditMode(false) },
                         onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) },
@@ -288,7 +303,13 @@ fun AccountsScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(pageBackground.copy(alpha = 0.5f))
+                                .hazeEffect(state = hazeState, style = hazeStyle) {
+                                    mask = Brush.verticalGradient(
+                                        listOf(Color.Transparent, Color.Black),
+                                        startY = 0f,
+                                        endY = searchBarHeightPx.toFloat()
+                                    )
+                                }
                                 .onSizeChanged { searchBarHeightPx = it.height }
                         ) {
                             Column {
