@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
@@ -39,8 +40,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
-import com.artembolotov.twinkey.ui.theme.CardBackgroundDark
-import com.artembolotov.twinkey.ui.theme.CardBackgroundLight
+import com.artembolotov.twinkey.ui.theme.SearchFieldBackgroundDark
+import com.artembolotov.twinkey.ui.theme.SearchFieldBackgroundLight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,11 +69,12 @@ fun AccountsSearchBar(
             modifier = Modifier
                 .weight(1f)
                 .padding(
-                    start = 16.dp,
-                    end = 16.dp,
+                    start = 28.dp,
+                    end = 28.dp,
                     top = 8.dp,
                     bottom = 8.dp
                 )
+                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
                 .onFocusChanged { onSearchActiveChange(it.isFocused) },
             decorationBox = { innerTextField ->
                 TextFieldDefaults.DecorationBox(
@@ -102,8 +104,8 @@ fun AccountsSearchBar(
                     },
                     shape = CircleShape,
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = if (isSystemInDarkTheme()) CardBackgroundDark else CardBackgroundLight,
-                        unfocusedContainerColor = if (isSystemInDarkTheme()) CardBackgroundDark else CardBackgroundLight,
+                        focusedContainerColor   = if (isSystemInDarkTheme()) SearchFieldBackgroundDark else SearchFieldBackgroundLight,
+                        unfocusedContainerColor = if (isSystemInDarkTheme()) SearchFieldBackgroundDark else SearchFieldBackgroundLight,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent,

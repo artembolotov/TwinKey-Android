@@ -24,3 +24,6 @@ val PageBackgroundDark  = Color(0xFF000000)
 
 val CardBackgroundLight = Color(0xFFFFFFFF)
 val CardBackgroundDark  = Color(0xFF2C2C2E)
+
+val SearchFieldBackgroundLight = Color(0xFFE5E5EA)
+val SearchFieldBackgroundDark  = Color(0xFF1C1C1E)
