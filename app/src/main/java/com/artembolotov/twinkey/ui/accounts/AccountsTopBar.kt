@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -27,22 +29,23 @@ import com.artembolotov.twinkey.R
 fun AccountsTopBar(
     visible: Boolean,
     editMode: Boolean,
-    pageBackground: Color,
+    modifier: Modifier = Modifier,
     onDoneClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onAddClick: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = visible,
+        modifier = modifier,
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut()
     ) {
         CenterAlignedTopAppBar(
             title = { Text("TwinKey") },
-            windowInsets = WindowInsets(0, 0, 0, 0),
+            windowInsets = WindowInsets.statusBars,
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = pageBackground,
-                scrolledContainerColor = pageBackground
+                containerColor = Color.Transparent,
+                scrolledContainerColor = Color.Transparent
             ),
             navigationIcon = {
                 if (!editMode) {

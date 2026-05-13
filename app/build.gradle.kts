@@ -92,6 +92,7 @@ dependencies {
     implementation(libs.reorderable)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.appmetrica.analytics)
+    implementation(libs.haze)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -18,6 +18,7 @@ commonsCodec = "1.21.0"
 reorderable = "3.0.0"
 coreSplashscreen = "1.0.1"
 appmetrica = "8.1.0"
+haze = "1.7.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,6 +48,7 @@ commons-codec = { group = "commons-codec", name = "commons-codec", version.ref =
 reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 appmetrica-analytics = { group = "io.appmetrica.analytics", name = "analytics", version.ref = "appmetrica" }
+haze = { group = "dev.chrisbanes.haze", name = "haze", version.ref = "haze" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

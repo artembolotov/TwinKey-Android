@@ -12,26 +12,39 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.GoogleAuthMigrationParser
@@ -41,6 +54,8 @@ import com.artembolotov.twinkey.ui.add.QrScannerScreen
 import com.artembolotov.twinkey.ui.settings.SettingsScreen
 import com.artembolotov.twinkey.ui.theme.PageBackgroundDark
 import com.artembolotov.twinkey.ui.theme.PageBackgroundLight
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 
 /**
  * Порт AccountsScreen.swift.
@@ -60,6 +75,7 @@ fun AccountsScreen(
 
     var searchActive by remember { mutableStateOf(false) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val density = LocalDensity.current
 
     val copiedMessage = stringResource(R.string.accounts_code_copied)
     val invalidQrMessage = stringResource(R.string.scan_invalid_qr)
@@ -201,69 +217,98 @@ fun AccountsScreen(
             }
 
             else -> {
-                Scaffold(
-                    containerColor = pageBackground,
-                    topBar = {},
-                ) { padding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                    ) {
-                        AccountsTopBar(
-                            visible = !searchActive && !isLandscape,
-                            editMode = state.editMode,
-                            pageBackground = pageBackground,
-                            onDoneClick = { vm.setEditMode(false) },
-                            onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) },
-                            onAddClick = { vm.showOverlay(AccountsOverlay.Scanner) }
+                val hazeState = remember { HazeState() }
+                var topBarHeightPx by remember { mutableIntStateOf(0) }
+                var searchBarHeightPx by remember { mutableIntStateOf(0) }
+                val topBarHeightDp = with(density) { topBarHeightPx.toDp() }
+                val searchBarHeightDp = with(density) { searchBarHeightPx.toDp() }
+                val listTopSpacing = 8.dp
+
+                // background on outer Box — hazeSource must NOT have background on the same node
+                Box(modifier = Modifier.fillMaxSize().background(pageBackground)) {
+                    if (state.accounts.isEmpty()) {
+                        AccountsEmptyView(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = topBarHeightDp, bottom = searchBarHeightDp),
+                            onRestoreFromBackup = { vm.showOverlay(AccountsOverlay.ImportFromEmpty) },
                         )
-                        if (state.accounts.isEmpty()) {
-                            AccountsEmptyView(
-                                onRestoreFromBackup = { vm.showOverlay(AccountsOverlay.ImportFromEmpty) },
-                            )
-                        } else {
-                            AccountsSearchBar(
-                                query = state.searchQuery,
-                                searchActive = searchActive,
-                                editMode = state.editMode,
-                                isLandscape = isLandscape,
-                                onQueryChange = { vm.setSearchQuery(it) },
-                                onSearchActiveChange = { searchActive = it },
-                                onClearQuery = { vm.setSearchQuery("") },
-                                onDoneClick = { vm.setEditMode(false) },
-                                onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) },
-                                onAddClick = { vm.showOverlay(AccountsOverlay.Scanner) }
-                            )
-                            AccountsListView(
-                                accounts = filteredAccounts,
-                                codes = state.codes,
-                                secondsRemaining = state.secondsRemaining,
-                                onCopyCode = { code ->
-                                    context.getSystemService(ClipboardManager::class.java)
-                                        .setPrimaryClip(ClipData.newPlainText("", code))
-                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                                        vm.showMessage(copiedMessage)
-                                    }
-                                },
-                                onEditAccount = { id ->
-                                    val token = state.accounts.find { it.id == id } ?: return@AccountsListView
-                                    vm.showOverlay(AccountsOverlay.Editing(token))
-                                },
-                                onMove = { from, to -> vm.moveAccount(from, to) },
-                                isDraggable = state.editMode && state.searchQuery.isBlank(),
-                                isEditMode = state.editMode,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .pointerInput(Unit) {
-                                        awaitPointerEventScope {
-                                            while (true) {
-                                                awaitPointerEvent(PointerEventPass.Initial)
-                                                focusManager.clearFocus()
-                                            }
+                    } else {
+                        AccountsListView(
+                            accounts = filteredAccounts,
+                            codes = state.codes,
+                            secondsRemaining = state.secondsRemaining,
+                            onCopyCode = { code ->
+                                context.getSystemService(ClipboardManager::class.java)
+                                    .setPrimaryClip(ClipData.newPlainText("", code))
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                    vm.showMessage(copiedMessage)
+                                }
+                            },
+                            onEditAccount = { id ->
+                                val token = state.accounts.find { it.id == id } ?: return@AccountsListView
+                                vm.showOverlay(AccountsOverlay.Editing(token))
+                            },
+                            onMove = { from, to -> vm.moveAccount(from, to) },
+                            isDraggable = state.editMode && state.searchQuery.isBlank(),
+                            isEditMode = state.editMode,
+                            contentPadding = PaddingValues(top = topBarHeightDp + listTopSpacing, bottom = searchBarHeightDp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .hazeSource(hazeState)
+                                .background(pageBackground)
+                                .pointerInput(Unit) {
+                                    awaitPointerEventScope {
+                                        while (true) {
+                                            awaitPointerEvent(PointerEventPass.Initial)
+                                            focusManager.clearFocus()
                                         }
                                     }
-                            )
+                                }
+                        )
+                    }
+
+                    // TopBar — полупрозрачный фон для теста структуры слоёв
+                    AccountsTopBar(
+                        visible = !searchActive && !isLandscape,
+                        editMode = state.editMode,
+                        modifier = Modifier
+                            .background(pageBackground.copy(alpha = 0.5f))
+                            .onSizeChanged { topBarHeightPx = it.height },
+                        onDoneClick = { vm.setEditMode(false) },
+                        onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) },
+                        onAddClick = { vm.showOverlay(AccountsOverlay.Scanner) }
+                    )
+
+                    // SearchBar — внешний Box только для imePadding (не влияет на измерение),
+                    // внутренний Box измеряет реальную высоту контента и рисует фон
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth()
+                            .imePadding()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(pageBackground.copy(alpha = 0.5f))
+                                .onSizeChanged { searchBarHeightPx = it.height }
+                        ) {
+                            Column {
+                                AccountsSearchBar(
+                                    query = state.searchQuery,
+                                    searchActive = searchActive,
+                                    editMode = state.editMode,
+                                    isLandscape = isLandscape,
+                                    onQueryChange = { vm.setSearchQuery(it) },
+                                    onSearchActiveChange = { searchActive = it },
+                                    onClearQuery = { vm.setSearchQuery("") },
+                                    onDoneClick = { vm.setEditMode(false) },
+                                    onSettingsClick = { vm.showOverlay(AccountsOverlay.Settings) },
+                                    onAddClick = { vm.showOverlay(AccountsOverlay.Scanner) }
+                                )
+                                Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+                            }
                         }
                     }
                 }

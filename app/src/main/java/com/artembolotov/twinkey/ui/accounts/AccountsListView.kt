@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.material.icons.Icons
@@ -57,6 +58,7 @@ fun AccountsListView(
     onEditAccount: (String) -> Unit,
     onMove: (Int, Int) -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(),
     isDraggable: Boolean = true,
     isEditMode: Boolean = false
 ) {
@@ -98,6 +100,7 @@ fun AccountsListView(
     ) {
         LazyColumn(
             state = lazyListState,
+            contentPadding = contentPadding,
             modifier = Modifier.fillMaxSize()
         ) {
             itemsIndexed(accounts, key = { _, token -> token.id }) { index, token ->
