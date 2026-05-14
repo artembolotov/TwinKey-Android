@@ -21,10 +21,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.ui.graphics.Color
+import com.artembolotov.twinkey.ui.components.GlassScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -75,7 +77,7 @@ fun AccountsExportScreen(
         }
     }
 
-    Scaffold(
+    GlassScaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.backup_export_title)) },
@@ -91,14 +93,18 @@ fun AccountsExportScreen(
                     ) {
                         Text(stringResource(R.string.backup_export_button, selectedCount))
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
         }
-    ) { innerPadding ->
+    ) { contentPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(contentPadding)
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Text(
