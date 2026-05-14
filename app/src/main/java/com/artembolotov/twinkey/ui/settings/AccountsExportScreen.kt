@@ -105,8 +105,8 @@ fun AccountsExportScreen(
         LazyColumn(
             contentPadding = PaddingValues(
                 top = contentPadding.calculateTopPadding() + 8.dp,
-                start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
+                start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
+                end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
                 bottom = contentPadding.calculateBottomPadding() + 8.dp
             ),
             modifier = Modifier.fillMaxSize()

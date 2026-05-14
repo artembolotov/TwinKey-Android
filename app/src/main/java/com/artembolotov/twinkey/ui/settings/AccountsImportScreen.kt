@@ -157,8 +157,8 @@ fun AccountsImportSelectionScreen(
             LazyColumn(
                 contentPadding = PaddingValues(
                     top = contentPadding.calculateTopPadding() + 8.dp,
-                    start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                    end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
+                    start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
+                    end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
                     bottom = bottomBarHeightDp
                 ),
                 modifier = Modifier.fillMaxSize()
@@ -217,8 +217,8 @@ fun AccountsImportSelectionScreen(
                     .fillMaxWidth()
                     .onSizeChanged { bottomBarHeightPx = it.height }
                     .padding(
-                        start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                        end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
+                        start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
+                        end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
                         top = 8.dp,
                         bottom = contentPadding.calculateBottomPadding() + 8.dp
                     )
