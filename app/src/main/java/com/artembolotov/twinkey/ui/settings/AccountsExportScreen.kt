@@ -6,12 +6,11 @@ import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -101,43 +100,43 @@ fun AccountsExportScreen(
             )
         }
     ) { contentPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+        LazyColumn(
+            contentPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding() + 8.dp,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = contentPadding.calculateBottomPadding() + 8.dp
+            ),
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = stringResource(R.string.backup_export_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                items(accounts, key = { it.id }) { token ->
-                    CheckableTokenRow(
-                        token = token,
-                        checked = selected[token.id] ?: false,
-                        onCheckedChange = { checked -> selected[token.id] = checked }
-                    )
+            item {
+                Text(
+                    text = stringResource(R.string.backup_export_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+            items(accounts, key = { it.id }) { token ->
+                CheckableTokenRow(
+                    token = token,
+                    checked = selected[token.id] ?: false,
+                    onCheckedChange = { checked -> selected[token.id] = checked }
+                )
+            }
+            item {
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = {
+                        if (allSelected) accounts.forEach { selected[it.id] = false }
+                        else accounts.forEach { selected[it.id] = true }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (allSelected) stringResource(R.string.backup_select_none) else stringResource(R.string.backup_select_all))
                 }
+                Spacer(Modifier.height(8.dp))
             }
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedButton(
-                onClick = {
-                    if (allSelected) accounts.forEach { selected[it.id] = false }
-                    else accounts.forEach { selected[it.id] = true }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (allSelected) stringResource(R.string.backup_select_none) else stringResource(R.string.backup_select_all))
-            }
-
-            Spacer(Modifier.height(8.dp))
         }
     }
 }

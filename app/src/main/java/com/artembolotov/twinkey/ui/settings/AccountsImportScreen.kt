@@ -7,7 +7,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,11 +34,16 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.ui.graphics.Color
 import com.artembolotov.twinkey.ui.components.GlassScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
@@ -113,6 +121,10 @@ fun AccountsImportSelectionScreen(
     val allSelected = importResult.successful.all { selected[it.id] == true }
     val selectedCount = importResult.successful.count { selected[it.id] == true }
 
+    val density = LocalDensity.current
+    var bottomBarHeightPx by remember { mutableIntStateOf(0) }
+    val bottomBarHeightDp = with(density) { bottomBarHeightPx.toDp() }
+
     GlassScaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -139,33 +151,40 @@ fun AccountsImportSelectionScreen(
             )
         }
     ) { contentPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            if (importResult.skipped.isNotEmpty()) {
-                androidx.compose.foundation.layout.Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
-                    Text(stringResource(R.string.backup_import_skipped, importResult.skipped.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        Box(Modifier.fillMaxSize()) {
+            LazyColumn(
+                contentPadding = PaddingValues(
+                    top = contentPadding.calculateTopPadding() + 8.dp,
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = bottomBarHeightDp
+                ),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (importResult.skipped.isNotEmpty()) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                            Text(stringResource(R.string.backup_import_skipped, importResult.skipped.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                        }
+                        Spacer(Modifier.height(4.dp))
+                    }
                 }
-                Spacer(Modifier.height(4.dp))
-            }
 
-            if (importResult.successful.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.backup_import_no_accounts),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                if (importResult.successful.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.backup_import_no_accounts),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    }
+                } else {
                     items(importResult.successful, key = { it.id }) { token ->
                         CheckableTokenRow(
                             token = token,
@@ -174,31 +193,37 @@ fun AccountsImportSelectionScreen(
                         )
                     }
                 }
-            }
 
-            if (importResult.skipped.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                Text(stringResource(R.string.backup_import_skipped_section), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                importResult.skipped.forEach { skipped ->
-                    val reason = when (val r = skipped.reason) {
-                        is SkipReason.UnsupportedType -> stringResource(R.string.backup_skip_unsupported, r.typeName)
-                        SkipReason.InvalidAccount -> stringResource(R.string.backup_skip_invalid)
+                if (importResult.skipped.isNotEmpty()) {
+                    item {
+                        Spacer(Modifier.height(8.dp))
+                        Text(stringResource(R.string.backup_import_skipped_section), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        importResult.skipped.forEach { skipped ->
+                            val reason = when (val r = skipped.reason) {
+                                is SkipReason.UnsupportedType -> stringResource(R.string.backup_skip_unsupported, r.typeName)
+                                SkipReason.InvalidAccount -> stringResource(R.string.backup_skip_invalid)
+                            }
+                            Text("• ${skipped.name} — $reason", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 8.dp, top = 2.dp))
+                        }
                     }
-                    Text("• ${skipped.name} — $reason", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 8.dp, top = 2.dp))
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            Button(
-                onClick = { onImport(importResult.successful.filter { selected[it.id] == true }) },
-                enabled = selectedCount > 0,
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .onSizeChanged { bottomBarHeightPx = it.height }
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 8.dp)
             ) {
-                Text(stringResource(R.string.backup_import_button, selectedCount))
+                Button(
+                    onClick = { onImport(importResult.successful.filter { selected[it.id] == true }) },
+                    enabled = selectedCount > 0,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.backup_import_button, selectedCount))
+                }
             }
-
-            Spacer(Modifier.height(8.dp))
         }
     }
 }
