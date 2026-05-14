@@ -143,75 +143,82 @@ fun AccountsImportSelectionScreen(
             )
         }
     ) { contentPadding ->
-        LazyColumn(
-            contentPadding = PaddingValues(
-                top = contentPadding.calculateTopPadding() + 8.dp,
-                start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
-                end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
-                bottom = contentPadding.calculateBottomPadding() + 8.dp
-            ),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            if (importResult.skipped.isNotEmpty()) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
-                        Text(stringResource(R.string.backup_import_skipped, importResult.skipped.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                    }
-                    Spacer(Modifier.height(4.dp))
-                }
-            }
-
-            if (importResult.successful.isEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.backup_import_no_accounts),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
-                }
-            } else {
-                items(importResult.successful, key = { it.id }) { token ->
-                    CheckableTokenRow(
-                        token = token,
-                        checked = selected[token.id] ?: false,
-                        onCheckedChange = { checked -> selected[token.id] = checked }
-                    )
-                }
-            }
-
-            if (importResult.skipped.isNotEmpty()) {
-                item {
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.backup_import_skipped_section), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    importResult.skipped.forEach { skipped ->
-                        val reason = when (val r = skipped.reason) {
-                            is SkipReason.UnsupportedType -> stringResource(R.string.backup_skip_unsupported, r.typeName)
-                            SkipReason.InvalidAccount -> stringResource(R.string.backup_skip_invalid)
+        Column(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                contentPadding = PaddingValues(
+                    top = contentPadding.calculateTopPadding() + 8.dp,
+                    start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
+                    end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
+                    bottom = 8.dp
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                if (importResult.skipped.isNotEmpty()) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                            Text(stringResource(R.string.backup_import_skipped, importResult.skipped.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                         }
-                        Text("• ${skipped.name} — $reason", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 8.dp, top = 2.dp))
+                        Spacer(Modifier.height(4.dp))
+                    }
+                }
+
+                if (importResult.successful.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.backup_import_no_accounts),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    }
+                } else {
+                    items(importResult.successful, key = { it.id }) { token ->
+                        CheckableTokenRow(
+                            token = token,
+                            checked = selected[token.id] ?: false,
+                            onCheckedChange = { checked -> selected[token.id] = checked }
+                        )
+                    }
+                }
+
+                if (importResult.skipped.isNotEmpty()) {
+                    item {
+                        Spacer(Modifier.height(8.dp))
+                        Text(stringResource(R.string.backup_import_skipped_section), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        importResult.skipped.forEach { skipped ->
+                            val reason = when (val r = skipped.reason) {
+                                is SkipReason.UnsupportedType -> stringResource(R.string.backup_skip_unsupported, r.typeName)
+                                SkipReason.InvalidAccount -> stringResource(R.string.backup_skip_invalid)
+                            }
+                            Text("• ${skipped.name} — $reason", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 8.dp, top = 2.dp))
+                        }
                     }
                 }
             }
 
             if (importResult.successful.isNotEmpty()) {
-                item {
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedButton(
-                        onClick = {
-                            if (allSelected) importResult.successful.forEach { selected[it.id] = false }
-                            else importResult.successful.forEach { selected[it.id] = true }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(if (allSelected) stringResource(R.string.backup_select_none) else stringResource(R.string.backup_select_all))
-                    }
-                    Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = {
+                        if (allSelected) importResult.successful.forEach { selected[it.id] = false }
+                        else importResult.successful.forEach { selected[it.id] = true }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
+                            end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
+                            top = 8.dp,
+                            bottom = contentPadding.calculateBottomPadding() + 8.dp
+                        )
+                ) {
+                    Text(if (allSelected) stringResource(R.string.backup_select_none) else stringResource(R.string.backup_select_all))
                 }
             }
         }
