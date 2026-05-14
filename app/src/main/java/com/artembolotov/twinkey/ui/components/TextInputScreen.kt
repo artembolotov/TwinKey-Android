@@ -1,5 +1,6 @@
 package com.artembolotov.twinkey.ui.components
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -7,13 +8,14 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +29,8 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.artembolotov.twinkey.ui.theme.AppTextFieldShape
+import com.artembolotov.twinkey.ui.theme.appTextFieldColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,9 +77,12 @@ fun TextInputScreen(
             onValueChange = { value = it },
             placeholder = { Text(placeholder) },
             singleLine = true,
+            shape = AppTextFieldShape,
+            colors = appTextFieldColors(),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
+                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, AppTextFieldShape)
                 .focusRequester(focusRequester),
             keyboardOptions = keyboardOptions.copy(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { if (allowBlankDone || value.text.isNotBlank()) onDone(value.text) })

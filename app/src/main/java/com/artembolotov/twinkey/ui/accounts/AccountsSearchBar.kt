@@ -7,7 +7,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -33,15 +32,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
-import com.artembolotov.twinkey.ui.theme.SearchFieldBackgroundDark
-import com.artembolotov.twinkey.ui.theme.SearchFieldBackgroundLight
+import com.artembolotov.twinkey.ui.theme.appTextFieldColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,13 +100,7 @@ fun AccountsSearchBar(
                         }
                     },
                     shape = CircleShape,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor   = if (isSystemInDarkTheme()) SearchFieldBackgroundDark else SearchFieldBackgroundLight,
-                        unfocusedContainerColor = if (isSystemInDarkTheme()) SearchFieldBackgroundDark else SearchFieldBackgroundLight,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                    ),
+                    colors = appTextFieldColors(),
                     contentPadding = TextFieldDefaults.contentPaddingWithoutLabel(
                         top = 12.dp,
                         bottom = 12.dp,

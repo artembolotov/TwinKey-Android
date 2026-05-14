@@ -2,6 +2,7 @@ package com.artembolotov.twinkey.ui.accounts
 
 import android.content.ClipData
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -55,6 +56,8 @@ import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.TextInputScreen
+import com.artembolotov.twinkey.ui.theme.AppTextFieldShape
+import com.artembolotov.twinkey.ui.theme.appTextFieldColors
 import kotlinx.coroutines.launch
 import org.apache.commons.codec.binary.Base32
 
@@ -114,8 +117,11 @@ fun AccountEditScreen(
                     label = { Text(stringResource(R.string.edit_issuer)) },
                     singleLine = true,
                     readOnly = true,
+                    shape = AppTextFieldShape,
+                    colors = appTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, AppTextFieldShape)
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {
@@ -132,8 +138,11 @@ fun AccountEditScreen(
                     label = { Text(stringResource(R.string.edit_account)) },
                     singleLine = true,
                     readOnly = true,
+                    shape = AppTextFieldShape,
+                    colors = appTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, AppTextFieldShape)
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {

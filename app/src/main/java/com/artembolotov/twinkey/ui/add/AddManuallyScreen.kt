@@ -1,6 +1,7 @@
 package com.artembolotov.twinkey.ui.add
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -50,6 +51,8 @@ import com.artembolotov.twinkey.domain.OtpFactor
 import com.artembolotov.twinkey.domain.OtpGenerator
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.TextInputScreen
+import com.artembolotov.twinkey.ui.theme.AppTextFieldShape
+import com.artembolotov.twinkey.ui.theme.appTextFieldColors
 import org.apache.commons.codec.binary.Base32
 import java.util.UUID
 
@@ -129,8 +132,11 @@ fun AddManuallyScreen(
                     label = { Text(stringResource(R.string.add_manually_issuer)) },
                     singleLine = true,
                     readOnly = true,
+                    shape = AppTextFieldShape,
+                    colors = appTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, AppTextFieldShape)
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {
@@ -141,6 +147,7 @@ fun AddManuallyScreen(
                         }
                 )
 
+                val secretIsError = secretRaw.isNotEmpty() && !secretValid
                 SectionHeader(stringResource(R.string.add_manually_section_secret))
                 TextField(
                     value = secretRaw,
@@ -148,12 +155,20 @@ fun AddManuallyScreen(
                     label = { Text(stringResource(R.string.add_manually_secret)) },
                     singleLine = true,
                     readOnly = true,
-                    isError = secretRaw.isNotEmpty() && !secretValid,
-                    supportingText = if (secretRaw.isNotEmpty() && !secretValid) {
+                    isError = secretIsError,
+                    supportingText = if (secretIsError) {
                         { Text(stringResource(R.string.add_manually_secret_invalid)) }
                     } else null,
+                    shape = AppTextFieldShape,
+                    colors = appTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .border(
+                            width = 0.5.dp,
+                            color = if (secretIsError) MaterialTheme.colorScheme.error
+                                    else MaterialTheme.colorScheme.outlineVariant,
+                            shape = AppTextFieldShape
+                        )
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {
@@ -171,8 +186,11 @@ fun AddManuallyScreen(
                     label = { Text(stringResource(R.string.add_manually_account)) },
                     singleLine = true,
                     readOnly = true,
+                    shape = AppTextFieldShape,
+                    colors = appTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, AppTextFieldShape)
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {
