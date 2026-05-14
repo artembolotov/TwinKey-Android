@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
@@ -122,6 +123,7 @@ fun AccountsImportSelectionScreen(
     val selectedCount = importResult.successful.count { selected[it.id] == true }
 
     val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
     var bottomBarHeightPx by remember { mutableIntStateOf(0) }
     val bottomBarHeightDp = with(density) { bottomBarHeightPx.toDp() }
 
@@ -155,8 +157,8 @@ fun AccountsImportSelectionScreen(
             LazyColumn(
                 contentPadding = PaddingValues(
                     top = contentPadding.calculateTopPadding() + 8.dp,
-                    start = 16.dp,
-                    end = 16.dp,
+                    start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+                    end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
                     bottom = bottomBarHeightDp
                 ),
                 modifier = Modifier.fillMaxSize()
@@ -214,7 +216,12 @@ fun AccountsImportSelectionScreen(
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
                     .onSizeChanged { bottomBarHeightPx = it.height }
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 8.dp)
+                    .padding(
+                        start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+                        end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
+                        top = 8.dp,
+                        bottom = contentPadding.calculateBottomPadding() + 8.dp
+                    )
             ) {
                 Button(
                     onClick = { onImport(importResult.successful.filter { selected[it.id] == true }) },

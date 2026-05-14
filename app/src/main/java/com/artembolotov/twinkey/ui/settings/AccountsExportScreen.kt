@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
@@ -55,6 +56,7 @@ fun AccountsExportScreen(
     BackHandler { onDismiss() }
 
     val context = LocalContext.current
+    val layoutDirection = LocalLayoutDirection.current
     val selected = remember { mutableStateMapOf<String, Boolean>() }
     val allSelected = accounts.all { selected[it.id] == true }
     val exportState = remember { ExportState() }
@@ -103,8 +105,8 @@ fun AccountsExportScreen(
         LazyColumn(
             contentPadding = PaddingValues(
                 top = contentPadding.calculateTopPadding() + 8.dp,
-                start = 16.dp,
-                end = 16.dp,
+                start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+                end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
                 bottom = contentPadding.calculateBottomPadding() + 8.dp
             ),
             modifier = Modifier.fillMaxSize()

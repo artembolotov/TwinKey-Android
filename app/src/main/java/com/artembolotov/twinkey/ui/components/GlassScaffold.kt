@@ -5,6 +5,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.ui.theme.PageBackgroundDark
 import com.artembolotov.twinkey.ui.theme.PageBackgroundLight
@@ -42,9 +44,22 @@ fun GlassScaffold(
         blurRadius = 4.dp
     )
     val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
     var topBarHeightPx by remember { mutableIntStateOf(0) }
     val topBarHeightDp = with(density) { topBarHeightPx.toDp() }
     val navBarBottomDp = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
+    val safeLeft = with(density) {
+        maxOf(
+            WindowInsets.navigationBars.getLeft(this, layoutDirection),
+            WindowInsets.displayCutout.getLeft(this, layoutDirection)
+        ).toDp()
+    }
+    val safeRight = with(density) {
+        maxOf(
+            WindowInsets.navigationBars.getRight(this, layoutDirection),
+            WindowInsets.displayCutout.getRight(this, layoutDirection)
+        ).toDp()
+    }
 
     Box(modifier = modifier.fillMaxSize().background(pageBackground)) {
         Box(
@@ -52,7 +67,7 @@ fun GlassScaffold(
                 .fillMaxSize()
                 .hazeSource(hazeState)
         ) {
-            content(PaddingValues(top = topBarHeightDp, bottom = navBarBottomDp))
+            content(PaddingValues(start = safeLeft, top = topBarHeightDp, end = safeRight, bottom = navBarBottomDp))
         }
 
         Box(
