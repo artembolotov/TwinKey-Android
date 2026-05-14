@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberOverscrollEffect
@@ -82,6 +85,10 @@ fun AccountEditScreen(
     val secretBase32 = remember {
         Base32().encodeToString(token.generator.secret).trimEnd('=')
     }
+
+    var deleteButtonHeightPx by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    val deleteButtonHeightDp = with(density) { deleteButtonHeightPx.toDp() }
 
     val scrollState = rememberScrollState()
     val overscrollEffect = rememberOverscrollEffect()
@@ -183,18 +190,32 @@ fun AccountEditScreen(
 
                 HorizontalDivider()
 
-                Spacer(Modifier.height(8.dp))
-
-                Button(
-                    onClick = { state.showDeleteDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                ) {
-                    Text(stringResource(R.string.edit_delete))
+                Spacer(Modifier.height(deleteButtonHeightDp))
                 }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(bottom = contentPadding.calculateBottomPadding())
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onSizeChanged { deleteButtonHeightPx = it.height }
+                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                    ) {
+                        Button(
+                            onClick = { state.showDeleteDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) {
+                            Text(stringResource(R.string.edit_delete))
+                        }
+                    }
                 }
             }
         }
