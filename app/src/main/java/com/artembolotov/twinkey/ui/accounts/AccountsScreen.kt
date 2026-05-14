@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -232,8 +231,6 @@ fun AccountsScreen(
                 val topBarHeightDp = with(density) { topBarHeightPx.toDp() }
                 val searchBarHeightDp = with(density) { searchBarHeightPx.toDp() }
                 val listTopSpacing = 8.dp
-                val glassFadeDp = 8.dp
-                val glassFadePx = with(density) { glassFadeDp.toPx() }
 
                 // background on outer Box — hazeSource must NOT have background on the same node
                 Box(modifier = Modifier.fillMaxSize().background(pageBackground)) {
@@ -296,30 +293,12 @@ fun AccountsScreen(
                         onAddClick = { vm.showOverlay(AccountsOverlay.Scanner) }
                     )
 
-                    // SearchBar — внешний Box только для imePadding (не влияет на измерение).
-                    // Стекло рисуется отдельным слоем за SearchBar, чтобы graphics layer от
-                    // hazeEffect не перехватывал touch/focus у BasicTextField внутри.
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
                             .fillMaxWidth()
                             .imePadding()
                     ) {
-                        // Стекло начинается с верха SearchBar; первые glassFadeDp — fade-зона,
-                        // далее полностью непрозрачное стекло до низа navBar.
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(searchBarHeightDp)
-                                .align(Alignment.BottomStart)
-                                .hazeEffect(state = hazeState, style = hazeStyle) {
-                                    mask = Brush.verticalGradient(
-                                        listOf(Color.Transparent, Color.Black),
-                                        startY = 0f,
-                                        endY = glassFadePx
-                                    )
-                                }
-                        )
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
