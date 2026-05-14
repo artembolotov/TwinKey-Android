@@ -6,6 +6,8 @@ import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.OutlinedButton
@@ -38,6 +43,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.data.BackupManager
@@ -47,7 +57,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AccountsExportScreen(
     accounts: List<Token>,
@@ -68,6 +78,33 @@ fun AccountsExportScreen(
     val fileName = remember {
         val fmt = SimpleDateFormat("yyyy-MM-dd HH-mm", Locale.getDefault())
         "${fmt.format(Date())}.twinkey"
+    }
+
+    val lazyListState = rememberLazyListState()
+    val overscrollEffect = rememberOverscrollEffect()
+    val nestedScrollConnection = remember(overscrollEffect) {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                return if (!lazyListState.canScrollForward && !lazyListState.canScrollBackward) {
+                    overscrollEffect?.applyToScroll(available, source) { Offset.Zero } ?: Offset.Zero
+                } else {
+                    Offset.Zero
+                }
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                return if (!lazyListState.canScrollForward && !lazyListState.canScrollBackward) {
+                    overscrollEffect?.applyToFling(available) { Velocity.Zero }
+                    available
+                } else {
+                    Velocity.Zero
+                }
+            }
+        }
     }
 
     val createFileLauncher = rememberLauncherForActivityResult(
@@ -105,31 +142,38 @@ fun AccountsExportScreen(
         }
     ) { contentPadding ->
         Column(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    top = contentPadding.calculateTopPadding() + 8.dp,
-                    start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
-                    end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
-                    bottom = 8.dp
-                ),
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .nestedScroll(nestedScrollConnection)
+                    .then(if (overscrollEffect != null) Modifier.overscroll(overscrollEffect) else Modifier)
             ) {
-                item {
-                    Text(
-                        text = stringResource(R.string.backup_export_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(8.dp))
-                }
-                items(accounts, key = { it.id }) { token ->
-                    CheckableTokenRow(
-                        token = token,
-                        checked = selected[token.id] ?: false,
-                        onCheckedChange = { checked -> selected[token.id] = checked }
-                    )
+                LazyColumn(
+                    state = lazyListState,
+                    contentPadding = PaddingValues(
+                        top = contentPadding.calculateTopPadding() + 8.dp,
+                        start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
+                        end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
+                        bottom = 8.dp
+                    ),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.backup_export_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    items(accounts, key = { it.id }) { token ->
+                        CheckableTokenRow(
+                            token = token,
+                            checked = selected[token.id] ?: false,
+                            onCheckedChange = { checked -> selected[token.id] = checked }
+                        )
+                    }
                 }
             }
             OutlinedButton(

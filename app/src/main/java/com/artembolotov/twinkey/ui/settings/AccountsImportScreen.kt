@@ -6,7 +6,9 @@ import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Warning
@@ -41,6 +46,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.data.BackupManager
@@ -102,7 +112,7 @@ fun AccountsImportPickerSheet(
 }
 
 /** Шаг 2: выбор аккаунтов с чекбоксами. Полноэкранный. */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AccountsImportSelectionScreen(
     importResult: ImportResult,
@@ -118,6 +128,33 @@ fun AccountsImportSelectionScreen(
     val selectedCount = importResult.successful.count { selected[it.id] == true }
 
     val layoutDirection = LocalLayoutDirection.current
+
+    val lazyListState = rememberLazyListState()
+    val overscrollEffect = rememberOverscrollEffect()
+    val nestedScrollConnection = remember(overscrollEffect) {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                return if (!lazyListState.canScrollForward && !lazyListState.canScrollBackward) {
+                    overscrollEffect?.applyToScroll(available, source) { Offset.Zero } ?: Offset.Zero
+                } else {
+                    Offset.Zero
+                }
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                return if (!lazyListState.canScrollForward && !lazyListState.canScrollBackward) {
+                    overscrollEffect?.applyToFling(available) { Velocity.Zero }
+                    available
+                } else {
+                    Velocity.Zero
+                }
+            }
+        }
+    }
 
     GlassScaffold(
         topBar = {
@@ -144,17 +181,23 @@ fun AccountsImportSelectionScreen(
         }
     ) { contentPadding ->
         Column(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    top = contentPadding.calculateTopPadding() + 8.dp,
-                    start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
-                    end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
-                    bottom = 8.dp
-                ),
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .nestedScroll(nestedScrollConnection)
+                    .then(if (overscrollEffect != null) Modifier.overscroll(overscrollEffect) else Modifier)
             ) {
+                LazyColumn(
+                    state = lazyListState,
+                    contentPadding = PaddingValues(
+                        top = contentPadding.calculateTopPadding() + 8.dp,
+                        start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
+                        end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
+                        bottom = 8.dp
+                    ),
+                    modifier = Modifier.fillMaxSize()
+                ) {
                 if (importResult.skipped.isNotEmpty()) {
                     item {
                         Row(
@@ -200,6 +243,7 @@ fun AccountsImportSelectionScreen(
                             Text("• ${skipped.name} — $reason", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 8.dp, top = 2.dp))
                         }
                     }
+                }
                 }
             }
 
