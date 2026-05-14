@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +41,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.OtpAlgorithm
@@ -51,7 +59,7 @@ import java.util.UUID
 
 private enum class AddManuallyField { Issuer, Secret, Account }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AddManuallyScreen(
     onDone: (Token) -> Unit,
@@ -89,6 +97,33 @@ fun AddManuallyScreen(
         )
     }
 
+    val scrollState = rememberScrollState()
+    val overscrollEffect = rememberOverscrollEffect()
+    val nestedScrollConnection = remember(overscrollEffect) {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                return if (!scrollState.canScrollForward && !scrollState.canScrollBackward) {
+                    overscrollEffect?.applyToScroll(available, source) { Offset.Zero } ?: Offset.Zero
+                } else {
+                    Offset.Zero
+                }
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                return if (!scrollState.canScrollForward && !scrollState.canScrollBackward) {
+                    overscrollEffect?.applyToFling(available) { Velocity.Zero }
+                    available
+                } else {
+                    Velocity.Zero
+                }
+            }
+        }
+    }
+
     Box(Modifier.fillMaxSize()) {
         GlassScaffold(
             topBar = {
@@ -114,14 +149,20 @@ fun AddManuallyScreen(
                 )
             }
         ) { contentPadding ->
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(contentPadding)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize()
+                    .nestedScroll(nestedScrollConnection)
+                    .then(if (overscrollEffect != null) Modifier.overscroll(overscrollEffect) else Modifier)
             ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                        .padding(contentPadding)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                 SectionHeader(stringResource(R.string.add_manually_section_service))
                 ReadOnlyField(
                     value = issuer,
@@ -171,6 +212,7 @@ fun AddManuallyScreen(
                     OtpAlgorithm.entries.forEach { alg ->
                         FilterChip(selected = algorithm == alg, onClick = { algorithm = alg }, label = { Text(alg.name) })
                     }
+                }
                 }
             }
         }
