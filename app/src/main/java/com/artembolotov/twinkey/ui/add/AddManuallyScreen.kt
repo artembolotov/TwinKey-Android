@@ -1,7 +1,6 @@
 package com.artembolotov.twinkey.ui.add
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -27,7 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -52,7 +51,7 @@ import com.artembolotov.twinkey.domain.OtpGenerator
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.TextInputScreen
 import com.artembolotov.twinkey.ui.theme.AppTextFieldShape
-import com.artembolotov.twinkey.ui.theme.appTextFieldColors
+import com.artembolotov.twinkey.ui.theme.appOutlinedTextFieldColors
 import org.apache.commons.codec.binary.Base32
 import java.util.UUID
 
@@ -126,17 +125,16 @@ fun AddManuallyScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 SectionHeader(stringResource(R.string.add_manually_section_service))
-                TextField(
+                OutlinedTextField(
                     value = issuer,
                     onValueChange = {},
                     label = { Text(stringResource(R.string.add_manually_issuer)) },
                     singleLine = true,
                     readOnly = true,
                     shape = AppTextFieldShape,
-                    colors = appTextFieldColors(),
+                    colors = appOutlinedTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, AppTextFieldShape)
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {
@@ -149,7 +147,7 @@ fun AddManuallyScreen(
 
                 val secretIsError = secretRaw.isNotEmpty() && !secretValid
                 SectionHeader(stringResource(R.string.add_manually_section_secret))
-                TextField(
+                OutlinedTextField(
                     value = secretRaw,
                     onValueChange = {},
                     label = { Text(stringResource(R.string.add_manually_secret)) },
@@ -160,15 +158,9 @@ fun AddManuallyScreen(
                         { Text(stringResource(R.string.add_manually_secret_invalid)) }
                     } else null,
                     shape = AppTextFieldShape,
-                    colors = appTextFieldColors(),
+                    colors = appOutlinedTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(
-                            width = 0.5.dp,
-                            color = if (secretIsError) MaterialTheme.colorScheme.error
-                                    else MaterialTheme.colorScheme.outlineVariant,
-                            shape = AppTextFieldShape
-                        )
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {
@@ -180,17 +172,16 @@ fun AddManuallyScreen(
                 )
 
                 SectionHeader(stringResource(R.string.add_manually_section_account))
-                TextField(
+                OutlinedTextField(
                     value = account,
                     onValueChange = {},
                     label = { Text(stringResource(R.string.add_manually_account)) },
                     singleLine = true,
                     readOnly = true,
                     shape = AppTextFieldShape,
-                    colors = appTextFieldColors(),
+                    colors = appOutlinedTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, AppTextFieldShape)
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {

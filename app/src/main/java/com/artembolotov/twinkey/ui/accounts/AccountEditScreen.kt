@@ -2,7 +2,6 @@ package com.artembolotov.twinkey.ui.accounts
 
 import android.content.ClipData
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -33,7 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,7 +56,7 @@ import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.TextInputScreen
 import com.artembolotov.twinkey.ui.theme.AppTextFieldShape
-import com.artembolotov.twinkey.ui.theme.appTextFieldColors
+import com.artembolotov.twinkey.ui.theme.appOutlinedTextFieldColors
 import kotlinx.coroutines.launch
 import org.apache.commons.codec.binary.Base32
 
@@ -111,17 +110,16 @@ fun AccountEditScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                TextField(
+                OutlinedTextField(
                     value = state.issuer,
                     onValueChange = {},
                     label = { Text(stringResource(R.string.edit_issuer)) },
                     singleLine = true,
                     readOnly = true,
                     shape = AppTextFieldShape,
-                    colors = appTextFieldColors(),
+                    colors = appOutlinedTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, AppTextFieldShape)
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {
@@ -132,17 +130,16 @@ fun AccountEditScreen(
                         }
                 )
 
-                TextField(
+                OutlinedTextField(
                     value = state.name,
                     onValueChange = {},
                     label = { Text(stringResource(R.string.edit_account)) },
                     singleLine = true,
                     readOnly = true,
                     shape = AppTextFieldShape,
-                    colors = appTextFieldColors(),
+                    colors = appOutlinedTextFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, AppTextFieldShape)
                         .focusProperties { canFocus = false }
                         .pointerInput(Unit) {
                             awaitEachGesture {
