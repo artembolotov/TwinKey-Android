@@ -145,7 +145,7 @@ fun AccountEditScreen(
                 ) {
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .matchParentSize()
                             .verticalScroll(scrollState)
                             .padding(
                                 top = contentPadding.calculateTopPadding() + 8.dp,
