@@ -2,9 +2,6 @@ package com.artembolotov.twinkey.ui.accounts
 
 import android.content.ClipData
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +29,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,9 +38,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
@@ -54,9 +47,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.Token
+import com.artembolotov.twinkey.ui.components.ReadOnlyField
 import com.artembolotov.twinkey.ui.components.TextInputScreen
-import com.artembolotov.twinkey.ui.theme.AppTextFieldShape
-import com.artembolotov.twinkey.ui.theme.appOutlinedTextFieldColors
 import kotlinx.coroutines.launch
 import org.apache.commons.codec.binary.Base32
 
@@ -110,44 +102,16 @@ fun AccountEditScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedTextField(
+                ReadOnlyField(
                     value = state.issuer,
-                    onValueChange = {},
-                    label = { Text(stringResource(R.string.edit_issuer)) },
-                    singleLine = true,
-                    readOnly = true,
-                    shape = AppTextFieldShape,
-                    colors = appOutlinedTextFieldColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusProperties { canFocus = false }
-                        .pointerInput(Unit) {
-                            awaitEachGesture {
-                                awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
-                                val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                                if (up != null) { up.consume(); state.activeField = AccountEditField.Issuer }
-                            }
-                        }
+                    label = stringResource(R.string.edit_issuer),
+                    onTap = { state.activeField = AccountEditField.Issuer }
                 )
 
-                OutlinedTextField(
+                ReadOnlyField(
                     value = state.name,
-                    onValueChange = {},
-                    label = { Text(stringResource(R.string.edit_account)) },
-                    singleLine = true,
-                    readOnly = true,
-                    shape = AppTextFieldShape,
-                    colors = appOutlinedTextFieldColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusProperties { canFocus = false }
-                        .pointerInput(Unit) {
-                            awaitEachGesture {
-                                awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
-                                val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                                if (up != null) { up.consume(); state.activeField = AccountEditField.Name }
-                            }
-                        }
+                    label = stringResource(R.string.edit_account),
+                    onTap = { state.activeField = AccountEditField.Name }
                 )
 
                 HorizontalDivider()

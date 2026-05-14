@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 
 val AppTextFieldShape = RoundedCornerShape(12.dp)
 
-/** Colors for the search bar (BasicTextField + DecorationBox). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun appTextFieldColors(): TextFieldColors {

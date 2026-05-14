@@ -1,9 +1,6 @@
 package com.artembolotov.twinkey.ui.add
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -37,9 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,9 +42,8 @@ import com.artembolotov.twinkey.domain.OtpAlgorithm
 import com.artembolotov.twinkey.domain.OtpFactor
 import com.artembolotov.twinkey.domain.OtpGenerator
 import com.artembolotov.twinkey.domain.Token
+import com.artembolotov.twinkey.ui.components.ReadOnlyField
 import com.artembolotov.twinkey.ui.components.TextInputScreen
-import com.artembolotov.twinkey.ui.theme.AppTextFieldShape
-import com.artembolotov.twinkey.ui.theme.appOutlinedTextFieldColors
 import org.apache.commons.codec.binary.Base32
 import java.util.UUID
 
@@ -125,71 +117,29 @@ fun AddManuallyScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 SectionHeader(stringResource(R.string.add_manually_section_service))
-                OutlinedTextField(
+                ReadOnlyField(
                     value = issuer,
-                    onValueChange = {},
-                    label = { Text(stringResource(R.string.add_manually_issuer)) },
-                    singleLine = true,
-                    readOnly = true,
-                    shape = AppTextFieldShape,
-                    colors = appOutlinedTextFieldColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusProperties { canFocus = false }
-                        .pointerInput(Unit) {
-                            awaitEachGesture {
-                                awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
-                                val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                                if (up != null) { up.consume(); activeField = AddManuallyField.Issuer }
-                            }
-                        }
+                    label = stringResource(R.string.add_manually_issuer),
+                    onTap = { activeField = AddManuallyField.Issuer }
                 )
 
                 val secretIsError = secretRaw.isNotEmpty() && !secretValid
                 SectionHeader(stringResource(R.string.add_manually_section_secret))
-                OutlinedTextField(
+                ReadOnlyField(
                     value = secretRaw,
-                    onValueChange = {},
-                    label = { Text(stringResource(R.string.add_manually_secret)) },
-                    singleLine = true,
-                    readOnly = true,
+                    label = stringResource(R.string.add_manually_secret),
                     isError = secretIsError,
                     supportingText = if (secretIsError) {
                         { Text(stringResource(R.string.add_manually_secret_invalid)) }
                     } else null,
-                    shape = AppTextFieldShape,
-                    colors = appOutlinedTextFieldColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusProperties { canFocus = false }
-                        .pointerInput(Unit) {
-                            awaitEachGesture {
-                                awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
-                                val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                                if (up != null) { up.consume(); activeField = AddManuallyField.Secret }
-                            }
-                        }
+                    onTap = { activeField = AddManuallyField.Secret }
                 )
 
                 SectionHeader(stringResource(R.string.add_manually_section_account))
-                OutlinedTextField(
+                ReadOnlyField(
                     value = account,
-                    onValueChange = {},
-                    label = { Text(stringResource(R.string.add_manually_account)) },
-                    singleLine = true,
-                    readOnly = true,
-                    shape = AppTextFieldShape,
-                    colors = appOutlinedTextFieldColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusProperties { canFocus = false }
-                        .pointerInput(Unit) {
-                            awaitEachGesture {
-                                awaitFirstDown(pass = PointerEventPass.Initial).also { it.consume() }
-                                val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                                if (up != null) { up.consume(); activeField = AddManuallyField.Account }
-                            }
-                        }
+                    label = stringResource(R.string.add_manually_account),
+                    onTap = { activeField = AddManuallyField.Account }
                 )
 
                 SectionHeader(stringResource(R.string.add_manually_section_period))
