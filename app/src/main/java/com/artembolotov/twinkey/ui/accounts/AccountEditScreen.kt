@@ -6,14 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberOverscrollEffect
@@ -48,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -85,10 +81,6 @@ fun AccountEditScreen(
     val secretBase32 = remember {
         Base32().encodeToString(token.generator.secret).trimEnd('=')
     }
-
-    var deleteButtonHeightPx by remember { mutableIntStateOf(0) }
-    val density = LocalDensity.current
-    val deleteButtonHeightDp = with(density) { deleteButtonHeightPx.toDp() }
 
     val scrollState = rememberScrollState()
     val overscrollEffect = rememberOverscrollEffect()
@@ -142,80 +134,79 @@ fun AccountEditScreen(
                 )
             }
         ) { contentPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(nestedScrollConnection)
-                    .then(if (overscrollEffect != null) Modifier.overscroll(overscrollEffect) else Modifier)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(scrollState)
-                        .padding(contentPadding)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                ReadOnlyField(
-                    value = state.issuer,
-                    label = stringResource(R.string.edit_issuer),
-                    onTap = { state.activeField = AccountEditField.Issuer }
-                )
-
-                ReadOnlyField(
-                    value = state.name,
-                    label = stringResource(R.string.edit_account),
-                    onTap = { state.activeField = AccountEditField.Name }
-                )
-
-                HorizontalDivider()
-
-                ReadOnlyRow(
-                    label = stringResource(R.string.edit_secret),
-                    value = secretBase32,
-                    trailing = {
-                        IconButton(onClick = {
-                            scope.launch {
-                                clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", secretBase32)))
-                            }
-                        }) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.edit_copy_secret))
-                        }
-                    }
-                )
-
-                ReadOnlyRow(label = stringResource(R.string.edit_digits), value = token.generator.digits.toString())
-                ReadOnlyRow(label = stringResource(R.string.edit_period), value = stringResource(R.string.edit_period_seconds, token.generator.periodOrDefault))
-                ReadOnlyRow(label = stringResource(R.string.edit_algorithm), value = token.generator.algorithm.name)
-
-                HorizontalDivider()
-
-                Spacer(Modifier.height(deleteButtonHeightDp))
-                }
-
+            val layoutDirection = LocalLayoutDirection.current
+            Column(modifier = Modifier.fillMaxSize()) {
                 Box(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .padding(bottom = contentPadding.calculateBottomPadding())
+                        .weight(1f)
+                        .nestedScroll(nestedScrollConnection)
+                        .then(if (overscrollEffect != null) Modifier.overscroll(overscrollEffect) else Modifier)
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .onSizeChanged { deleteButtonHeightPx = it.height }
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                            .verticalScroll(scrollState)
+                            .padding(
+                                top = contentPadding.calculateTopPadding() + 8.dp,
+                                start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
+                                end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
+                                bottom = 8.dp
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Button(
-                            onClick = { state.showDeleteDialog = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        ) {
-                            Text(stringResource(R.string.edit_delete))
-                        }
+                        ReadOnlyField(
+                            value = state.issuer,
+                            label = stringResource(R.string.edit_issuer),
+                            onTap = { state.activeField = AccountEditField.Issuer }
+                        )
+
+                        ReadOnlyField(
+                            value = state.name,
+                            label = stringResource(R.string.edit_account),
+                            onTap = { state.activeField = AccountEditField.Name }
+                        )
+
+                        HorizontalDivider()
+
+                        ReadOnlyRow(
+                            label = stringResource(R.string.edit_secret),
+                            value = secretBase32,
+                            trailing = {
+                                IconButton(onClick = {
+                                    scope.launch {
+                                        clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", secretBase32)))
+                                    }
+                                }) {
+                                    Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.edit_copy_secret))
+                                }
+                            }
+                        )
+
+                        ReadOnlyRow(label = stringResource(R.string.edit_digits), value = token.generator.digits.toString())
+                        ReadOnlyRow(label = stringResource(R.string.edit_period), value = stringResource(R.string.edit_period_seconds, token.generator.periodOrDefault))
+                        ReadOnlyRow(label = stringResource(R.string.edit_algorithm), value = token.generator.algorithm.name)
+
+                        HorizontalDivider()
                     }
+                }
+
+                Button(
+                    onClick = { state.showDeleteDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp,
+                            end = contentPadding.calculateRightPadding(layoutDirection) + 16.dp,
+                            top = 8.dp,
+                            bottom = contentPadding.calculateBottomPadding() + 8.dp
+                        ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Text(stringResource(R.string.edit_delete))
                 }
             }
         }
