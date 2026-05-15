@@ -163,10 +163,9 @@ fun AddManuallyScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                SectionHeader(stringResource(R.string.add_manually_section_service))
                 ReadOnlyField(
                     value = issuer,
-                    label = stringResource(R.string.add_manually_issuer),
+                    label = stringResource(R.string.add_manually_section_service),
                     onTap = { activeField = AddManuallyField.Issuer }
                 )
 
@@ -182,10 +181,9 @@ fun AddManuallyScreen(
                     onTap = { activeField = AddManuallyField.Secret }
                 )
 
-                SectionHeader(stringResource(R.string.add_manually_section_account))
                 ReadOnlyField(
                     value = account,
-                    label = stringResource(R.string.add_manually_account),
+                    label = stringResource(R.string.add_manually_section_account),
                     onTap = { activeField = AddManuallyField.Account }
                 )
 
