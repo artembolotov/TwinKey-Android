@@ -5,7 +5,6 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,19 +31,11 @@ internal fun ReadOnlyField(
     label: String,
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String? = null,
     isError: Boolean = false,
     supportingText: @Composable (() -> Unit)? = null,
 ) {
-    val showPlaceholder = placeholder != null && value.isEmpty()
-    val displayValue = if (showPlaceholder) placeholder!! else value
-    val baseColors = appOutlinedTextFieldColors()
-    val colors = if (showPlaceholder) baseColors.copy(
-        unfocusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-    ) else baseColors
-
     OutlinedTextField(
-        value = displayValue,
+        value = value,
         onValueChange = {},
         label = { Text(label) },
         singleLine = true,
@@ -52,7 +43,7 @@ internal fun ReadOnlyField(
         isError = isError,
         supportingText = supportingText,
         shape = AppTextFieldShape,
-        colors = colors,
+        colors = appOutlinedTextFieldColors(),
         modifier = modifier
             .fillMaxWidth()
             .focusProperties { canFocus = false }
