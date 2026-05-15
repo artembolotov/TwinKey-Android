@@ -166,6 +166,7 @@ fun AddManuallyScreen(
                 ReadOnlyField(
                     value = issuer,
                     label = stringResource(R.string.add_manually_section_service),
+                    placeholder = stringResource(R.string.add_manually_issuer),
                     onTap = { activeField = AddManuallyField.Issuer }
                 )
 
@@ -184,6 +185,7 @@ fun AddManuallyScreen(
                 ReadOnlyField(
                     value = account,
                     label = stringResource(R.string.add_manually_section_account),
+                    placeholder = stringResource(R.string.add_manually_account),
                     onTap = { activeField = AddManuallyField.Account }
                 )
 
