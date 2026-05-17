@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Git workflow
 
-`git push origin main` fails with 403 in Claude Code sessions — the local proxy only allows pushing to `claude/*` branches. To push to `main`, use the GitHub MCP tool:
+`git push origin main` works normally in Claude Code sessions for this repository. Use standard git push:
 
+```bash
+git push origin main
+# or from a feature branch:
+git push origin HEAD:main
 ```
-mcp__github__push_files(owner="artembolotov", repo="twinkey-android", branch="main", message="...", files=[...])
-```
-
-After pushing via MCP, sync locally: `git pull origin main`.
 
 ## Build & Run
 
