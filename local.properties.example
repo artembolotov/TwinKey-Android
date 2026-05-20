@@ -1,0 +1,10 @@
+# Copy this file to local.properties and fill in your values.
+# local.properties is gitignored and will never be committed.
+
+# Android SDK path (set automatically by Android Studio)
+# sdk.dir=/Users/username/Library/Android/sdk
+
+# AppMetrica API key for local builds.
+# Get it from AppMetrica dashboard: https://appmetrica.io
+# Leave empty or omit to disable analytics in local builds.
+appmetrica.api.key=
