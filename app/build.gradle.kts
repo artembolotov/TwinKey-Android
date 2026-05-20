@@ -11,6 +11,16 @@ val keystoreProperties = Properties().apply {
     if (f.exists()) load(f.inputStream())
 }
 
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) load(f.inputStream())
+}
+
+val appmetricaApiKey: String =
+    (project.findProperty("appmetricaApiKey") as String?)
+        ?: (localProperties["appmetrica.api.key"] as String?)
+        ?: ""
+
 android {
     namespace = "com.artembolotov.twinkey"
     compileSdk = 37
@@ -23,6 +33,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "APPMETRICA_API_KEY", "\"$appmetricaApiKey\"")
     }
 
     signingConfigs {
@@ -52,6 +63,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     lint {

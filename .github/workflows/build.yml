@@ -35,7 +35,7 @@ jobs:
       - name: Build release AAB and APK
         run: |
           chmod +x ./gradlew
-          ./gradlew bundleRelease assembleRelease -PversionCode=${{ github.run_number }}
+          ./gradlew bundleRelease assembleRelease -PversionCode=${{ github.run_number }} -PappmetricaApiKey=${{ secrets.APPMETRICA_API_KEY }}
 
       - name: Upload to Play Console
         uses: r0adkll/upload-google-play@v1
