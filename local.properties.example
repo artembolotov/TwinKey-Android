@@ -7,4 +7,5 @@
 # AppMetrica API key for local builds.
 # Get it from AppMetrica dashboard: https://appmetrica.io
 # Leave empty or omit to disable analytics in local builds.
-appmetrica.api.key=
+sdk.dir=/path/to/Android/sdk
+appmetrica.api.key=your_key_here

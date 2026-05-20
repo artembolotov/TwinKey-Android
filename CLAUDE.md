@@ -37,7 +37,7 @@ Release signing reads from `keystore.properties` at the repo root; if absent, th
 
 Android port of an iOS TOTP authenticator. Layers are intentionally mirrored after the iOS app — screen names, service names, and storage keys match their Swift counterparts.
 
-`TwinKeyApplication` is the `Application` subclass; it initializes AppMetrica analytics on startup (API key hard-coded, activity auto-tracking enabled).
+`TwinKeyApplication` is the `Application` subclass; it initializes AppMetrica analytics on startup (API key read from `local.properties` / Gradle property `appmetricaApiKey`, activity auto-tracking enabled).
 
 ### Data flow
 
@@ -68,7 +68,7 @@ State management pattern used throughout:
 - ViewModel holds `_state: MutableStateFlow<UiState>`, exposes `state: StateFlow<UiState>`
 - Composables observe via `state.collectAsState()` and call ViewModel methods — no direct state mutations in UI
 - `ModalBottomSheetState` animation state lives in the Composable (UI-only concern, not in ViewModel)
-- `ui/components/` provides shared building blocks: `AppModalBottomSheet` + `rememberAppSheetState` (wrappers used by every overlay), `OtpCodeView`, `CheckableTokenRow`
+- `ui/components/` provides shared building blocks: `AppModalBottomSheet` + `rememberAppSheetState` (wrappers used by every overlay), `OtpCodeView`, `CheckableTokenRow`, `GlassScaffold` (frosted-glass scaffold via Haze), `ReadOnlyField`, `TextInputScreen`
 
 **Overlay system** (`AccountsScreen`): a sealed class `AccountsOverlay` drives which bottom sheet is visible (`None`, `Scanner`, `Manual`, `Added(token)`, `Editing(token)`, `Settings`, `ImportFromEmpty`). `AccountsSheets` renders sheets conditionally based on overlay state.
 
@@ -94,3 +94,4 @@ State management pattern used throughout:
 | kotlinx.serialization | JSON backup format |
 | androidx.core.splashscreen | System splash screen |
 | AppMetrica analytics | Usage analytics (initialized in `TwinKeyApplication`) |
+| Haze | Frosted-glass blur effect (`GlassScaffold`) |
