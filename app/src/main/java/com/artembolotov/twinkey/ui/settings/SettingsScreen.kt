@@ -230,6 +230,12 @@ fun SettingsScreen(
                         )
 
                         SettingsRow(
+                            title = stringResource(R.string.settings_user_guide),
+                            isLink = true,
+                            onClick = { openUrl(context, "https://twinkey.app/docs") }
+                        )
+
+                        SettingsRow(
                             title = stringResource(R.string.settings_terms),
                             isLink = true,
                             onClick = { openUrl(context, "https://twinkey.app/terms") }
