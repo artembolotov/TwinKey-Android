@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,6 +37,7 @@ const val ADD_TEST_ACCOUNT_URL = "twinkey://add-test"
 
 @Composable
 fun AccountsEmptyView(
+    onAddAccount: () -> Unit,
     onRestoreFromBackup: () -> Unit,
     onAddTestAccount: () -> Unit,
     modifier: Modifier = Modifier
@@ -69,6 +71,12 @@ fun AccountsEmptyView(
         )
 
         Spacer(Modifier.weight(1f))
+
+        Button(onClick = onAddAccount) {
+            Text(stringResource(R.string.accounts_add_account))
+        }
+
+        Spacer(Modifier.height(8.dp))
 
         TextButton(onClick = onRestoreFromBackup) {
             Text(stringResource(R.string.accounts_restore_from_backup))

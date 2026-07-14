@@ -248,6 +248,7 @@ fun AccountsScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(top = topBarHeightDp, bottom = searchBarHeightDp),
+                            onAddAccount = { vm.showOverlay(AccountsOverlay.Scanner) },
                             onRestoreFromBackup = { vm.showOverlay(AccountsOverlay.ImportFromEmpty) },
                             onAddTestAccount = { vm.addTestAccount() },
                         )
