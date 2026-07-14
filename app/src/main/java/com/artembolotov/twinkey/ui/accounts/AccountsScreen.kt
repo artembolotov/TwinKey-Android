@@ -6,8 +6,11 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -100,6 +103,12 @@ fun AccountsScreen(
     BackHandler(enabled = state.searchQuery.isNotEmpty() || state.editMode) {
         if (state.searchQuery.isNotEmpty()) vm.setSearchQuery("")
         else vm.setEditMode(false)
+    }
+
+    // Когда аккаунтов нет, поиск скрыт — сбрасываем остаточный запрос
+    // (например, после удаления последнего аккаунта во время поиска)
+    LaunchedEffect(state.accounts.isEmpty()) {
+        if (state.accounts.isEmpty() && state.searchQuery.isNotEmpty()) vm.setSearchQuery("")
     }
 
     LaunchedEffect(state.message) {
@@ -306,13 +315,20 @@ fun AccountsScreen(
                                 .align(Alignment.BottomStart)
                                 .onSizeChanged { searchBarHeightPx = it.height }
                         ) {
-                            AccountsSearchBar(
-                                query = state.searchQuery,
-                                searchActive = searchActive,
-                                onQueryChange = { vm.setSearchQuery(it) },
-                                onSearchActiveChange = { searchActive = it },
-                                onClearQuery = { vm.setSearchQuery("") },
-                            )
+                            // На пустом экране-приветствии искать нечего — поиск скрыт
+                            AnimatedVisibility(
+                                visible = state.accounts.isNotEmpty(),
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
+                                AccountsSearchBar(
+                                    query = state.searchQuery,
+                                    searchActive = searchActive,
+                                    onQueryChange = { vm.setSearchQuery(it) },
+                                    onSearchActiveChange = { searchActive = it },
+                                    onClearQuery = { vm.setSearchQuery("") },
+                                )
+                            }
                             Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
                         }
                     }
