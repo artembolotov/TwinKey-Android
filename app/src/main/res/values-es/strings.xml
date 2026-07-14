@@ -3,7 +3,7 @@
     <string name="accounts_no_codes">Las cuentas aún no se han añadido.</string>
     <string name="accounts_add_account">Añadir cuenta</string>
     <string name="accounts_restore_from_backup">Restaurar desde copia</string>
-    <string name="accounts_google_auth_import_hint">También puedes escanear un código QR de Google Authenticator para transferir tus cuentas</string>
+    <string name="accounts_google_auth_import_hint"><![CDATA[También puedes escanear un código QR de Google Authenticator para transferir tus cuentas o añadir una <a href="twinkey://add-test">cuenta de prueba</a> para explorar la app]]></string>
     <string name="accounts_code_copied">El código se copia</string>
     <string name="accounts_edit">Editar</string>
     <string name="accounts_done">OK</string>
@@ -14,7 +14,7 @@
     <string name="tutorial_greeting_2">Sé cómo generar códigos de seis dígitos para confirmar el inicio de sesión en las cuentas. Esto aumenta la seguridad, porque sin dicho código no puedes iniciar sesión en tu cuenta aunque conozcas tu contraseña.</string>
     <string name="tutorial_get_started">Empezar</string>
     <string name="tutorial_more_about_2fa">Dígame más</string>
-    <string name="tutorial_more_info_text">La autenticación de dos factores es una capa adicional de seguridad que garantiza que sólo tú puedes acceder a tus cuentas, aunque tus contraseñas sean conocidas por otra persona.</string>
+    <string name="tutorial_more_info_text"><![CDATA[La autenticación de dos factores es una capa adicional de seguridad que garantiza que sólo tú puedes acceder a tus cuentas, aunque tus contraseñas sean conocidas por otra persona. <a href="https://es.wikipedia.org/wiki/Contraseña_de_un_solo_uso">Más información en Wikipedia</a>]]></string>
     <string name="tutorial_typing">TwinKey está escribiendo</string>
 
     <!-- QrScannerScreen -->

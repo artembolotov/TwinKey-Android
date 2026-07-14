@@ -10,8 +10,10 @@ import com.artembolotov.twinkey.data.AccountRepository
 import com.artembolotov.twinkey.data.ImportResult
 import com.artembolotov.twinkey.data.KeychainService
 import com.artembolotov.twinkey.domain.OtpFactor
+import com.artembolotov.twinkey.domain.OtpGenerator
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.domain.TotpCodeGenerator
+import org.apache.commons.codec.binary.Base32
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -126,6 +128,17 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
                 searchQuery = ""
             )
         }
+    }
+
+    // Порт twinkey://add-test из iOS: тестовый аккаунт для знакомства с приложением
+    fun addTestAccount() {
+        addAccount(
+            Token(
+                name = "hello@twinkey.app",
+                issuer = "TwinKey",
+                generator = OtpGenerator(secret = Base32().decode("OZSXEYTBORUW22DK"))
+            )
+        )
     }
 
     fun addMultiple(tokens: List<Token>) {

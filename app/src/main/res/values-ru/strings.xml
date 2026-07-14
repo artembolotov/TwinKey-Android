@@ -3,7 +3,7 @@
     <string name="accounts_no_codes">Аккаунты ещё не добавлены.</string>
     <string name="accounts_add_account">Добавить аккаунт</string>
     <string name="accounts_restore_from_backup">Восстановить из копии</string>
-    <string name="accounts_google_auth_import_hint">Также можно отсканировать QR-код из Google Authenticator для переноса аккаунтов</string>
+    <string name="accounts_google_auth_import_hint"><![CDATA[Также можно отсканировать QR-код из Google Authenticator для переноса аккаунтов или добавить <a href="twinkey://add-test">тестовый аккаунт</a> для знакомства с приложением]]></string>
     <string name="accounts_code_copied">Код скопирован</string>
     <string name="accounts_edit">Изменить</string>
     <string name="accounts_done">Готово</string>
@@ -14,7 +14,7 @@
     <string name="tutorial_greeting_2">Я умею генерировать шестизначные коды, которыми нужно подтверждать вход в аккаунты. Это повышает безопасность, ведь без такого кода не получится зайти в учётную запись, даже зная пароль.</string>
     <string name="tutorial_get_started">Начать работу</string>
     <string name="tutorial_more_about_2fa">Расскажи подробнее</string>
-    <string name="tutorial_more_info_text">Двухфакторная аутентификация — это дополнительный уровень безопасности, который гарантирует, что доступ к своим учётным записям сможете получить только вы, даже если ваши пароли стали известны кому-то ещё.</string>
+    <string name="tutorial_more_info_text"><![CDATA[Двухфакторная аутентификация — это дополнительный уровень безопасности, который гарантирует, что доступ к своим учётным записям сможете получить только вы, даже если ваши пароли стали известны кому-то ещё. <a href="https://ru.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm">Подробнее в Википедии</a>]]></string>
     <string name="tutorial_typing">TwinKey печатает</string>
 
     <!-- QrScannerScreen -->
