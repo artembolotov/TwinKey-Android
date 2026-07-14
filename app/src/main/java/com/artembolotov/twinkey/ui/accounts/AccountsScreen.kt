@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -241,6 +242,12 @@ fun AccountsScreen(
                 val searchBarHeightDp = with(density) { searchBarHeightPx.toDp() }
                 val listTopSpacing = 8.dp
 
+                // Топ-бар сам содержит отступ под статус-бар (safeDrawing.top), но при
+                // активном поиске он схлопывается до нулевой высоты — список не должен
+                // заезжать под часы/батарейку, поэтому инсет остаётся нижней границей.
+                val safeTopDp = with(density) { WindowInsets.safeDrawing.getTop(density).toDp() }
+                val listTopPadding = maxOf(topBarHeightDp, safeTopDp) + listTopSpacing
+
                 // background on outer Box — hazeSource must NOT have background on the same node
                 Box(modifier = Modifier.fillMaxSize().background(pageBackground)) {
                     if (state.accounts.isEmpty()) {
@@ -271,7 +278,7 @@ fun AccountsScreen(
                             onMove = { from, to -> vm.moveAccount(from, to) },
                             isDraggable = state.editMode && state.searchQuery.isBlank(),
                             isEditMode = state.editMode,
-                            contentPadding = PaddingValues(top = topBarHeightDp + listTopSpacing, bottom = searchBarHeightDp),
+                            contentPadding = PaddingValues(top = listTopPadding, bottom = searchBarHeightDp),
                             modifier = Modifier
                                 .fillMaxSize()
                                 .hazeSource(hazeState)
