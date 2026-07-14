@@ -41,11 +41,13 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.theme.CardBackgroundDark
 import com.artembolotov.twinkey.ui.theme.CardBackgroundLight
@@ -145,7 +147,7 @@ fun AccountsListView(
                                 {
                                     Icon(
                                         imageVector = Icons.Default.DragHandle,
-                                        contentDescription = "Drag to reorder",
+                                        contentDescription = stringResource(R.string.accounts_reorder_hint),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier
                                             .size(24.dp)
