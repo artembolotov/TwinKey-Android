@@ -193,9 +193,9 @@ fun AccountsScreen(
                                 if (tokens.isNotEmpty()) {
                                     vm.addMultiple(tokens)
                                     val msg = if (skipped.isEmpty())
-                                        "${tokens.size} account(s) imported from Google Authenticator"
+                                        context.getString(R.string.google_auth_imported, tokens.size)
                                     else
-                                        "${tokens.size} imported, ${skipped.size} skipped (HOTP)"
+                                        context.getString(R.string.google_auth_imported_skipped, tokens.size, skipped.size)
                                     vm.showMessage(msg)
                                 } else {
                                     vm.showMessage(invalidQrMessage)
