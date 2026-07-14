@@ -66,6 +66,10 @@ android {
         buildConfig = true
     }
 
+    androidResources {
+        localeFilters += listOf("en", "es", "ru")
+    }
+
     lint {
         disable += "OldTargetApi"
         disable += "GradleDependency"

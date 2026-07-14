@@ -1,0 +1,114 @@
+<resources>
+    <!-- AccountsScreen -->
+    <string name="accounts_no_codes">Аккаунты ещё не добавлены.</string>
+    <string name="accounts_add_account">Добавить аккаунт</string>
+    <string name="accounts_restore_from_backup">Восстановить из копии</string>
+    <string name="accounts_google_auth_import_hint">Также можно отсканировать QR-код из Google Authenticator для переноса аккаунтов</string>
+    <string name="accounts_code_copied">Код скопирован</string>
+    <string name="accounts_edit">Изменить</string>
+    <string name="accounts_done">Готово</string>
+    <string name="settings">Настройки</string>
+
+    <!-- TutorialScreen -->
+    <string name="tutorial_greeting_1">Привет, я TwinKey — ваше новое приложение для двухфакторной аутентификации</string>
+    <string name="tutorial_greeting_2">Я умею генерировать шестизначные коды, которыми нужно подтверждать вход в аккаунты. Это повышает безопасность, ведь без такого кода не получится зайти в учётную запись, даже зная пароль.</string>
+    <string name="tutorial_get_started">Начать работу</string>
+    <string name="tutorial_more_about_2fa">Расскажи подробнее</string>
+    <string name="tutorial_more_info_text">Двухфакторная аутентификация — это дополнительный уровень безопасности, который гарантирует, что доступ к своим учётным записям сможете получить только вы, даже если ваши пароли стали известны кому-то ещё.</string>
+    <string name="tutorial_typing">TwinKey печатает</string>
+
+    <!-- QrScannerScreen -->
+    <string name="scan_qr_title">Сканировать QR-код</string>
+    <string name="scan_add_manually">Вручную</string>
+    <string name="scan_select_from_photos">Выбрать из Фото</string>
+    <string name="scan_no_camera_permission">Разрешите TwinKey доступ к камере.\nЭто позволит добавлять аккаунты гораздо удобнее.</string>
+    <string name="scan_grant_permission">Разрешить доступ к камере</string>
+    <string name="cancel">Отменить</string>
+
+    <!-- AddManuallyScreen -->
+    <string name="add_manually_title">Новый аккаунт</string>
+    <string name="add_manually_section_service">Поставщик услуг / Эмитент</string>
+    <string name="add_manually_issuer">Госуслуги, Google, Microsoft, …</string>
+    <string name="add_manually_section_secret">Ключ</string>
+    <string name="add_manually_secret_invalid">Неверный ключ Base32</string>
+    <string name="add_manually_section_account">Имя пользователя</string>
+    <string name="add_manually_section_period">Временной интервал</string>
+    <string name="add_manually_period_seconds">%d секунд</string>
+    <string name="add_manually_section_digits">Количество цифр</string>
+    <string name="add_manually_section_algorithm">Алгоритм</string>
+    <string name="add_manually_done">Готово</string>
+
+    <!-- AccountAddedScreen -->
+    <string name="account_added_done">Готово</string>
+    <string name="account_added_tap_to_copy_hint">Нажмите, чтобы скопировать</string>
+
+    <!-- QR Scanner -->
+    <string name="scan_invalid_qr">Неверный QR код</string>
+    <string name="accounts_search">Поиск</string>
+    <string name="accounts_search_clear">Очистить поиск</string>
+
+    <!-- AccountEditScreen -->
+    <string name="edit_title">Изменить аккаунт</string>
+    <string name="edit_issuer">Поставщик услуг / Эмитент</string>
+    <string name="edit_account">Имя пользователя</string>
+    <string name="edit_secret">Ключ</string>
+    <string name="edit_copy_secret">Скопировать ключ</string>
+    <string name="edit_digits">Количество цифр</string>
+    <string name="edit_period">Временной интервал</string>
+    <string name="edit_period_seconds">%d сек</string>
+    <string name="edit_algorithm">Алгоритм</string>
+    <string name="edit_done">Готово</string>
+    <string name="edit_delete">Удалить аккаунт…</string>
+    <string name="edit_delete_confirm_title">Удалить аккаунт?</string>
+    <string name="edit_delete_confirm_message">Действительно удалить аккаунт?</string>
+
+    <!-- SettingsScreen -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_section_data">Управление данными</string>
+    <string name="settings_delete_all">Удалить аккаунты…</string>
+    <string name="settings_delete_all_title">Удалить аккаунты?</string>
+    <string name="settings_delete_all_message">Действительно удалить аккаунты? Без резервной копии это может стать большой проблемой!</string>
+    <string name="settings_erase_all">Стереть всё…</string>
+    <string name="settings_erase_all_title">Стереть всё?</string>
+    <string name="settings_erase_all_message">Действительно стереть всё? Это полностью удалит сохранённые аккаунты и настройки!</string>
+    <string name="settings_erase_all_confirm">Стереть всё</string>
+    <string name="settings_section_feedback">Обратная связь</string>
+    <string name="settings_rate_on_google_play">Оценить в Google Play</string>
+    <string name="settings_report_problem">Сообщить о проблеме</string>
+    <string name="settings_report_problem_message">Если у вас возникли трудности с TwinKey или есть предложения, пишите на support@twinkey.app</string>
+    <string name="settings_report_send_email">Написать письмо</string>
+    <string name="settings_report_copy_address">Скопировать адрес</string>
+    <string name="settings_section_info">Дополнительно</string>
+    <string name="settings_website">Сайт TwinKey</string>
+    <string name="settings_user_guide">Инструкция</string>
+    <string name="settings_terms">Условия использования</string>
+    <string name="settings_privacy">Политика конфиденциальности</string>
+    <string name="settings_version">Версия</string>
+    <string name="settings_done">Готово</string>
+    <string name="settings_section_accounts">Аккаунты</string>
+    <string name="settings_edit_accounts">Редактировать</string>
+    <string name="settings_export">Экспортировать в файл</string>
+    <string name="settings_import">Импортировать из файла</string>
+
+    <!-- Backup Export -->
+    <string name="backup_export_title">Экспорт аккаунтов</string>
+    <string name="backup_export_hint">Выберите аккаунты, которые попадут в файл резервной копии.</string>
+    <string name="backup_select_all">Выбрать все</string>
+    <string name="backup_select_none">Отменить выбор</string>
+    <string name="backup_export_button">Экспортировать (%d)</string>
+    <string name="backup_export_success">Резервная копия сохранена</string>
+    <string name="backup_export_error">Не удалось экспортировать аккаунты</string>
+
+    <!-- Backup Import -->
+    <string name="backup_import_title">Импортировать аккаунты</string>
+    <string name="backup_import_hint">Выберите файл .twinkey, чтобы импортировать из него аккаунты.</string>
+    <string name="backup_import_choose_file">Выбрать файл…</string>
+    <string name="backup_import_button">Импортировать (%d)</string>
+    <string name="backup_import_success">Аккаунты импортированы</string>
+    <string name="backup_import_error">Не удалось импортировать аккаунты</string>
+    <string name="backup_import_skipped">Не удалось импортировать аккаунтов: %d</string>
+    <string name="backup_import_skipped_section">Аккаунты, которые не удастся импортировать</string>
+    <string name="backup_import_no_accounts">В файле не найдено подходящих аккаунтов</string>
+    <string name="backup_skip_unsupported">Неподдерживаемый тип: %s</string>
+    <string name="backup_skip_invalid">Некорректные данные аккаунта</string>
+</resources>
