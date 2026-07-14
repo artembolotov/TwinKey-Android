@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">TwinKey</string>
+    <string name="app_name" translatable="false">TwinKey</string>
 
     <!-- AccountsScreen (порт iOS локализации) -->
     <string name="accounts_no_codes">Looks like there aren\'t any accounts here yet.</string>
     <string name="accounts_add_account">Add Account</string>
-    <string name="accounts_restore_from_backup">Restore from backup</string>
+    <string name="accounts_restore_from_backup">Restore from Backup</string>
     <string name="accounts_google_auth_import_hint">You can also scan a QR code from Google Authenticator to transfer your accounts</string>
     <string name="accounts_code_copied">Code copied</string>
     <string name="accounts_edit">Edit</string>
@@ -12,18 +12,18 @@
     <string name="settings">Settings</string>
 
     <!-- TutorialScreen -->
-    <string name="tutorial_greeting_1">Hi! I\'m TwinKey — your two-factor authentication app. 🔐</string>
-    <string name="tutorial_greeting_2">I keep your one-time codes safe and generate them right on your device. Ready to add your first account?</string>
+    <string name="tutorial_greeting_1">Hello! I\'m TwinKey, your new Two-factor authentication app</string>
+    <string name="tutorial_greeting_2">I can generate six-digit codes to confirm login to accounts. This increases security because without this code, you cannot log in to your account, even if you know the password.</string>
     <string name="tutorial_get_started">Get Started</string>
     <string name="tutorial_more_about_2fa">Tell More</string>
-    <string name="tutorial_more_info_text">Two-factor authentication (2FA) adds an extra layer of security. Even if someone knows your password, they still need the one-time code from your device to log in.</string>
+    <string name="tutorial_more_info_text">Two-factor authentication is an additional level of security that ensures that only you can access your accounts, even if your passwords have become known to someone else.</string>
     <string name="tutorial_typing">TwinKey is typing</string>
 
     <!-- QrScannerScreen -->
     <string name="scan_qr_title">Scan QR Code</string>
     <string name="scan_add_manually">Add Manually</string>
     <string name="scan_select_from_photos">Select from Photos</string>
-    <string name="scan_no_camera_permission">Camera access is required to scan QR codes.\nPlease grant permission to continue.</string>
+    <string name="scan_no_camera_permission">Allow TwinKey to access your camera.\nThis will make adding accounts even easier.</string>
     <string name="scan_grant_permission">Grant Camera Access</string>
     <string name="cancel">Cancel</string>
 
@@ -32,13 +32,13 @@
     <string name="add_manually_section_service">Service Provider / Issuer</string>
     <string name="add_manually_issuer">Google, Microsoft, X, …</string>
     <string name="add_manually_section_secret">Key</string>
-    <string name="add_manually_secret">OZSXEYTBORUW22DK</string>
+    <string name="add_manually_secret" translatable="false">OZSXEYTBORUW22DK</string>
     <string name="add_manually_secret_invalid">Invalid Base32 secret</string>
-    <string name="add_manually_section_account">Account</string>
-    <string name="add_manually_account">hello@twinkey.app</string>
+    <string name="add_manually_section_account">Username</string>
+    <string name="add_manually_account" translatable="false">hello@twinkey.app</string>
     <string name="add_manually_section_period">Time Interval</string>
     <string name="add_manually_period_seconds">%d seconds</string>
-    <string name="add_manually_section_digits">Digits</string>
+    <string name="add_manually_section_digits">Number of Digits</string>
     <string name="add_manually_section_algorithm">Algorithm</string>
     <string name="add_manually_done">Done</string>
 
@@ -47,7 +47,7 @@
     <string name="account_added_tap_to_copy_hint">Tap to Copy</string>
 
     <!-- QR Scanner -->
-    <string name="scan_invalid_qr">Invalid QR code — not an OTP account</string>
+    <string name="scan_invalid_qr">Invalid QR code</string>
     <string name="accounts_search">Search</string>
     <string name="accounts_search_clear">Clear search</string>
 
@@ -71,10 +71,10 @@
     <string name="settings_section_data">Data Management</string>
     <string name="settings_delete_all">Delete Accounts…</string>
     <string name="settings_delete_all_title">Delete Accounts?</string>
-    <string name="settings_delete_all_message">All accounts will be permanently removed from this device.</string>
+    <string name="settings_delete_all_message">Really delete accounts? Without a backup it could be a big problem!</string>
     <string name="settings_erase_all">Erase All…</string>
     <string name="settings_erase_all_title">Erase everything?</string>
-    <string name="settings_erase_all_message">This will permanently delete all accounts and settings.</string>
+    <string name="settings_erase_all_message">Really erase? This will completely delete the saved accounts and settings!</string>
     <string name="settings_erase_all_confirm">Erase All</string>
     <string name="settings_section_feedback">Feedback</string>
     <string name="settings_rate_on_google_play">Rate on Google Play</string>
@@ -82,7 +82,7 @@
     <string name="settings_report_problem_message">If you encounter any difficulties with TwinKey or have any suggestions, please write to support@twinkey.app</string>
     <string name="settings_report_send_email">Send Email</string>
     <string name="settings_report_copy_address">Copy Address</string>
-    <string name="settings_section_info">Info</string>
+    <string name="settings_section_info">Additional</string>
     <string name="settings_website">TwinKey\'s Website</string>
     <string name="settings_user_guide">User Guide</string>
     <string name="settings_terms">Terms and Conditions</string>
@@ -98,10 +98,10 @@
     <string name="backup_export_title">Export Accounts</string>
     <string name="backup_export_hint">Select accounts to include in the backup file.</string>
     <string name="backup_select_all">Select All</string>
-    <string name="backup_select_none">Select None</string>
+    <string name="backup_select_none">Clear Selection</string>
     <string name="backup_export_button">Export (%d)</string>
     <string name="backup_export_success">Backup exported successfully</string>
-    <string name="backup_export_error">Failed to export backup</string>
+    <string name="backup_export_error">Failed to export accounts</string>
 
     <!-- Backup Import -->
     <string name="backup_import_title">Import Accounts</string>
@@ -109,9 +109,9 @@
     <string name="backup_import_choose_file">Choose File…</string>
     <string name="backup_import_button">Import (%d)</string>
     <string name="backup_import_success">Accounts imported successfully</string>
-    <string name="backup_import_error">Failed to read backup file</string>
+    <string name="backup_import_error">Failed to import accounts</string>
     <string name="backup_import_skipped">%d account(s) could not be imported</string>
-    <string name="backup_import_skipped_section">Skipped accounts</string>
+    <string name="backup_import_skipped_section">Accounts that can\'t be imported</string>
     <string name="backup_import_no_accounts">No valid accounts found in the file</string>
     <string name="backup_skip_unsupported">Unsupported type: %s</string>
     <string name="backup_skip_invalid">Invalid account data</string>

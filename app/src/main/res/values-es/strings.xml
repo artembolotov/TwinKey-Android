@@ -1,0 +1,114 @@
+<resources>
+    <!-- AccountsScreen -->
+    <string name="accounts_no_codes">Las cuentas aún no se han añadido.</string>
+    <string name="accounts_add_account">Añadir cuenta</string>
+    <string name="accounts_restore_from_backup">Restaurar desde copia</string>
+    <string name="accounts_google_auth_import_hint">También puedes escanear un código QR de Google Authenticator para transferir tus cuentas</string>
+    <string name="accounts_code_copied">El código se copia</string>
+    <string name="accounts_edit">Editar</string>
+    <string name="accounts_done">OK</string>
+    <string name="settings">Configuración</string>
+
+    <!-- TutorialScreen -->
+    <string name="tutorial_greeting_1">¡Hola, soy TwinKey, tu nueva aplicación para autenticación de dos factores!</string>
+    <string name="tutorial_greeting_2">Sé cómo generar códigos de seis dígitos para confirmar el inicio de sesión en las cuentas. Esto aumenta la seguridad, porque sin dicho código no puedes iniciar sesión en tu cuenta aunque conozcas tu contraseña.</string>
+    <string name="tutorial_get_started">Empezar</string>
+    <string name="tutorial_more_about_2fa">Dígame más</string>
+    <string name="tutorial_more_info_text">La autenticación de dos factores es una capa adicional de seguridad que garantiza que sólo tú puedes acceder a tus cuentas, aunque tus contraseñas sean conocidas por otra persona.</string>
+    <string name="tutorial_typing">TwinKey está escribiendo</string>
+
+    <!-- QrScannerScreen -->
+    <string name="scan_qr_title">Escanear código QR</string>
+    <string name="scan_add_manually">Manualmente</string>
+    <string name="scan_select_from_photos">Seleccionar foto</string>
+    <string name="scan_no_camera_permission">Permitir el acceso de TwinKey a la cámara.\nEsto hará que añadir cuentas sea mucho más cómodo.</string>
+    <string name="scan_grant_permission">Permitir acceso a la cámara</string>
+    <string name="cancel">Cancelar</string>
+
+    <!-- AddManuallyScreen -->
+    <string name="add_manually_title">Nueva cuenta</string>
+    <string name="add_manually_section_service">Proveedor de servicio / Emisor</string>
+    <string name="add_manually_issuer">Google, Microsoft, X, …</string>
+    <string name="add_manually_section_secret">Clave</string>
+    <string name="add_manually_secret_invalid">Clave Base32 no válida</string>
+    <string name="add_manually_section_account">Nombre de usuario</string>
+    <string name="add_manually_section_period">Intervalo de tiempo</string>
+    <string name="add_manually_period_seconds">%d segundos</string>
+    <string name="add_manually_section_digits">Número de dígitos</string>
+    <string name="add_manually_section_algorithm">Algoritmo</string>
+    <string name="add_manually_done">OK</string>
+
+    <!-- AccountAddedScreen -->
+    <string name="account_added_done">OK</string>
+    <string name="account_added_tap_to_copy_hint">Toca para copiar</string>
+
+    <!-- QR Scanner -->
+    <string name="scan_invalid_qr">Código QR inválido</string>
+    <string name="accounts_search">Buscar</string>
+    <string name="accounts_search_clear">Borrar búsqueda</string>
+
+    <!-- AccountEditScreen -->
+    <string name="edit_title">Editar cuenta</string>
+    <string name="edit_issuer">Proveedor de servicio / Emisor</string>
+    <string name="edit_account">Nombre de usuario</string>
+    <string name="edit_secret">Clave</string>
+    <string name="edit_copy_secret">Copiar clave</string>
+    <string name="edit_digits">Número de dígitos</string>
+    <string name="edit_period">Intervalo de tiempo</string>
+    <string name="edit_period_seconds">%d s</string>
+    <string name="edit_algorithm">Algoritmo</string>
+    <string name="edit_done">OK</string>
+    <string name="edit_delete">Borrar cuenta…</string>
+    <string name="edit_delete_confirm_title">¿Borrar cuenta?</string>
+    <string name="edit_delete_confirm_message">¿De verdad borrar la cuenta?</string>
+
+    <!-- SettingsScreen -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_section_data">Gestión de los datos</string>
+    <string name="settings_delete_all">Eliminar cuentas…</string>
+    <string name="settings_delete_all_title">¿Eliminar cuentas?</string>
+    <string name="settings_delete_all_message">¿Realmente deseas eliminar estas cuentas? ¡Esto podría ser un problema sin una copia de seguridad!</string>
+    <string name="settings_erase_all">Borrar todo…</string>
+    <string name="settings_erase_all_title">¿Borrar todo?</string>
+    <string name="settings_erase_all_message">¿Realmente borrar todo? ¡Esto eliminará por completo las cuentas y los ajustes guardados!</string>
+    <string name="settings_erase_all_confirm">Borrar todo</string>
+    <string name="settings_section_feedback">Comentarios</string>
+    <string name="settings_rate_on_google_play">Evalúe en Google Play</string>
+    <string name="settings_report_problem">Notificar un problema</string>
+    <string name="settings_report_problem_message">Si tiene dificultades con TwinKey o alguna sugerencia, escriba a support@twinkey.app</string>
+    <string name="settings_report_send_email">Escribir Email</string>
+    <string name="settings_report_copy_address">Copiar la dirección</string>
+    <string name="settings_section_info">También</string>
+    <string name="settings_website">Web de TwinKey</string>
+    <string name="settings_user_guide">Guía de uso</string>
+    <string name="settings_terms">Condiciones de uso</string>
+    <string name="settings_privacy">Política de privacidad</string>
+    <string name="settings_version">Versión</string>
+    <string name="settings_done">OK</string>
+    <string name="settings_section_accounts">Cuentas</string>
+    <string name="settings_edit_accounts">Editar</string>
+    <string name="settings_export">Exportar a fichero</string>
+    <string name="settings_import">Importar desde fichero</string>
+
+    <!-- Backup Export -->
+    <string name="backup_export_title">Exportar cuentas</string>
+    <string name="backup_export_hint">Selecciona las cuentas que se incluirán en el archivo de copia de seguridad.</string>
+    <string name="backup_select_all">Seleccionar todos</string>
+    <string name="backup_select_none">Deseleccionar</string>
+    <string name="backup_export_button">Exportar (%d)</string>
+    <string name="backup_export_success">Copia de seguridad exportada</string>
+    <string name="backup_export_error">Error al exportar cuentas</string>
+
+    <!-- Backup Import -->
+    <string name="backup_import_title">Importar cuentas</string>
+    <string name="backup_import_hint">Elige un archivo .twinkey para importar cuentas.</string>
+    <string name="backup_import_choose_file">Elegir archivo…</string>
+    <string name="backup_import_button">Importar (%d)</string>
+    <string name="backup_import_success">Cuentas importadas correctamente</string>
+    <string name="backup_import_error">Error al importar cuentas</string>
+    <string name="backup_import_skipped">No se pudieron importar %d cuentas</string>
+    <string name="backup_import_skipped_section">Cuentas que no se pueden importar</string>
+    <string name="backup_import_no_accounts">No se encontraron cuentas válidas en el archivo</string>
+    <string name="backup_skip_unsupported">Tipo no soportado: %s</string>
+    <string name="backup_skip_invalid">Datos de cuenta inválidos</string>
+</resources>
