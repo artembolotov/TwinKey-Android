@@ -5,7 +5,7 @@
     <string name="accounts_no_codes">Looks like there aren\'t any accounts here yet.</string>
     <string name="accounts_add_account">Add Account</string>
     <string name="accounts_restore_from_backup">Restore from Backup</string>
-    <string name="accounts_google_auth_import_hint">You can also scan a QR code from Google Authenticator to transfer your accounts</string>
+    <string name="accounts_google_auth_import_hint"><![CDATA[You can also scan a QR code from Google Authenticator to transfer your accounts or add a <a href="twinkey://add-test">test account</a> to explore the app]]></string>
     <string name="accounts_code_copied">Code copied</string>
     <string name="accounts_edit">Edit</string>
     <string name="accounts_done">Done</string>
@@ -16,7 +16,7 @@
     <string name="tutorial_greeting_2">I can generate six-digit codes to confirm login to accounts. This increases security because without this code, you cannot log in to your account, even if you know the password.</string>
     <string name="tutorial_get_started">Get Started</string>
     <string name="tutorial_more_about_2fa">Tell More</string>
-    <string name="tutorial_more_info_text">Two-factor authentication is an additional level of security that ensures that only you can access your accounts, even if your passwords have become known to someone else.</string>
+    <string name="tutorial_more_info_text"><![CDATA[Two-factor authentication is an additional level of security that ensures that only you can access your accounts, even if your passwords have become known to someone else. <a href="https://en.wikipedia.org/wiki/Time-based_one-time_password">More in Wikipedia</a>]]></string>
     <string name="tutorial_typing">TwinKey is typing</string>
 
     <!-- QrScannerScreen -->

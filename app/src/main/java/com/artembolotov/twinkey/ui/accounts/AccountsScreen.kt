@@ -240,6 +240,7 @@ fun AccountsScreen(
                                 .fillMaxSize()
                                 .padding(top = topBarHeightDp, bottom = searchBarHeightDp),
                             onRestoreFromBackup = { vm.showOverlay(AccountsOverlay.ImportFromEmpty) },
+                            onAddTestAccount = { vm.addTestAccount() },
                         )
                     } else {
                         AccountsListView(

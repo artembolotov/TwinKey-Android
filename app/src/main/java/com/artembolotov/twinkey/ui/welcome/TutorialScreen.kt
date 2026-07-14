@@ -34,6 +34,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.fromHtml
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
@@ -84,11 +89,11 @@ fun TutorialScreen(
                 when (msg) {
                     is ChatMessage.Typing -> TypingBubble()
                     is ChatMessage.Income -> MessageBubble(
-                        text = stringResource(msg.textRes),
+                        text = rememberHtmlText(msg.textRes),
                         isOutcome = false
                     )
                     is ChatMessage.Outcome -> MessageBubble(
-                        text = stringResource(msg.textRes),
+                        text = rememberHtmlText(msg.textRes),
                         isOutcome = true
                     )
                 }
@@ -124,8 +129,24 @@ sealed class ChatMessage {
     data class Outcome(val textRes: Int) : ChatMessage()
 }
 
+// Сообщения могут содержать HTML-ссылки (например, «Подробнее в Википедии»);
+// клики обрабатываются LocalUriHandler по умолчанию.
 @Composable
-private fun MessageBubble(text: String, isOutcome: Boolean) {
+private fun rememberHtmlText(textRes: Int): AnnotatedString {
+    val html = stringResource(textRes)
+    val linkColor = MaterialTheme.colorScheme.primary
+    return remember(html, linkColor) {
+        AnnotatedString.fromHtml(
+            htmlString = html,
+            linkStyles = TextLinkStyles(
+                style = SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline)
+            )
+        )
+    }
+}
+
+@Composable
+private fun MessageBubble(text: AnnotatedString, isOutcome: Boolean) {
     val bgColor = if (isOutcome) MaterialTheme.colorScheme.primary
     else MaterialTheme.colorScheme.surfaceVariant
     val textColor = if (isOutcome) MaterialTheme.colorScheme.onPrimary
