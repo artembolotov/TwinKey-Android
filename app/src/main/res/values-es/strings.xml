@@ -14,7 +14,7 @@
     <string name="tutorial_greeting_2">Sé cómo generar códigos de seis dígitos para confirmar el inicio de sesión en las cuentas. Esto aumenta la seguridad, porque sin dicho código no puedes iniciar sesión en tu cuenta aunque conozcas tu contraseña.</string>
     <string name="tutorial_get_started">Empezar</string>
     <string name="tutorial_more_about_2fa">Dígame más</string>
-    <string name="tutorial_more_info_text"><![CDATA[La autenticación de dos factores es una capa adicional de seguridad que garantiza que sólo tú puedes acceder a tus cuentas, aunque tus contraseñas sean conocidas por otra persona. <a href="https://es.wikipedia.org/wiki/Contraseña_de_un_solo_uso">Más información en Wikipedia</a>]]></string>
+    <string name="tutorial_more_info_text"><![CDATA[La autenticación de dos factores es una capa adicional de seguridad que garantiza que sólo tú puedes acceder a tus cuentas, aunque tus contraseñas sean conocidas por otra persona. <a href="https://es.m.wikipedia.org/wiki/Time-based_one-time_password">Más información en Wikipedia</a>]]></string>
     <string name="tutorial_typing">TwinKey está escribiendo</string>
 
     <!-- QrScannerScreen -->
