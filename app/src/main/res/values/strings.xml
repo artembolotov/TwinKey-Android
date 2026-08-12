@@ -49,7 +49,6 @@
     <!-- QR Scanner -->
     <string name="scan_invalid_qr">Invalid QR code</string>
     <string name="google_auth_imported">%d account(s) imported from Google Authenticator</string>
-    <string name="google_auth_imported_skipped">%1$d imported, %2$d skipped (HOTP)</string>
     <string name="accounts_search">Search</string>
     <string name="accounts_search_clear">Clear search</string>
     <string name="accounts_reorder_hint">Drag to reorder</string>

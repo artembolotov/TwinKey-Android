@@ -51,6 +51,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
+import com.artembolotov.twinkey.data.ImportResult
+import com.artembolotov.twinkey.data.SkipReason
+import com.artembolotov.twinkey.data.SkippedAccount
 import com.artembolotov.twinkey.domain.GoogleAuthMigrationParser
 import com.artembolotov.twinkey.domain.TokenUrlParser
 import com.artembolotov.twinkey.ui.add.AddManuallyScreen
@@ -199,15 +202,16 @@ fun AccountsScreen(
                                     GoogleAuthMigrationParser.parse(url)
                                 }.getOrElse { Pair(emptyList(), emptyList()) }
 
-                                vm.dismissOverlay()
-                                if (tokens.isNotEmpty()) {
-                                    vm.addMultiple(tokens)
-                                    val msg = if (skipped.isEmpty())
-                                        context.getString(R.string.google_auth_imported, tokens.size)
-                                    else
-                                        context.getString(R.string.google_auth_imported_skipped, tokens.size, skipped.size)
-                                    vm.showMessage(msg)
+                                if (tokens.isNotEmpty() || skipped.isNotEmpty()) {
+                                    val importResult = ImportResult(
+                                        successful = tokens,
+                                        skipped = skipped.map {
+                                            SkippedAccount(name = it, reason = SkipReason.UnsupportedType("HOTP"))
+                                        }
+                                    )
+                                    vm.showOverlay(AccountsOverlay.GoogleAuthImport(importResult))
                                 } else {
+                                    vm.dismissOverlay()
                                     vm.showMessage(invalidQrMessage)
                                 }
                             }

@@ -30,6 +30,7 @@ sealed class AccountsOverlay {
     data class Editing(val token: Token) : AccountsOverlay()
     object Settings : AccountsOverlay()
     object ImportFromEmpty : AccountsOverlay()
+    data class GoogleAuthImport(val importResult: ImportResult) : AccountsOverlay()
 }
 
 // Порт AppState + TimerService из iOS

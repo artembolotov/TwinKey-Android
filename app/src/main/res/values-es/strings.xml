@@ -45,7 +45,6 @@
     <!-- QR Scanner -->
     <string name="scan_invalid_qr">Código QR inválido</string>
     <string name="google_auth_imported">%d cuentas importadas de Google Authenticator</string>
-    <string name="google_auth_imported_skipped">%1$d importadas, %2$d omitidas (HOTP)</string>
     <string name="accounts_search">Buscar</string>
     <string name="accounts_search_clear">Borrar búsqueda</string>
     <string name="accounts_reorder_hint">Arrastra para reordenar</string>
