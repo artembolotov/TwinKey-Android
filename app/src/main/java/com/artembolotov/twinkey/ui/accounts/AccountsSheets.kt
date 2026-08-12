@@ -12,6 +12,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.data.ImportResult
 import com.artembolotov.twinkey.ui.add.AccountAddedScreen
 import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
@@ -44,6 +46,7 @@ fun AccountsSheets(
     importSuccess: String,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     when (val overlay = state.overlay) {
         is AccountsOverlay.Added -> {
@@ -113,6 +116,25 @@ fun AccountsSheets(
                         onDismiss = { vm.dismissOverlay() }
                     )
                 }
+            }
+        }
+
+        is AccountsOverlay.GoogleAuthImport -> {
+            val skippedCount = overlay.importResult.skipped.size
+            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                AccountsImportSelectionScreen(
+                    importResult = overlay.importResult,
+                    onImport = { tokens ->
+                        vm.addMultiple(tokens)
+                        vm.dismissOverlay()
+                        val msg = if (skippedCount == 0)
+                            context.getString(R.string.google_auth_imported, tokens.size)
+                        else
+                            context.getString(R.string.google_auth_imported_skipped, tokens.size, skippedCount)
+                        vm.showMessage(msg)
+                    },
+                    onDismiss = { vm.dismissOverlay() }
+                )
             }
         }
 
