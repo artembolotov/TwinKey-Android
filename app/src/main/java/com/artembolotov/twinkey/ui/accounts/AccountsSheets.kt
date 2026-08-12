@@ -120,13 +120,18 @@ fun AccountsSheets(
         }
 
         is AccountsOverlay.GoogleAuthImport -> {
+            val skippedCount = overlay.importResult.skipped.size
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                 AccountsImportSelectionScreen(
                     importResult = overlay.importResult,
                     onImport = { tokens ->
                         vm.addMultiple(tokens)
                         vm.dismissOverlay()
-                        vm.showMessage(context.getString(R.string.google_auth_imported, tokens.size))
+                        val msg = if (skippedCount == 0)
+                            context.getString(R.string.google_auth_imported, tokens.size)
+                        else
+                            context.getString(R.string.google_auth_imported_skipped, tokens.size, skippedCount)
+                        vm.showMessage(msg)
                     },
                     onDismiss = { vm.dismissOverlay() }
                 )
