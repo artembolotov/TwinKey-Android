@@ -202,7 +202,7 @@ fun AccountsScreen(
                                     GoogleAuthMigrationParser.parse(url)
                                 }.getOrElse { Pair(emptyList(), emptyList()) }
 
-                                if (tokens.isNotEmpty()) {
+                                if (tokens.isNotEmpty() || skipped.isNotEmpty()) {
                                     val importResult = ImportResult(
                                         successful = tokens,
                                         skipped = skipped.map {
