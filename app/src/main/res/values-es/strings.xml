@@ -90,8 +90,8 @@
     <string name="settings_done">OK</string>
     <string name="settings_section_accounts">Cuentas</string>
     <string name="settings_edit_accounts">Editar</string>
-    <string name="settings_export">Exportar a fichero</string>
-    <string name="settings_import">Importar desde fichero</string>
+    <string name="settings_export">Exportar a archivo</string>
+    <string name="settings_import">Importar desde archivo</string>
 
     <!-- Backup Export -->
     <string name="backup_export_title">Exportar cuentas</string>
