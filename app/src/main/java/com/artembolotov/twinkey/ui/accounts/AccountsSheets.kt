@@ -76,35 +76,42 @@ fun AccountsSheets(
 
         AccountsOverlay.ImportFromEmpty -> {
             var importResult by remember { mutableStateOf<ImportResult?>(null) }
+            val result = importResult
 
-            AppModalBottomSheet(
-                appSheetState = sheetStates.importFromEmpty,
-                onDismissRequest = { vm.dismissOverlay() }
-            ) {
-                AccountsImportPickerSheet(
-                    onFileParsed = { result ->
-                        scope.launch {
-                            sheetStates.importFromEmpty.hide()
-                            importResult = result
+            if (result == null) {
+                // Шаг 1: bottom sheet с выбором файла. Композируется только пока нет
+                // результата — иначе после перехода к полноэкранному списку (шаг 2) его
+                // Dialog-окно остаётся живым (лист лишь визуально скрыт через .hide()) и
+                // перехватывает жесты поверх AccountsImportSelectionScreen, из-за чего
+                // скролл списка закрывает весь оверлей.
+                AppModalBottomSheet(
+                    appSheetState = sheetStates.importFromEmpty,
+                    onDismissRequest = { vm.dismissOverlay() }
+                ) {
+                    AccountsImportPickerSheet(
+                        onFileParsed = { parsed ->
+                            scope.launch {
+                                sheetStates.importFromEmpty.hide()
+                                importResult = parsed
+                            }
+                        },
+                        onError = { msg ->
+                            scope.launch {
+                                sheetStates.importFromEmpty.hide()
+                                vm.dismissOverlay()
+                                vm.showMessage(msg)
+                            }
+                        },
+                        onDismiss = {
+                            scope.launch {
+                                sheetStates.importFromEmpty.hide()
+                                vm.dismissOverlay()
+                            }
                         }
-                    },
-                    onError = { msg ->
-                        scope.launch {
-                            sheetStates.importFromEmpty.hide()
-                            vm.dismissOverlay()
-                            vm.showMessage(msg)
-                        }
-                    },
-                    onDismiss = {
-                        scope.launch {
-                            sheetStates.importFromEmpty.hide()
-                            vm.dismissOverlay()
-                        }
-                    }
-                )
-            }
-
-            importResult?.let { result ->
+                    )
+                }
+            } else {
+                // Шаг 2: полноэкранный список выбора аккаунтов.
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     AccountsImportSelectionScreen(
                         importResult = result,
