@@ -33,7 +33,9 @@
             <!-- Открытие .twinkey бэкапов из файлового менеджера / "Открыть с помощью".
                  У .twinkey нет зарегистрированного системного MIME-типа, поэтому провайдеры
                  обычно отдают его как application/octet-stream или вовсе без типа — матчимся
-                 по расширению через pathPattern, а mimeType оставляем "*/*". -->
+                 по расширению через pathPattern, а mimeType оставляем "*/*". Ловит Intent'ы
+                 с каким-либо распознанным типом (например content:// URI, для которых тип
+                 определяет провайдер). -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -44,6 +46,23 @@
                 <data android:scheme="file" />
                 <data android:host="*" />
                 <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.twinkey" />
+            </intent-filter>
+
+            <!-- Второй фильтр без android:mimeType — ловит Intent'ы вовсе без MIME-типа
+                 (type == null). Многие файловые менеджеры для незнакомого расширения не
+                 выставляют тип совсем, а фильтр с объявленным mimeType такие Intent'ы
+                 принципиально не матчит (IntentFilter#findMimeType возвращает false для
+                 null-типа ещё до проверки "*/*"), поэтому нужен отдельный фильтр. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:host="*" />
                 <data android:pathPattern=".*\\.twinkey" />
             </intent-filter>
         </activity>
