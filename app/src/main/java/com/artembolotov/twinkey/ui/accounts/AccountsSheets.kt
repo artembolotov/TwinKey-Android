@@ -1,11 +1,15 @@
 package com.artembolotov.twinkey.ui.accounts
 
 import android.os.Build
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.data.ImportResult
+import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.add.AccountAddedScreen
 import com.artembolotov.twinkey.ui.components.AppModalBottomSheet
 import com.artembolotov.twinkey.ui.components.AppSheetState
@@ -111,38 +116,36 @@ fun AccountsSheets(
                     )
                 }
             } else {
-                // Шаг 2: полноэкранный список выбора аккаунтов.
-                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    AccountsImportSelectionScreen(
-                        importResult = result,
-                        onImport = { tokens ->
-                            vm.addMultiple(tokens)
-                            vm.dismissOverlay()
-                            vm.showMessage(importSuccess)
-                        },
-                        onDismiss = { vm.dismissOverlay() }
-                    )
-                }
+                // Шаг 2: полноэкранный список выбора аккаунтов — появляется с тем же
+                // slide+fade, что и остальные полноэкранные оверлеи в AccountsScreen,
+                // а не резким скачком (см. ImportSelectionOverlay).
+                ImportSelectionOverlay(
+                    importResult = result,
+                    onImport = { tokens ->
+                        vm.addMultiple(tokens)
+                        vm.dismissOverlay()
+                        vm.showMessage(importSuccess)
+                    },
+                    onDismiss = { vm.dismissOverlay() }
+                )
             }
         }
 
         is AccountsOverlay.GoogleAuthImport -> {
             val skippedCount = overlay.importResult.skipped.size
-            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                AccountsImportSelectionScreen(
-                    importResult = overlay.importResult,
-                    onImport = { tokens ->
-                        vm.addMultiple(tokens)
-                        vm.dismissOverlay()
-                        val msg = if (skippedCount == 0)
-                            context.getString(R.string.google_auth_imported, tokens.size)
-                        else
-                            context.getString(R.string.google_auth_imported_skipped, tokens.size, skippedCount)
-                        vm.showMessage(msg)
-                    },
-                    onDismiss = { vm.dismissOverlay() }
-                )
-            }
+            ImportSelectionOverlay(
+                importResult = overlay.importResult,
+                onImport = { tokens ->
+                    vm.addMultiple(tokens)
+                    vm.dismissOverlay()
+                    val msg = if (skippedCount == 0)
+                        context.getString(R.string.google_auth_imported, tokens.size)
+                    else
+                        context.getString(R.string.google_auth_imported_skipped, tokens.size, skippedCount)
+                    vm.showMessage(msg)
+                },
+                onDismiss = { vm.dismissOverlay() }
+            )
         }
 
         AccountsOverlay.None,
@@ -150,5 +153,37 @@ fun AccountsSheets(
         AccountsOverlay.Manual,
         is AccountsOverlay.Editing,
         AccountsOverlay.Scanner -> Unit
+    }
+}
+
+/**
+ * Полноэкранный список выбора аккаунтов для импорта (шаг 2 ImportFromEmpty и
+ * GoogleAuthImport). Оба сценария монтируют этот composable уже в "видимом" состоянии
+ * (importResult готов сразу), поэтому просто читать флаг снаружи для AnimatedVisibility
+ * недостаточно — она не анимирует переход, если он уже true на первой композиции.
+ * Вместо этого показываем контент невидимым один кадр и включаем видимость в
+ * LaunchedEffect — тогда AnimatedVisibility честно проигрывает вход, тем же
+ * slideInVertically + fadeIn, что и остальные полноэкранные оверлеи в AccountsScreen.
+ */
+@Composable
+private fun ImportSelectionOverlay(
+    importResult: ImportResult,
+    onImport: (List<Token>) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+    ) {
+        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            AccountsImportSelectionScreen(
+                importResult = importResult,
+                onImport = onImport,
+                onDismiss = onDismiss
+            )
+        }
     }
 }
