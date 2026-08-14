@@ -31,11 +31,40 @@
             </intent-filter>
 
             <!-- Открытие .twinkey бэкапов из файлового менеджера / "Открыть с помощью".
-                 У .twinkey нет зарегистрированного системного MIME-типа, поэтому провайдеры
-                 обычно отдают его как application/octet-stream или вовсе без типа — матчимся
-                 по расширению через pathPattern, а mimeType оставляем "*/*". Ловит Intent'ы
-                 с каким-либо распознанным типом (например content:// URI, для которых тип
-                 определяет провайдер). -->
+
+                 Ключевой фильтр: у .twinkey нет зарегистрированного MIME-типа, поэтому
+                 DocumentsProvider/MediaStore отдают такой файл как application/octet-stream.
+                 Фильтры по имени файла (pathPattern, ниже) тут не работают: у content://
+                 URI большинства провайдеров в пути вообще нет имени файла — там
+                 непрозрачный id вроде content://com.android.providers.downloads.documents/
+                 document/msf%3A1000000042. Именно поэтому система и отвечала "нет
+                 приложений, способных открыть файл этого типа": совпасть было не по чему.
+                 Матчимся по MIME-типу без ограничений на путь — иначе открыть бэкап из
+                 "Загрузок" или Google Files невозможно в принципе. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="content" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/x-twinkey" />
+                <data android:mimeType="application/vnd.twinkey" />
+            </intent-filter>
+
+            <!-- Дополнительный фильтр по расширению — для провайдеров, которые всё же
+                 отдают имя файла в пути (ExternalStorageProvider: /document/primary:
+                 Download/backup.twinkey) и при этом ставят нестандартный MIME-тип,
+                 не покрытый фильтром выше.
+
+                 android:host обязателен: IntentFilter#matchData проверяет пути только
+                 когда у фильтра объявлен authority, без него pathPattern молча
+                 игнорируется и фильтр начинает ловить вообще все content:// URI.
+                 pathAdvancedPattern (API 26+, minSdk у нас 26) — настоящая регулярка,
+                 в отличие от pathPattern, чей PatternMatcher.SIMPLE_GLOB не умеет
+                 бэктрекинг и спотыкается об имена с несколькими точками; pathPattern
+                 оставлен для совместимости с резолверами, игнорирующими advanced. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -47,10 +76,11 @@
                 <data android:host="*" />
                 <data android:mimeType="*/*" />
                 <data android:pathPattern=".*\\.twinkey" />
+                <data android:pathAdvancedPattern=".*\\.twinkey" />
             </intent-filter>
 
-            <!-- Второй фильтр без android:mimeType — ловит Intent'ы вовсе без MIME-типа
-                 (type == null). Многие файловые менеджеры для незнакомого расширения не
+            <!-- То же самое, но без android:mimeType — ловит Intent'ы вовсе без MIME-типа
+                 (type == null). Некоторые файловые менеджеры для незнакомого расширения не
                  выставляют тип совсем, а фильтр с объявленным mimeType такие Intent'ы
                  принципиально не матчит (IntentFilter#findMimeType возвращает false для
                  null-типа ещё до проверки "*/*"), поэтому нужен отдельный фильтр. -->
@@ -64,6 +94,20 @@
                 <data android:scheme="file" />
                 <data android:host="*" />
                 <data android:pathPattern=".*\\.twinkey" />
+                <data android:pathAdvancedPattern=".*\\.twinkey" />
+            </intent-filter>
+
+            <!-- Запасной путь: "Поделиться → TwinKey" из файлового менеджера. Работает даже
+                 там, где "Открыть с помощью" для неизвестного расширения не предлагается
+                 вовсе. Uri приходит в EXTRA_STREAM, см. MainActivity.handleFileIntent. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/x-twinkey" />
+                <data android:mimeType="application/vnd.twinkey" />
             </intent-filter>
         </activity>
     </application>
