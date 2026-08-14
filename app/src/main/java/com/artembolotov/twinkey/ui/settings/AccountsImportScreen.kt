@@ -1,8 +1,5 @@
 package com.artembolotov.twinkey.ui.settings
 
-import android.content.Context
-import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -73,7 +70,7 @@ fun AccountsImportPickerSheet(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            val result = readBackupFile(context, uri)
+            val result = BackupManager.importFromUri(context, uri)
             if (result != null) onFileParsed(result) else onError(importErrorMsg)
         }
     }
@@ -266,15 +263,5 @@ fun AccountsImportSelectionScreen(
                 }
             }
         }
-    }
-}
-
-private fun readBackupFile(context: Context, uri: Uri): ImportResult? {
-    return try {
-        val json = context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) } ?: return null
-        BackupManager.import(json)
-    } catch (e: Exception) {
-        Log.w("AccountsImport", "Failed to read backup file", e)
-        null
     }
 }
