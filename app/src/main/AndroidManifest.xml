@@ -106,6 +106,30 @@
                 <data android:pathAdvancedPattern=".*\\.twinkey" />
             </intent-filter>
 
+            <!-- Последняя непокрытая комбинация: null-тип + непрозрачный content:// URI,
+                 в пути которого имени файла нет вовсе (content://media/external/file/1234).
+                 Так делают файловые менеджеры поверх MediaStore — в частности Samsung
+                 My Files: расширения .twinkey нет в его внутренней таблице, поэтому MIME-тип
+                 он не выставляет, а URI берёт из MediaStore. Матчиться не по чему: типа нет,
+                 имени файла в пути нет — предыдущие фильтры такой Intent пропускают, и
+                 проводник показывает "нет приложений".
+
+                 Поэтому здесь нет ни pathPattern, ни mimeType. Отсутствие mimeType — не
+                 послабление, а сужение: фильтр без объявленных типов матчит ТОЛЬКО Intent'ы
+                 с type == null (IntentFilter#matchData: "if no MIME types are specified, we
+                 will only match against an Intent that does not have a MIME type"). Цена —
+                 TwinKey будет появляться в "Открыть с помощью" для любых файлов, тип которых
+                 система определить не смогла; ровно для этих файлов она иначе отвечает "нет
+                 приложений". Нечитаемый файл упирается в backup_import_error. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="content" />
+            </intent-filter>
+
             <!-- Запасной путь: "Поделиться → TwinKey" из файлового менеджера. Работает даже
                  там, где "Открыть с помощью" для неизвестного расширения не предлагается
                  вовсе. Uri приходит в EXTRA_STREAM, см. MainActivity.handleFileIntent. -->
