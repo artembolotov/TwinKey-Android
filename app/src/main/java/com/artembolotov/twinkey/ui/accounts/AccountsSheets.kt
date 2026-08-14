@@ -148,18 +148,6 @@ fun AccountsSheets(
             )
         }
 
-        is AccountsOverlay.BackupFileImport -> {
-            ImportSelectionOverlay(
-                importResult = overlay.importResult,
-                onImport = { tokens ->
-                    vm.addMultiple(tokens)
-                    vm.dismissOverlay()
-                    vm.showMessage(importSuccess)
-                },
-                onDismiss = { vm.dismissOverlay() }
-            )
-        }
-
         AccountsOverlay.None,
         AccountsOverlay.Settings,
         AccountsOverlay.Manual,
