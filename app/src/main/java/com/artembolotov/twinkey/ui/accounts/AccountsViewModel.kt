@@ -2,11 +2,14 @@ package com.artembolotov.twinkey.ui.accounts
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.core.AppMode
 import com.artembolotov.twinkey.data.AccountRepository
+import com.artembolotov.twinkey.data.BackupManager
 import com.artembolotov.twinkey.data.ImportResult
 import com.artembolotov.twinkey.data.KeychainService
 import com.artembolotov.twinkey.domain.OtpFactor
@@ -31,6 +34,7 @@ sealed class AccountsOverlay {
     object Settings : AccountsOverlay()
     object ImportFromEmpty : AccountsOverlay()
     data class GoogleAuthImport(val importResult: ImportResult) : AccountsOverlay()
+    data class BackupFileImport(val importResult: ImportResult) : AccountsOverlay()
 }
 
 // Порт AppState + TimerService из iOS
@@ -152,6 +156,20 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
     fun completeWelcome() {
         settings.edit { putBoolean("initialized", true) }
         _state.update { it.copy(mode = AppMode.Accounts) }
+    }
+
+    // Порт открытия .twinkey-файла извне (файловый менеджер / "Открыть с помощью"),
+    // см. MainActivity.handleViewIntent. Ведёт себя как completeWelcome() на первом
+    // запуске: пользователь, открывший бэкап, не должен упираться в туториал.
+    fun importBackupFile(uri: Uri) {
+        val context = getApplication<Application>()
+        val result = BackupManager.importFromUri(context, uri)
+        if (result == null) {
+            showMessage(context.getString(R.string.backup_import_error))
+            return
+        }
+        if (!settings.contains("initialized")) settings.edit { putBoolean("initialized", true) }
+        _state.update { it.copy(mode = AppMode.Accounts, overlay = AccountsOverlay.BackupFileImport(result)) }
     }
 
     fun showMessage(text: String) = _state.update { it.copy(message = text) }

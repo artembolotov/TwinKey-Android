@@ -21,12 +21,30 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.TwinKey.Splash"
             android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Открытие .twinkey бэкапов из файлового менеджера / "Открыть с помощью".
+                 У .twinkey нет зарегистрированного системного MIME-типа, поэтому провайдеры
+                 обычно отдают его как application/octet-stream или вовсе без типа — матчимся
+                 по расширению через pathPattern, а mimeType оставляем "*/*". -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.twinkey" />
             </intent-filter>
         </activity>
     </application>

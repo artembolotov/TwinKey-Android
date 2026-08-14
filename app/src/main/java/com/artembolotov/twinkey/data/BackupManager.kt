@@ -1,5 +1,8 @@
 package com.artembolotov.twinkey.data
 
+import android.content.Context
+import android.net.Uri
+import android.util.Log
 import com.artembolotov.twinkey.domain.CodableToken
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.domain.TokenUrlParser
@@ -68,6 +71,23 @@ object BackupManager {
         }
 
         return ImportResult(successful = successful, skipped = skipped)
+    }
+
+    /**
+     * Читает .twinkey файл по SAF/content Uri и парсит его через [import].
+     * Возвращает null при ошибке чтения или нечитаемом формате — вызывающая сторона
+     * показывает общее сообщение об ошибке.
+     */
+    fun importFromUri(context: Context, uri: Uri): ImportResult? {
+        return try {
+            val json = context.contentResolver.openInputStream(uri)
+                ?.use { it.readBytes().toString(Charsets.UTF_8) }
+                ?: return null
+            import(json)
+        } catch (e: Exception) {
+            Log.w("BackupManager", "Failed to read backup file", e)
+            null
+        }
     }
 
     private fun extractDisplayName(url: String): String {
