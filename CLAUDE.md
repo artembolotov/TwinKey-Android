@@ -29,7 +29,7 @@ git push origin HEAD:main
 ```
 
 Lint rules (app/build.gradle.kts): `OldTargetApi` and `GradleDependency` are disabled.  
-JVM target: Java 11. Kotlin 2.3.20, AGP 9.2.1. Min SDK: 26. Target/Compile SDK: 36/37.
+JVM target: Java 11. Kotlin 2.3.20, AGP 9.3.1 (Gradle 9.5.0). Min SDK: 26. Target/Compile SDK: 36/37.
 
 Release signing reads from `keystore.properties` at the repo root; if absent, the release build runs unsigned (no signingConfig). `isMinifyEnabled = false` in release.
 

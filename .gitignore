@@ -8,6 +8,8 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 /.idea/appInsightsSettings.xml
+/.idea/misc.xml
+/.idea/deviceManager.xml
 .DS_Store
 /build
 /captures
