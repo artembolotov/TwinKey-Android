@@ -40,14 +40,23 @@
                  document/msf%3A1000000042. Именно поэтому система и отвечала "нет
                  приложений, способных открыть файл этого типа": совпасть было не по чему.
                  Матчимся по MIME-типу без ограничений на путь — иначе открыть бэкап из
-                 "Загрузок" или Google Files невозможно в принципе. -->
+                 "Загрузок" или Google Files невозможно в принципе.
+
+                 android:scheme здесь НЕ объявляем намеренно. Проводники (Samsung My Files
+                 и др.) и механизм package visibility на Android 11+ проверяют "есть ли чем
+                 открыть файл" через Intent с типом, но БЕЗ data URI —
+                 new Intent(ACTION_VIEW).setType(mime). В IntentFilter#matchData объявленная
+                 схема отсекает такой Intent сразу (scheme == null сравнивается с "" и не
+                 совпадает с "content"), поэтому проводник показывает "нет приложений", даже
+                 не дойдя до настоящего резолвинга. Без объявленной схемы срабатывает
+                 задокументированный в AOSP special case: фильтр с одними лишь типами ловит
+                 и Intent'ы без data URI, и content://, и file://. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="content" />
                 <data android:mimeType="application/octet-stream" />
                 <data android:mimeType="application/x-twinkey" />
                 <data android:mimeType="application/vnd.twinkey" />
