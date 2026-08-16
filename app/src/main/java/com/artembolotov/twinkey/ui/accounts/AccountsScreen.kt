@@ -55,6 +55,7 @@ import com.artembolotov.twinkey.data.ImportResult
 import com.artembolotov.twinkey.data.SkipReason
 import com.artembolotov.twinkey.data.SkippedAccount
 import com.artembolotov.twinkey.domain.GoogleAuthMigrationParser
+import com.artembolotov.twinkey.domain.OtpFactor
 import com.artembolotov.twinkey.domain.TokenUrlParser
 import com.artembolotov.twinkey.ui.add.AddManuallyScreen
 import com.artembolotov.twinkey.ui.add.QrScannerScreen
@@ -88,6 +89,7 @@ fun AccountsScreen(
 
     val copiedMessage = stringResource(R.string.accounts_code_copied)
     val invalidQrMessage = stringResource(R.string.scan_invalid_qr)
+    val hotpUnsupportedMessage = stringResource(R.string.scan_hotp_unsupported)
     val importSuccess = stringResource(R.string.backup_import_success)
 
     val sheetStates = rememberAccountsSheetStates()
@@ -217,12 +219,21 @@ fun AccountsScreen(
                             }
                             else -> {
                                 val token = runCatching { TokenUrlParser.parse(url) }.getOrNull()
-                                if (token != null) {
-                                    vm.addAccount(token)
-                                    vm.showOverlay(AccountsOverlay.Added(token))
-                                } else {
-                                    vm.dismissOverlay()
-                                    vm.showMessage(invalidQrMessage)
+                                when {
+                                    token == null -> {
+                                        vm.dismissOverlay()
+                                        vm.showMessage(invalidQrMessage)
+                                    }
+                                    // HOTP не поддерживается (как в iOS): такой аккаунт
+                                    // нельзя было бы записать в бэкап, см. docs/BACKUP_FORMAT.md §3
+                                    token.generator.factor is OtpFactor.Counter -> {
+                                        vm.dismissOverlay()
+                                        vm.showMessage(hotpUnsupportedMessage)
+                                    }
+                                    else -> {
+                                        vm.addAccount(token)
+                                        vm.showOverlay(AccountsOverlay.Added(token))
+                                    }
                                 }
                             }
                         }

@@ -1,7 +1,6 @@
 package com.artembolotov.twinkey.domain
 
 import java.net.URI
-import java.net.URLDecoder
 import java.util.Base64
 import java.util.UUID
 
@@ -177,9 +176,11 @@ object GoogleAuthMigrationParser {
         for (param in query.split("&")) {
             val eq = param.indexOf('=')
             if (eq < 0) continue
-            val key = URLDecoder.decode(param.substring(0, eq), "UTF-8")
+            // percentDecode, а не URLDecoder: form-decoding превратил бы '+' в пробел
+            // и сломал бы стандартный Base64 в параметре data
+            val key = TokenUrlParser.percentDecode(param.substring(0, eq))
             if (key == name) {
-                return URLDecoder.decode(param.substring(eq + 1), "UTF-8")
+                return TokenUrlParser.percentDecode(param.substring(eq + 1))
             }
         }
         return null

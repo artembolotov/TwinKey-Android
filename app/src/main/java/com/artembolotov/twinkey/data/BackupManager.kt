@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.artembolotov.twinkey.domain.CodableToken
+import com.artembolotov.twinkey.domain.OtpFactor
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.domain.TokenUrlParser
 import kotlinx.serialization.json.Json
@@ -12,16 +13,26 @@ import java.util.UUID
 /**
  * Порт BackupDocument.swift + BackupImporter.swift.
  *
- * Формат .twinkey: JSON-массив CodableToken, совместимый с iOS.
- * Каждый элемент: { "url": "otpauth://...", "secret": "<base64>" }
+ * Формат .twinkey описан в docs/BACKUP_FORMAT.md: компактный JSON-массив
+ * CodableToken в UTF-8, каждый элемент — { "url": "otpauth://totp/...", "secret": "<base64>" }
+ * именно в этом порядке ключей. kotlinx.serialization пишет компактно, не экранирует '/'
+ * и сохраняет порядок полей, поэтому байты совпадают с iOS.
  */
 object BackupManager {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    /** Сериализует выбранные токены в JSON-строку для записи в .twinkey файл */
+    /**
+     * Сериализует выбранные токены в JSON-строку для записи в .twinkey файл.
+     *
+     * HOTP в бэкап не попадает (§3 спецификации): добавить такой аккаунт в приложении
+     * нельзя, но он мог остаться в хранилище от старых версий — а импорт (и iOS, и наш)
+     * всё равно такие записи отклоняет, так что в файле от них был бы только мусор.
+     */
     fun export(tokens: List<Token>): String {
-        val codable = tokens.map { TokenUrlParser.toCodableToken(it) }
+        val codable = tokens
+            .filter { it.generator.factor is OtpFactor.Timer }
+            .map { TokenUrlParser.toCodableToken(it) }
         return json.encodeToString(codable)
     }
 
@@ -49,24 +60,25 @@ object BackupManager {
         val skipped = mutableListOf<SkippedAccount>()
 
         for (codable in codableList) {
-            try {
-                val token = TokenUrlParser.fromCodableToken(codable, UUID.randomUUID().toString())
-                // Проверяем тип: HOTP не поддерживается (как в iOS)
-                if (codable.url.startsWith("otpauth://hotp/")) {
-                    skipped += SkippedAccount(
-                        name = token.issuer.ifEmpty { token.name },
-                        reason = SkipReason.UnsupportedType("HOTP")
-                    )
-                } else {
-                    successful += token
-                }
+            val token = try {
+                TokenUrlParser.fromCodableToken(codable, UUID.randomUUID().toString())
             } catch (_: Exception) {
                 // Попытаться извлечь имя из URL для отображения в skipped
-                val displayName = extractDisplayName(codable.url)
                 skipped += SkippedAccount(
-                    name = displayName,
+                    name = extractDisplayName(codable.url),
                     reason = SkipReason.InvalidAccount
                 )
+                continue
+            }
+
+            // Проверяем тип: HOTP не поддерживается (как в iOS, §3 спецификации)
+            if (token.generator.factor is OtpFactor.Counter) {
+                skipped += SkippedAccount(
+                    name = token.issuer.ifEmpty { token.name },
+                    reason = SkipReason.UnsupportedType("HOTP")
+                )
+            } else {
+                successful += token
             }
         }
 
@@ -93,7 +105,7 @@ object BackupManager {
     private fun extractDisplayName(url: String): String {
         return try {
             val path = url.substringAfter("://").substringAfter("/").substringBefore("?")
-            java.net.URLDecoder.decode(path, "UTF-8")
+            TokenUrlParser.percentDecode(path)
                 .substringAfter(":").ifEmpty { path }
         } catch (_: Exception) { url }
     }

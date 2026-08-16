@@ -44,6 +44,7 @@
 
     <!-- QR Scanner -->
     <string name="scan_invalid_qr">Código QR inválido</string>
+    <string name="scan_hotp_unsupported">Las cuentas HOTP no son compatibles</string>
     <string name="google_auth_imported">%d cuentas importadas de Google Authenticator</string>
     <string name="google_auth_imported_skipped">%1$d importadas, %2$d omitidas (HOTP)</string>
     <string name="accounts_search">Buscar</string>
