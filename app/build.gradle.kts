@@ -56,6 +56,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Диагностика: -PreadableStacktraces=true отключает переименование,
+            // сохраняя ужатие и оптимизации. Сборка остаётся той же, но падения
+            // приходят с настоящими именами классов и методов.
+            if (project.hasProperty("readableStacktraces")) {
+                proguardFile("proguard-readable.pro")
+            }
         }
     }
     compileOptions {
