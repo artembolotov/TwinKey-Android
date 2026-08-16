@@ -55,13 +55,13 @@ core/   AppState + AppMode enum (shared root state shape)
 Pure Kotlin business logic with no Android dependencies (designed for JVM testability).
 - `Token` — core model; `CodableToken` — serialization shape stored in the keychain
 - `OtpGenerator` (interface) + `TotpCodeGenerator` — RFC 4226/6238 HMAC-based OTP; `OtpAlgorithm` enum (SHA1/256/512), `OtpFactor` enum (TOTP/HOTP). Truncation follows the RFC dynamic truncation spec.
-- `TokenUrlParser` — parses/serializes `otpauth://` URIs using `java.net.URI` (not `android.net.Uri`)
+- `TokenUrlParser` — parses/serializes `otpauth://` URIs. No `android.net.Uri`, no `java.net.URI`, no `URLEncoder`: the raw URL string is split by hand (the reader needs the label *before* percent-decoding) and percent-encoding is RFC 3986 (`URLEncoder` writes a space as `+`). Writing is strictly canonical, reading is permissive — see `docs/BACKUP_FORMAT.md`
 - `GoogleAuthMigrationParser` — decodes Google Authenticator migration QR payloads
 
 ### data/
 - `KeychainService` — EncryptedSharedPreferences backed by Android Keystore (AES256-GCM). Storage keys match iOS: `"accounts"` (map UUID→CodableToken) and `"order"` (array of UUIDs for display order). JSON via kotlinx.serialization.
 - `AccountRepository` — CRUD + ordering over the keychain
-- `BackupManager` — exports/imports `.twinkey` files (JSON)
+- `BackupManager` — exports/imports `.twinkey` files. The byte-level format is shared with the iOS app and specified in `docs/BACKUP_FORMAT.md`: both apps must emit identical bytes for identical accounts, and both must keep reading the pre-spec files each of them used to write
 
 ### ui/
 State management pattern used throughout:
