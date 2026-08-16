@@ -135,6 +135,26 @@ class BackupFormatTest {
     }
 
     @Test
+    fun `export never writes HOTP entries`() {
+        val hotp = Token(
+            name = "bob",
+            issuer = "Acme",
+            generator = OtpGenerator(
+                secret = byteArrayOf(0, 1, 2, 3),
+                factor = OtpFactor.Counter(7),
+                algorithm = OtpAlgorithm.SHA1,
+                digits = 6
+            )
+        )
+
+        val json = BackupManager.export(listOf(hotp, token(name = "alice", issuer = "Acme")))
+
+        assertFalse(json.contains("hotp"))
+        assertFalse(json.contains("counter"))
+        assertEquals(listOf("alice"), BackupManager.import(json).successful.map { it.name })
+    }
+
+    @Test
     fun `export import roundtrip preserves accounts`() {
         val tokens = listOf(
             token(name = "teeemon@gmail.com", issuer = "DigitalPlat Domains"),

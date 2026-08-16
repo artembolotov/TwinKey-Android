@@ -22,9 +22,17 @@ object BackupManager {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    /** Сериализует выбранные токены в JSON-строку для записи в .twinkey файл */
+    /**
+     * Сериализует выбранные токены в JSON-строку для записи в .twinkey файл.
+     *
+     * HOTP в бэкап не попадает (§3 спецификации): добавить такой аккаунт в приложении
+     * нельзя, но он мог остаться в хранилище от старых версий — а импорт (и iOS, и наш)
+     * всё равно такие записи отклоняет, так что в файле от них был бы только мусор.
+     */
     fun export(tokens: List<Token>): String {
-        val codable = tokens.map { TokenUrlParser.toCodableToken(it) }
+        val codable = tokens
+            .filter { it.generator.factor is OtpFactor.Timer }
+            .map { TokenUrlParser.toCodableToken(it) }
         return json.encodeToString(codable)
     }
 
