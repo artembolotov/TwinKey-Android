@@ -27,7 +27,10 @@ Rules:
 
 1. The top level is an array of objects, one per account, in the order the accounts are
    shown in the app.
-2. Each object has exactly two keys, in this order: `url`, then `secret`.
+2. Each object has exactly two keys, in this order: `url`, then `secret`. Write the pair
+   from an ordered structure, never from a hash map, and never with a key-sorting option
+   (`JSONEncoder.OutputFormatting.sortedKeys` and its equivalents would emit
+   `secret`, `url`).
 3. `secret` is the raw shared secret (the decoded bytes, **not** Base32) encoded as
    standard Base64 with padding, per RFC 4648 §4 — the `+/` alphabet, not the URL-safe one.
 4. The secret is carried **only** in this field. It must never be added to the URL as a
