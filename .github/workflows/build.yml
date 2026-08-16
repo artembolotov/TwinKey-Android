@@ -56,3 +56,12 @@ jobs:
         with:
           name: app-release.apk
           path: app/build/outputs/apk/release/app-release.apk
+
+      # Без mapping.txt стектрейсы из AppMetrica нечитаемы: там одни co4.b/cf4.a.
+      # Заодно забираем отчёты R8 — usage.txt показывает, что именно вырезано,
+      # configuration.txt — итоговый набор правил со всеми consumer-правилами библиотек.
+      - name: Upload R8 mapping and reports
+        uses: actions/upload-artifact@v7
+        with:
+          name: r8-mapping
+          path: app/build/outputs/mapping/release/
