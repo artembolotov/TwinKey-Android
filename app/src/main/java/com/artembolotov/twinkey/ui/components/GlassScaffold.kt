@@ -38,13 +38,10 @@ fun GlassScaffold(
 ) {
     val pageBackground = if (isSystemInDarkTheme()) PageBackgroundDark else PageBackgroundLight
     val hazeState = remember { HazeState() }
-    // noiseFactor = 0f — см. комментарий в AccountsScreen: шумовая текстура Haze
-    // роняла отрисовку, когда её ресурс не читался.
     val hazeStyle = HazeStyle(
         backgroundColor = pageBackground.copy(alpha = 0.2f),
         tints = listOf(HazeTint(pageBackground.copy(alpha = 0.1f))),
-        blurRadius = 4.dp,
-        noiseFactor = 0f
+        blurRadius = 4.dp
     )
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current

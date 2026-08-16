@@ -245,16 +245,10 @@ fun AccountsScreen(
 
             else -> {
                 val hazeState = remember { HazeState() }
-                // noiseFactor = 0f: при значении по умолчанию (0.15f) Haze подмешивает
-                // в блюр шумовую текстуру из своего ресурса haze_noise. Ресурс держится
-                // в res/raw/keep.xml, но обнулённый шум ещё и убирает сам путь к нему —
-                // на нём приложение падало NPE в фазе отрисовки. Визуально зерно на
-                // 4.dp блюра и без того почти не читается.
                 val hazeStyle = HazeStyle(
                     backgroundColor = pageBackground.copy(alpha = 0.2f),
                     tints = listOf(HazeTint(pageBackground.copy(alpha = 0.1f))),
-                    blurRadius = 4.dp,
-                    noiseFactor = 0f
+                    blurRadius = 4.dp
                 )
                 var topBarHeightPx by remember { mutableIntStateOf(0) }
                 var searchBarHeightPx by remember { mutableIntStateOf(0) }
