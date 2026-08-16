@@ -1,21 +1,20 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Правила R8 для release-сборки.
+# Базовый набор оптимизаций приходит из proguard-android-optimize.txt
+# (подключается в app/build.gradle.kts).
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Читаемые стектрейсы в Play Console: номера строк сохраняем,
+# оригинальные имена файлов прячем (mapping.txt заливается в Play).
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- kotlinx.serialization ---
+# Ядро библиотеки поставляет свои consumer-правила; здесь только
+# сгенерированные компилятором сериализаторы @Serializable-классов приложения.
+-keepclasseswithmembers class com.artembolotov.twinkey.**$$serializer {
+    *** INSTANCE;
+    kotlinx.serialization.KSerializer[] childSerializers();
+}
+-keepclassmembers @kotlinx.serialization.Serializable class com.artembolotov.twinkey.** {
+    *** Companion;
+    kotlinx.serialization.KSerializer serializer(...);
+}
