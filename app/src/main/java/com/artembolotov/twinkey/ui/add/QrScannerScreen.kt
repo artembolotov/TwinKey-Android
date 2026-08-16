@@ -9,6 +9,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -50,10 +51,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.artembolotov.twinkey.R
+import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Порт AccountScanScreen.swift + ScanAccountView.swift.
@@ -91,7 +95,8 @@ fun QrScannerScreen(
         if (uri != null && !state.scanned) {
             val image = runCatching { InputImage.fromFilePath(context, uri) }.getOrNull()
                 ?: return@rememberLauncherForActivityResult
-            BarcodeScanning.getClient().process(image)
+            val client = BarcodeScanning.getClient()
+            client.process(image)
                 .addOnSuccessListener { barcodes ->
                     barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
                         ?.rawValue
@@ -100,6 +105,7 @@ fun QrScannerScreen(
                             onScanned(url)
                         }
                 }
+                .addOnCompleteListener { client.close() }
         }
     }
 
@@ -187,7 +193,6 @@ private class QrScannerState(hasCameraPermission: Boolean) {
     var scanned by mutableStateOf(false)
 }
 
-@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 private fun CameraPreview(
     modifier: Modifier = Modifier,
@@ -197,8 +202,17 @@ private fun CameraPreview(
     val executor = remember { Executors.newSingleThreadExecutor() }
     val scanner = remember { BarcodeScanning.getClient() }
 
+    // Камера привязывается к жизненному циклу Activity, а не экрана, поэтому уход
+    // с экрана сам по себе её не отвязывает: ImageAnalysis продолжает слать кадры
+    // в уже погашенный executor и закрытый ML Kit-клиент. Держим провайдер, чтобы
+    // сделать unbind вручную, и флаг — на кадры, которые успели проскочить.
+    val cameraProviderRef = remember { AtomicReference<ProcessCameraProvider?>(null) }
+    val released = remember { AtomicBoolean(false) }
+
     DisposableEffect(Unit) {
         onDispose {
+            released.set(true)
+            runCatching { cameraProviderRef.getAndSet(null)?.unbindAll() }
             executor.shutdown()
             scanner.close()
         }
@@ -211,43 +225,68 @@ private fun CameraPreview(
             val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
 
             cameraProviderFuture.addListener({
-                val cameraProvider = cameraProviderFuture.get()
-                val preview = Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
-                }
-                val imageAnalysis = ImageAnalysis.Builder()
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-                    .also { analysis ->
-                        analysis.setAnalyzer(executor) { imageProxy ->
-                            val mediaImage = imageProxy.image
-                            if (mediaImage != null) {
-                                val image = InputImage.fromMediaImage(
-                                    mediaImage, imageProxy.imageInfo.rotationDegrees
-                                )
-                                scanner.process(image)
-                                    .addOnSuccessListener { barcodes ->
-                                        barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
-                                            ?.rawValue
-                                            ?.let { onQrCodeDetected(it) }
-                                    }
-                                    .addOnCompleteListener { imageProxy.close() }
-                            } else {
-                                imageProxy.close()
+                // get() бросает ExecutionException, если инициализация CameraX не
+                // удалась (нет камеры, занята другим приложением). Слушатель крутится
+                // на главном потоке, так что непойманное исключение — падение приложения.
+                try {
+                    val cameraProvider = cameraProviderFuture.get()
+                    if (released.get()) {
+                        cameraProvider.unbindAll()
+                        return@addListener
+                    }
+                    val preview = Preview.Builder().build().also {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    }
+                    val imageAnalysis = ImageAnalysis.Builder()
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build()
+                        .also { analysis ->
+                            analysis.setAnalyzer(executor) { imageProxy ->
+                                analyzeFrame(imageProxy, scanner, released, onQrCodeDetected)
                             }
                         }
-                    }
-                try {
                     cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(
                         lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageAnalysis
                     )
+                    cameraProviderRef.set(cameraProvider)
+                    // Экран мог уйти из композиции, пока шла привязка.
+                    if (released.get()) cameraProviderRef.getAndSet(null)?.unbindAll()
                 } catch (e: Exception) {
-                    Log.w("QrScannerScreen", "Camera bind failed", e)
+                    Log.w("QrScannerScreen", "Camera init failed", e)
                 }
             }, ContextCompat.getMainExecutor(ctx))
 
             previewView
         }
     )
+}
+
+@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
+private fun analyzeFrame(
+    imageProxy: ImageProxy,
+    scanner: BarcodeScanner,
+    released: AtomicBoolean,
+    onQrCodeDetected: (String) -> Unit,
+) {
+    val mediaImage = imageProxy.image
+    if (mediaImage == null || released.get()) {
+        imageProxy.close()
+        return
+    }
+    val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+    // Клиент могли закрыть между проверкой флага и вызовом — тогда process()
+    // бросает IllegalStateException на потоке анализа, а он никем не перехвачен.
+    val task = runCatching { scanner.process(image) }.getOrNull()
+    if (task == null) {
+        imageProxy.close()
+        return
+    }
+    task
+        .addOnSuccessListener { barcodes ->
+            barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
+                ?.rawValue
+                ?.let { onQrCodeDetected(it) }
+        }
+        .addOnCompleteListener { imageProxy.close() }
 }
