@@ -32,17 +32,6 @@ jobs:
           keyPassword=${{ secrets.KEY_PASSWORD }}
           EOF
 
-      # Раннер уже несёт установленный NDK — сообщаем его версию сборке, чтобы AGP
-      # не скачивал свою для извлечения нативных отладочных символов (debugSymbolLevel).
-      - name: Resolve installed NDK version
-        run: |
-          ndk_dir="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"
-          if [ -d "$ndk_dir" ]; then
-            echo "ANDROID_NDK_VERSION=$(basename "$ndk_dir")" >> "$GITHUB_ENV"
-          else
-            echo "NDK не найден на раннере, AGP скачает свою версию"
-          fi
-
       - name: Build release AAB and APK
         run: |
           chmod +x ./gradlew
