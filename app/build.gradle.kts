@@ -25,11 +25,6 @@ android {
     namespace = "com.artembolotov.twinkey"
     compileSdk = 37
 
-    // Отладочные символы из .so извлекает objcopy из NDK. Если версия не задана,
-    // AGP тянет свою версию по умолчанию (~1 ГБ) при каждой сборке на CI, поэтому
-    // берём уже установленный на раннере NDK.
-    System.getenv("ANDROID_NDK_VERSION")?.takeIf { it.isNotBlank() }?.let { ndkVersion = it }
-
     defaultConfig {
         applicationId = "com.artembolotov.twinkey"
         minSdk = 26
@@ -61,15 +56,14 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Play Console предупреждает про нативный код без файла отладочных
-            // символов. Своего C/C++ кода в проекте нет, .so приходят из зависимостей
-            // (ML Kit barcode, AppMetrica), но предупреждение относится к бандлу целиком.
-            // FULL складывает символы в BUNDLE-METADATA бандла: на устройства они не
-            // попадают, размер APK не растёт — их читает только Play Console, чтобы
-            // расшифровывать нативные стектрейсы в отчётах о сбоях и ANR.
-            ndk {
-                debugSymbolLevel = "FULL"
-            }
+            // Play Console предупреждает, что в бандле есть нативный код без файла
+            // отладочных символов, и убрать это предупреждение нельзя. Своего C/C++
+            // кода в проекте нет, все .so приходят из зависимостей уже стрипнутыми:
+            // libbarhopper_v3 (ML Kit), libimage_processing_util_jni и libsurface_util_jni
+            // (CameraX), libandroidx.graphics.path (тянет Compose) — в них есть только
+            // .dynsym, ни .symtab, ни .debug_*. Поэтому ndk.debugSymbolLevel здесь
+            // бесполезен: objcopy нечего извлекать, каталог символов выходит пустым и в
+            // BUNDLE-METADATA не попадает, а сборка начинает требовать установленный NDK.
         }
     }
     compileOptions {
