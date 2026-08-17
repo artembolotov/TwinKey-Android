@@ -25,6 +25,11 @@ android {
     namespace = "com.artembolotov.twinkey"
     compileSdk = 37
 
+    // Отладочные символы из .so извлекает objcopy из NDK. Если версия не задана,
+    // AGP тянет свою версию по умолчанию (~1 ГБ) при каждой сборке на CI, поэтому
+    // берём уже установленный на раннере NDK.
+    System.getenv("ANDROID_NDK_VERSION")?.takeIf { it.isNotBlank() }?.let { ndkVersion = it }
+
     defaultConfig {
         applicationId = "com.artembolotov.twinkey"
         minSdk = 26
@@ -56,6 +61,15 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Play Console предупреждает про нативный код без файла отладочных
+            // символов. Своего C/C++ кода в проекте нет, .so приходят из зависимостей
+            // (ML Kit barcode, AppMetrica), но предупреждение относится к бандлу целиком.
+            // FULL складывает символы в BUNDLE-METADATA бандла: на устройства они не
+            // попадают, размер APK не растёт — их читает только Play Console, чтобы
+            // расшифровывать нативные стектрейсы в отчётах о сбоях и ANR.
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
     compileOptions {
