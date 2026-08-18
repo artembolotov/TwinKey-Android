@@ -71,7 +71,9 @@ import java.util.concurrent.atomic.AtomicReference
 fun QrScannerScreen(
     onScanned: (String) -> Unit,
     onAddManually: () -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onNoQrCodeFound: () -> Unit,
+    onScanError: () -> Unit
 ) {
     BackHandler(onBack = onCancel)
 
@@ -88,23 +90,31 @@ fun QrScannerScreen(
         ActivityResultContracts.RequestPermission()
     ) { granted -> state.hasCameraPermission = granted }
 
-    // Выбор изображения из галереи
+    // Выбор изображения из галереи. Неудача — не молчаливый no-op: как в iOS,
+    // закрываем сканер и показываем сообщение поверх списка аккаунтов. Разделение
+    // сообщений повторяет iOS: нечитаемая картинка и картинка без QR — badOutput
+    // ("QR код не найден"), сбой самого распознавателя — unknown ("Ошибка сканирования").
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null && !state.scanned) {
             val image = runCatching { InputImage.fromFilePath(context, uri) }.getOrNull()
-                ?: return@rememberLauncherForActivityResult
+            if (image == null) {
+                onNoQrCodeFound()
+                return@rememberLauncherForActivityResult
+            }
             val client = BarcodeScanning.getClient()
             client.process(image)
                 .addOnSuccessListener { barcodes ->
-                    barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
-                        ?.rawValue
-                        ?.let { url ->
-                            state.scanned = true
-                            onScanned(url)
-                        }
+                    val url = barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }?.rawValue
+                    if (url != null) {
+                        state.scanned = true
+                        onScanned(url)
+                    } else {
+                        onNoQrCodeFound()
+                    }
                 }
+                .addOnFailureListener { onScanError() }
                 .addOnCompleteListener { client.close() }
         }
     }

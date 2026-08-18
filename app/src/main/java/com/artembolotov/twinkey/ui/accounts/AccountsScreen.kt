@@ -89,6 +89,8 @@ fun AccountsScreen(
 
     val copiedMessage = stringResource(R.string.accounts_code_copied)
     val invalidQrMessage = stringResource(R.string.scan_invalid_qr)
+    val noQrInImageMessage = stringResource(R.string.scan_no_qr_in_image)
+    val scanErrorMessage = stringResource(R.string.scan_error)
     val hotpUnsupportedMessage = stringResource(R.string.scan_hotp_unsupported)
     val importSuccess = stringResource(R.string.backup_import_success)
 
@@ -239,7 +241,15 @@ fun AccountsScreen(
                         }
                     },
                     onAddManually = { vm.showOverlay(AccountsOverlay.Manual) },
-                    onCancel = { vm.dismissOverlay() }
+                    onCancel = { vm.dismissOverlay() },
+                    onNoQrCodeFound = {
+                        vm.dismissOverlay()
+                        vm.showMessage(noQrInImageMessage)
+                    },
+                    onScanError = {
+                        vm.dismissOverlay()
+                        vm.showMessage(scanErrorMessage)
+                    }
                 )
             }
 

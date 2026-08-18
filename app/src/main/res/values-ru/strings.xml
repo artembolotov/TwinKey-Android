@@ -47,6 +47,8 @@
 
     <!-- QR Scanner -->
     <string name="scan_invalid_qr">Неверный QR код</string>
+    <string name="scan_no_qr_in_image">QR код не найден в изображении</string>
+    <string name="scan_error">Ошибка сканирования</string>
     <string name="scan_hotp_unsupported">HOTP-аккаунты не поддерживаются</string>
     <string name="google_auth_imported">Импортировано аккаунтов из Google Authenticator: %d</string>
     <string name="google_auth_imported_skipped">Импортировано: %1$d, пропущено (HOTP): %2$d</string>
