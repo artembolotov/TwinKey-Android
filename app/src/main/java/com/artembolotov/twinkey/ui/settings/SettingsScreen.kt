@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import com.artembolotov.twinkey.ui.components.GlassScaffold
 import androidx.compose.runtime.Composable
@@ -391,17 +392,18 @@ private fun SettingsRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(vertical = 12.dp),
+            .padding(vertical = 12.dp)
+            // onSurfaceVariant одного alpha-канала недостаточно — на динамических
+            // палитрах и поверх glass-blur фона disabled-строка визуально не
+            // отличается от активной. Затемняем всю строку целиком: это
+            // стандартная Material-альфа для disabled-контента.
+            .alpha(if (enabled) 1f else 0.38f),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.bodyLarge,
-            color = when {
-                !enabled -> MaterialTheme.colorScheme.onSurfaceVariant
-                destructive -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.onSurface
-            },
+            color = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
         if (detail != null) {
