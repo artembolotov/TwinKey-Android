@@ -90,10 +90,11 @@ fun QrScannerScreen(
         ActivityResultContracts.RequestPermission()
     ) { granted -> state.hasCameraPermission = granted }
 
-    // Выбор изображения из галереи. Неудача — не молчаливый no-op: как в iOS,
-    // закрываем сканер и показываем сообщение поверх списка аккаунтов. Разделение
-    // сообщений повторяет iOS: нечитаемая картинка и картинка без QR — badOutput
-    // ("QR код не найден"), сбой самого распознавателя — unknown ("Ошибка сканирования").
+    // Picking an image from the gallery. A failure is not a silent no-op: as on iOS,
+    // dismiss the scanner and show a message over the accounts list. The split between
+    // the two messages mirrors iOS as well: an unreadable image and an image without a
+    // QR code are badOutput ("No QR code found in image"), while a failure of the
+    // recognizer itself is unknown ("Scan error occurred").
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
