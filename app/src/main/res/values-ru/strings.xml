@@ -4,6 +4,9 @@
     <string name="accounts_add_account">Добавить аккаунт</string>
     <string name="accounts_restore_from_backup">Восстановить из копии</string>
     <string name="accounts_google_auth_import_hint"><![CDATA[Также можно отсканировать QR-код из Google Authenticator для переноса аккаунтов или добавить <a href="twinkey://add-test">тестовый аккаунт</a> для знакомства с приложением]]></string>
+    <string name="accounts_lost_title">Аккаунты не перенеслись</string>
+    <string name="accounts_lost_message">Ключи аккаунтов хранятся в защищённом хранилище этого устройства, поэтому их нельзя скопировать на другое устройство или восстановить из системной резервной копии. Восстановите аккаунты из файла .twinkey или добавьте их заново.</string>
+    <string name="accounts_lost_dismiss">Не сейчас</string>
     <string name="accounts_code_copied">Код скопирован</string>
     <string name="accounts_edit">Изменить</string>
     <string name="accounts_done">Готово</string>

@@ -85,6 +85,10 @@ android {
     }
 
     testOptions {
+        // KeychainService логирует через android.util.Log в ветках восстановления, а в
+        // unit-тестах методы android.jar по умолчанию бросают "not mocked" — без этого
+        // тест на отказоустойчивость проверял бы не тот отказ.
+        unitTests.isReturnDefaultValues = true
         unitTests.all {
             it.jvmArgs("-Djava.library.path=.")
         }

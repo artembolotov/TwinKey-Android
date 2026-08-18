@@ -6,6 +6,9 @@
     <string name="accounts_add_account">Add Account</string>
     <string name="accounts_restore_from_backup">Restore from Backup</string>
     <string name="accounts_google_auth_import_hint"><![CDATA[You can also scan a QR code from Google Authenticator to transfer your accounts or add a <a href="twinkey://add-test">test account</a> to explore the app]]></string>
+    <string name="accounts_lost_title">Accounts didn\'t transfer</string>
+    <string name="accounts_lost_message">Your account keys are stored in this device\'s secure hardware, so they can\'t be copied to another device or restored from a system backup. Restore them from a .twinkey backup file, or add the accounts again.</string>
+    <string name="accounts_lost_dismiss">Not Now</string>
     <string name="accounts_code_copied">Code copied</string>
     <string name="accounts_edit">Edit</string>
     <string name="accounts_done">Done</string>

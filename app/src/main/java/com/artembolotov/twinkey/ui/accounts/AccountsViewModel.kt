@@ -9,6 +9,7 @@ import com.artembolotov.twinkey.core.AppMode
 import com.artembolotov.twinkey.data.AccountRepository
 import com.artembolotov.twinkey.data.ImportResult
 import com.artembolotov.twinkey.data.KeychainService
+import com.artembolotov.twinkey.data.KeychainStatus
 import com.artembolotov.twinkey.domain.OtpFactor
 import com.artembolotov.twinkey.domain.OtpGenerator
 import com.artembolotov.twinkey.domain.Token
@@ -30,6 +31,9 @@ sealed class AccountsOverlay {
     data class Editing(val token: Token) : AccountsOverlay()
     object Settings : AccountsOverlay()
     object ImportFromEmpty : AccountsOverlay()
+
+    /** Хранилище приехало с другого устройства и не открылось — аккаунты потеряны. */
+    object DataLost : AccountsOverlay()
     data class GoogleAuthImport(val importResult: ImportResult) : AccountsOverlay()
 }
 
@@ -59,10 +63,29 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
 
     init {
         val accounts = repository.loadAll()
-        val isFirstLaunch = !settings.contains("initialized")
+
+        // twinkey_settings — обычные SharedPreferences: они бэкапятся и переезжают на новое
+        // устройство, а зашифрованное хранилище аккаунтов — нет, оно явно исключено из
+        // бэкапа (res/xml/backup_rules.xml, res/xml/data_extraction_rules.xml), потому что
+        // master key из Keystore неэкспортируем. Значит "initialized есть, а хранилища на
+        // диске никогда не было" — это переезд с потерей аккаунтов, а не первый запуск.
+        val initializedSeen = settings.contains("initialized")
+        val restoredWithoutAccounts = initializedSeen && !keychain.hadStoredData
+        val accountsLost = keychain.status != KeychainStatus.Ready || restoredWithoutAccounts
+
+        val isFirstLaunch = !initializedSeen && !accountsLost
         val mode = if (isFirstLaunch) AppMode.Welcome else AppMode.Accounts
 
-        _state.update { it.copy(mode = mode, accounts = accounts) }
+        // Туториал показывать уже некому — человек не новый, у него были аккаунты. Заодно
+        // это гасит объяснение на следующем запуске: хранилище к тому моменту создано,
+        // hadStoredData станет true, и повторно ничего не всплывёт.
+        if (accountsLost) settings.edit { putBoolean("initialized", true) }
+
+        val overlay =
+            if (accountsLost && accounts.isEmpty()) AccountsOverlay.DataLost
+            else AccountsOverlay.None
+
+        _state.update { it.copy(mode = mode, accounts = accounts, overlay = overlay) }
         updateCodes()
 
         viewModelScope.launch {

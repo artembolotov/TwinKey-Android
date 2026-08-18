@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 class AccountsSheetStates internal constructor(
     val added: AppSheetState,
     val importFromEmpty: AppSheetState,
+    val dataLost: AppSheetState,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,6 +40,7 @@ class AccountsSheetStates internal constructor(
 fun rememberAccountsSheetStates(): AccountsSheetStates = AccountsSheetStates(
     added = rememberAppSheetState(),
     importFromEmpty = rememberAppSheetState(),
+    dataLost = rememberAppSheetState(),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,6 +75,28 @@ fun AccountsSheets(
                     onCopied = {
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                             vm.showMessage(copiedMessage)
+                        }
+                    }
+                )
+            }
+        }
+
+        AccountsOverlay.DataLost -> {
+            AppModalBottomSheet(
+                appSheetState = sheetStates.dataLost,
+                onDismissRequest = { vm.dismissOverlay() }
+            ) {
+                AccountsDataLostSheet(
+                    onRestoreFromBackup = {
+                        scope.launch {
+                            sheetStates.dataLost.hide()
+                            vm.showOverlay(AccountsOverlay.ImportFromEmpty)
+                        }
+                    },
+                    onDismiss = {
+                        scope.launch {
+                            sheetStates.dataLost.hide()
+                            vm.dismissOverlay()
                         }
                     }
                 )
