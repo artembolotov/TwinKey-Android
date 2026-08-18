@@ -37,13 +37,16 @@ enum class KeychainStatus {
  *  - `java.security.GeneralSecurityException: decryption failed` — основной случай
  *    (AndroidKeysetManager.java:381 → :397: cleartext-fallback тоже падает, и Tink
  *    перебрасывает исходное исключение);
- *  - `com.google.protobuf.InvalidProtocolBufferException` (наследник `IOException`) —
- *    если keyset-блоб испорчен, а не зашифрован чужим ключом;
+ *  - `com.google.crypto.tink.shaded.protobuf.InvalidProtocolBufferException` (наследник
+ *    `IOException`) — если keyset-блоб испорчен, а не зашифрован чужим ключом. Пакет
+ *    именно shaded: tink-android прячет в себя protobuf, у нешейженного tink класс
+ *    лежит в `com.google.protobuf`;
  *  - `java.io.CharConversionException` — если значение keyset'а не разбирается как hex
  *    (AndroidKeysetManager.java:260);
  *  - `java.security.KeyStoreException` — master key есть, но непригоден (там же, :331).
  *
- * Первые два воспроизведены на настоящем Tink, остальные два — из его исходников.
+ * Первые два воспроизведены на настоящем Tink, остальные два — из его исходников. Второй
+ * дополнительно снят с устройства: порча keyset'а в prefs роняет `create()` ровно им.
  * Кроме них есть непроверяемые компилятором `ProviderException` из Keystore и
  * `java.lang.SecurityException`, в который EncryptedSharedPreferences заворачивает
  * ошибку расшифровки уже при чтении значения (EncryptedSharedPreferences.java:595) —

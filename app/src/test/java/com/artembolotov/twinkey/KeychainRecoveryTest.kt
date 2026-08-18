@@ -24,7 +24,8 @@ import java.security.ProviderException
  * Tink генерирует новый и не может им расшифровать keyset.
  *
  * Исключения здесь — не догадки. `GeneralSecurityException("decryption failed")` и
- * `InvalidProtocolBufferException` (наследник [IOException]) сняты с настоящего Tink:
+ * `InvalidProtocolBufferException` (наследник [IOException]; в tink-android класс shaded —
+ * `com.google.crypto.tink.shaded.protobuf`) сняты с настоящего Tink:
  * keyset, записанный `KeysetHandle.write(writer, masterA)`, читается
  * `KeysetHandle.read(reader, masterB)` — ровно тем вызовом, который делает
  * AndroidKeysetManager.java:381 внутри `EncryptedSharedPreferences.create()`.
