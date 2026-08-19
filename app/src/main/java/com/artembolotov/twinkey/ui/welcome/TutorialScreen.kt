@@ -107,7 +107,6 @@ fun TutorialScreen(
             ) {
                 Button(onClick = {
                     vm.showButtons.value = false
-                    messages.add(ChatMessage.Outcome(R.string.tutorial_get_started))
                     onGetStarted()
                 }) {
                     Text(stringResource(R.string.tutorial_get_started))
