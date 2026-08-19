@@ -16,7 +16,7 @@ navigationCompose = "2.9.8"
 lifecycleViewmodelCompose = "2.11.0"
 commonsCodec = "1.22.1"
 reorderable = "3.1.0"
-coreSplashscreen = "1.0.1"
+coreSplashscreen = "1.2.0"
 appmetrica = "8.5.1"
 haze = "1.7.2"
 
