@@ -29,9 +29,9 @@ git push origin HEAD:main
 ```
 
 Lint rules (app/build.gradle.kts): `OldTargetApi` and `GradleDependency` are disabled.  
-JVM target: Java 11. Kotlin 2.3.20, AGP 9.3.1 (Gradle 9.5.0). Min SDK: 26. Target/Compile SDK: 36/37.
+JVM target: Java 11. Kotlin 2.4.10, AGP 9.3.1 (Gradle 9.5.0). Min SDK: 26. Target/Compile SDK: 36/37.
 
-Release signing reads from `keystore.properties` at the repo root; if absent, the release build runs unsigned (no signingConfig). `isMinifyEnabled = false` in release.
+Release signing reads from `keystore.properties` at the repo root; if absent, the release build runs unsigned (no signingConfig). Release builds run R8: `isMinifyEnabled = true` and `isShrinkResources = true`, with `proguard-android-optimize.txt` plus `proguard-rules.pro`. The deobfuscation mapping lands in `app/build/outputs/mapping/release/mapping.txt`.
 
 ## Architecture
 
@@ -86,7 +86,7 @@ State management pattern used throughout:
 
 | Library | Purpose |
 |---|---|
-| Compose BOM 2026.03.01 + Material3 | UI |
+| Compose BOM 2026.08.00 + Material3 | UI |
 | CameraX + ML Kit barcode | QR scanning |
 | EncryptedSharedPreferences | Secure storage |
 | Apache Commons Codec | Base32 decoding |
