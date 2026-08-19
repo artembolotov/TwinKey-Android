@@ -14,10 +14,10 @@ cameraX = "1.6.0"
 mlkitBarcode = "17.3.0"
 navigationCompose = "2.9.7"
 lifecycleViewmodelCompose = "2.10.0"
-commonsCodec = "1.21.0"
-reorderable = "3.0.0"
+commonsCodec = "1.22.1"
+reorderable = "3.1.0"
 coreSplashscreen = "1.0.1"
-appmetrica = "8.1.0"
+appmetrica = "8.5.1"
 haze = "1.7.2"
 
 [libraries]
