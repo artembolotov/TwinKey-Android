@@ -36,3 +36,15 @@
     *** Companion;
     kotlinx.serialization.KSerializer serializer(...);
 }
+
+# --- Material3 sheet settle animation ---
+# ui/components/SheetStateExt.kt replaces the underdamped settle spring by writing these two fields
+# through reflection. R8 renames both by default (mapping.txt showed anchoredDraggableState -> d and
+# animationSpec -> c), the lookup then fails and the overshoot comes back in release only. Keeping
+# the names is enough; the classes are already reachable from Compose.
+-keepclassmembers class androidx.compose.material3.SheetState {
+    *** anchoredDraggableState;
+}
+-keepclassmembers class androidx.compose.material3.internal.AnchoredDraggableState {
+    *** animationSpec;
+}
