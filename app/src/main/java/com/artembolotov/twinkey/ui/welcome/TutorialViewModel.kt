@@ -9,6 +9,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * The typing pauses only exist to make the chat feel friendly; they are not
+ * meant to imitate the real pace of a person typing, so keep them short.
+ */
+private const val TYPING_SHORT_MS = 600L
+private const val TYPING_LONG_MS = 1_000L
+private const val PAUSE_BETWEEN_MESSAGES_MS = 300L
+private const val PAUSE_BEFORE_REPLY_MS = 400L
+
 class TutorialViewModel : ViewModel() {
 
     val messages = mutableStateListOf<ChatMessage>()
@@ -30,13 +39,13 @@ class TutorialViewModel : ViewModel() {
     fun startGreeting() {
         greetingJob = viewModelScope.launch {
             messages.add(ChatMessage.Typing)
-            delay(1_500)
+            delay(TYPING_SHORT_MS)
             messages.removeAt(messages.lastIndex)
             messages.add(ChatMessage.Income(R.string.tutorial_greeting_1))
 
-            delay(600)
+            delay(PAUSE_BETWEEN_MESSAGES_MS)
             messages.add(ChatMessage.Typing)
-            delay(3_000)
+            delay(TYPING_LONG_MS)
             messages.removeAt(messages.lastIndex)
             messages.add(ChatMessage.Income(R.string.tutorial_greeting_2))
             showButtons.value = true
@@ -51,9 +60,9 @@ class TutorialViewModel : ViewModel() {
         messages.add(ChatMessage.Outcome(R.string.tutorial_more_about_2fa))
 
         viewModelScope.launch {
-            delay(1_000)
+            delay(PAUSE_BEFORE_REPLY_MS)
             messages.add(ChatMessage.Typing)
-            delay(2_000)
+            delay(TYPING_SHORT_MS)
             messages.removeAt(messages.lastIndex)
             messages.add(ChatMessage.Income(R.string.tutorial_more_info_text))
             showButtons.value = true

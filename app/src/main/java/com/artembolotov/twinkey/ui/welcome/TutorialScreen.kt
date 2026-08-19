@@ -172,7 +172,7 @@ private fun TypingBubble() {
     var dots by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
         while (true) {
-            delay(400)
+            delay(250)
             dots = when (dots.length) { 3 -> ""; else -> dots + "." }
         }
     }
