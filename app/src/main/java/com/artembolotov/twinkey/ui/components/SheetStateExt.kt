@@ -28,8 +28,14 @@ import java.lang.reflect.Field
 // standard MotionScheme defines as spring(dampingRatio = 0.9f, stiffness = 700f), and
 // AnchoredDraggableState.animationSpec is a lambda reading that field back. With content near
 // full-screen height, any upward swipe overshoots the Expanded anchor, triggering verticalScaleUp
-// — visible bounce. There is no public hook for this one spec: MaterialTheme(motionScheme = …)
-// would move the show animation along with the settle, since both read DefaultSpatial.
+// — visible bounce.
+//
+// There is no supported hook for this. Feeding ModalBottomSheet a custom MotionScheme looks like
+// the way out, but in material3 1.4.0 the MotionScheme interface, MaterialTheme.motionScheme and
+// the MaterialTheme(motionScheme = …) overload are all Kotlin `internal` — javap shows them as
+// public because internal compiles to public on the JVM, only the Kotlin metadata says otherwise,
+// so this has to be tried in the compiler to be believed. Even if they opened up, DefaultSpatial
+// also drives the show animation, so overriding it would change how the sheet opens too.
 //
 // Fix: replace animationSpec with a tween via our own SideEffect placed inside the content lambda.
 // Content is composed after anchoredDraggable() in Material3's layout tree, so our SideEffect
