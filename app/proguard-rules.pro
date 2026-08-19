@@ -36,16 +36,3 @@
     *** Companion;
     kotlinx.serialization.KSerializer serializer(...);
 }
-
-# --- Material3 sheet settle animation ---
-# ui/components/SheetStateExt.kt swaps the underdamped settle spring for a tween by reaching
-# into two Material3 fields by reflection. R8 renames both (mapping.txt showed
-# anchoredDraggableState -> d and animationSpec -> c), getDeclaredField then throws and the
-# bounce comes back — in release only, which is why it went unnoticed for so long. Keeping the
-# names is enough; the classes themselves are already reachable from Compose.
--keepclassmembers class androidx.compose.material3.SheetState {
-    *** anchoredDraggableState;
-}
--keepclassmembers class androidx.compose.material3.internal.AnchoredDraggableState {
-    *** animationSpec;
-}
