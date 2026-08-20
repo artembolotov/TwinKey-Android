@@ -4,7 +4,8 @@ package com.artembolotov.twinkey.ui.components
 
 import android.util.Log
 import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.heightIn
@@ -21,22 +22,34 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import com.artembolotov.twinkey.BuildConfig
 import java.lang.reflect.Field
 
+// This is not cosmetic. Without it a sheet can get stuck oscillating, permanently, in landscape.
+//
 // Material3 settles a sheet drag with MotionSchemeKeyTokens.DefaultSpatial, which the standard
-// motion scheme defines as spring(dampingRatio = 0.9f, stiffness = 700f). Underdamped, so a fast
-// upward flick overshoots the Expanded anchor; verticalScaleUp then stretches the sheet from its
-// top edge until it settles back.
+// motion scheme defines as spring(dampingRatio = 0.9f, stiffness = 700f). Underdamped, so
+// releasing a flick overshoots the Expanded anchor. Once the offset is above the anchor,
+// verticalScaleUp stretches the sheet from its top edge. In landscape the content is nearly as
+// tall as the window, so the stretched sheet measures taller, which moves the anchor, which
+// overshoots again: the loop never converges. The sheet inflates to fill the screen and ping-pongs
+// between a handful of positions indefinitely, at a steady 60 fps against an 8 fps idle.
 //
-// We settle on MotionSchemeKeyTokens.FastEffects instead — spring(dampingRatio = 1f,
-// stiffness = 3800f), the same token ModalBottomSheet already uses for hideMotionSpec. Critical
-// damping alone is not enough: a spring released at its target with leftover velocity still makes
-// one excursion, its size proportional to velocity/sqrt(stiffness). Only the stiff critically
-// damped pair removes it outright. Top edge deviation from rest, hardest flick we can synthesise
-// (1400 px in 100 ms), measured frame by frame at 60 fps:
+// The overshoot is the only way into that loop, so the settle spec has to be incapable of one.
+// A critically damped spring is not enough: released at its target with leftover velocity it still
+// makes a single excursion, sized about v/(omega*e) — proportional to release velocity. It measures
+// as zero under a synthesised flick and still lets a real finger start the loop. A tween carries no
+// velocity into the animation and cannot pass its target at any flick strength, which is why this
+// is a tween and not a spring. Top edge deviation from rest, 1400 px flick in 100 ms, 60 fps:
 //
-//     spring(0.9, 700)   Material default   102 px over 200 ms
-//     spring(1.0, 700)   critical, soft      40 px over 100 ms
-//     spring(1.0, 3800)  FastEffects          0 px
-private val settleSpec: AnimationSpec<Float> = spring(dampingRatio = 1f, stiffness = 3800f)
+//     spring(0.9, 700)   Material default        102 px    loop reproduces
+//     spring(1.0, 700)   critically damped        40 px    loop reproduces
+//     spring(1.0, 3800)  FastEffects, stiff        0 px    loop still reproduces by hand
+//     tween(300)         no velocity carry-over    0 px    loop cannot be started
+//
+// Verified by hand on a Galaxy S20 (Android 13) in landscape, on the settings import sheet and the
+// account-added sheet. Ruled out first, each reproducing the loop on its own: our settle patch,
+// the 85% height cap, skipPartiallyExpanded, a 60% cap that keeps the sheet off the top edge, the
+// Haze blur, and GlassScaffold as a whole (replaced by a plain Scaffold). Nothing of ours is in the
+// loop — it is a Material3 bug, and this spec only denies it an entry point.
+private val settleSpec: AnimationSpec<Float> = tween(durationMillis = 300, easing = FastOutSlowInEasing)
 private val settleSpecLambda: () -> AnimationSpec<Float> = { settleSpec }
 
 private const val TAG = "SheetStateExt"
@@ -89,8 +102,8 @@ private fun report(failure: SettleFailure?) {
     if (failure == null || settleFailureReported) return
     settleFailureReported = true
     val message = "Sheet settle animation stays on the Material3 spring — sheets will overshoot on " +
-        "an upward flick (${failure.detail}). Either Material3 changed the field or the keep rules " +
-        "for it in proguard-rules.pro no longer match."
+        "an upward flick and can get stuck oscillating in landscape (${failure.detail}). Either Material3 " +
+        "changed the field or the keep rules for it in proguard-rules.pro no longer match."
     if (BuildConfig.DEBUG) throw IllegalStateException(message, failure.cause)
     Log.e(TAG, message, failure.cause)
 }
