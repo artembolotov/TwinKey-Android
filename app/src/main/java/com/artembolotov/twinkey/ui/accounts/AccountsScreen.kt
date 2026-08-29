@@ -49,6 +49,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.data.ImportResult
@@ -83,6 +86,12 @@ fun AccountsScreen(
     val state by vm.state.collectAsState()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+
+    // The once-a-second code refresh runs only while this screen is started — see keepCodesFresh.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(vm, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) { vm.keepCodesFresh() }
+    }
 
     var searchActive by remember { mutableStateOf(false) }
     val density = LocalDensity.current
