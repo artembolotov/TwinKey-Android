@@ -1,7 +1,13 @@
 package com.artembolotov.twinkey.ui.add
 
 import android.Manifest
+import android.content.ContentResolver
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -40,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,11 +57,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.exifinterface.media.ExifInterface
 import com.artembolotov.twinkey.R
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -90,33 +101,40 @@ fun QrScannerScreen(
         ActivityResultContracts.RequestPermission()
     ) { granted -> state.hasCameraPermission = granted }
 
+    val scope = rememberCoroutineScope()
+
     // Picking an image from the gallery. A failure is not a silent no-op: as on iOS,
     // dismiss the scanner and show a message over the accounts list. The split between
     // the two messages mirrors iOS as well: an unreadable image and an image without a
     // QR code are badOutput ("No QR code found in image"), while a failure of the
     // recognizer itself is unknown ("Scan error occurred").
+    //
+    // The decode runs off the main thread. It used to sit right here, in the result callback,
+    // where a large photo froze the UI for the better part of a second — see decodeScanImage.
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null && !state.scanned) {
-            val image = runCatching { InputImage.fromFilePath(context, uri) }.getOrNull()
-            if (image == null) {
-                onNoQrCodeFound()
-                return@rememberLauncherForActivityResult
-            }
-            val client = BarcodeScanning.getClient()
-            client.process(image)
-                .addOnSuccessListener { barcodes ->
-                    val url = barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }?.rawValue
-                    if (url != null) {
-                        state.scanned = true
-                        onScanned(url)
-                    } else {
-                        onNoQrCodeFound()
-                    }
+            scope.launch {
+                val image = withContext(Dispatchers.IO) { decodeScanImage(context, uri) }
+                if (image == null) {
+                    onNoQrCodeFound()
+                    return@launch
                 }
-                .addOnFailureListener { onScanError() }
-                .addOnCompleteListener { client.close() }
+                val client = BarcodeScanning.getClient()
+                client.process(image)
+                    .addOnSuccessListener { barcodes ->
+                        val url = barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }?.rawValue
+                        if (url != null) {
+                            state.scanned = true
+                            onScanned(url)
+                        } else {
+                            onNoQrCodeFound()
+                        }
+                    }
+                    .addOnFailureListener { onScanError() }
+                    .addOnCompleteListener { client.close() }
+            }
         }
     }
 
@@ -300,4 +318,78 @@ private fun analyzeFrame(
                 ?.let { onQrCodeDetected(it) }
         }
         .addOnCompleteListener { imageProxy.close() }
+}
+
+// The longest side a picked photo is decoded to. Checked on device against an 8160x6120 image,
+// which samples down by 4: a QR occupying 1500 px of it (375 px after sampling) reads, and so
+// does one occupying only 600 px (150 px after sampling). Real photos leave more margin than that.
+private const val MAX_SCAN_IMAGE_PX = 2048
+
+/**
+ * Decodes a picked gallery image down to [MAX_SCAN_IMAGE_PX] instead of handing the Uri to
+ * InputImage.fromFilePath.
+ *
+ * That helper goes through MediaStore.Images.Media.getBitmap, which decodes at full resolution
+ * with no sampling, and then — when EXIF says the photo is rotated — builds a second full-size
+ * copy before recycling the first. Measured on a Galaxy S20 with a synthetic 50 MP photo:
+ * peak RSS +221 MB unrotated, +393 MB rotated (760 MB absolute), and "Skipped 42 frames"
+ * because the decode ran on the main thread. Sampling first brings the peak to ~12 MB.
+ *
+ * Orientation is passed to ML Kit as an angle rather than baked into the pixels, so the rotated
+ * case costs no extra bitmap. The four mirrored orientations cannot be expressed as an angle and
+ * do get one copy — of the already sampled bitmap, and only for orientations cameras rarely write.
+ * That copy keeps the normalisation the old path did for them; it is not what makes detection
+ * work. Detection needs neither: on device ML Kit read the same QR rotated 90 degrees with no EXIF
+ * tag at all, and read it mirrored both with and without the tag that says so.
+ *
+ * runCatching is deliberately broad: it also swallows OutOfMemoryError, which sampling makes
+ * unlikely but a malformed image could still provoke. The caller reports it as "no QR found".
+ */
+private fun decodeScanImage(context: Context, uri: Uri): InputImage? = runCatching {
+    val resolver = context.contentResolver
+
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@runCatching null
+
+    val options = BitmapFactory.Options().apply {
+        inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight)
+    }
+    val bitmap = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) }
+        ?: return@runCatching null
+
+    inputImageFor(bitmap, exifOrientation(resolver, uri))
+}.getOrNull()
+
+/** Smallest power of two that brings the longest side within [MAX_SCAN_IMAGE_PX]. */
+private fun sampleSizeFor(width: Int, height: Int): Int {
+    var sample = 1
+    while (maxOf(width, height) / sample > MAX_SCAN_IMAGE_PX) sample *= 2
+    return sample
+}
+
+private fun exifOrientation(resolver: ContentResolver, uri: Uri): Int =
+    resolver.openInputStream(uri)?.use {
+        ExifInterface(it).getAttributeInt(
+            ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL
+        )
+    } ?: ExifInterface.ORIENTATION_NORMAL
+
+private fun inputImageFor(bitmap: Bitmap, orientation: Int): InputImage = when (orientation) {
+    ExifInterface.ORIENTATION_ROTATE_90 -> InputImage.fromBitmap(bitmap, 90)
+    ExifInterface.ORIENTATION_ROTATE_180 -> InputImage.fromBitmap(bitmap, 180)
+    ExifInterface.ORIENTATION_ROTATE_270 -> InputImage.fromBitmap(bitmap, 270)
+    // Each mirrored orientation is a horizontal mirror followed by a rotation.
+    ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> InputImage.fromBitmap(bitmap.mirrored(), 0)
+    ExifInterface.ORIENTATION_FLIP_VERTICAL -> InputImage.fromBitmap(bitmap.mirrored(), 180)
+    ExifInterface.ORIENTATION_TRANSPOSE -> InputImage.fromBitmap(bitmap.mirrored(), 270)
+    ExifInterface.ORIENTATION_TRANSVERSE -> InputImage.fromBitmap(bitmap.mirrored(), 90)
+    else -> InputImage.fromBitmap(bitmap, 0)
+}
+
+private fun Bitmap.mirrored(): Bitmap {
+    val matrix = Matrix().apply { postScale(-1f, 1f) }
+    val copy = Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+    if (copy !== this) recycle()
+    return copy
 }

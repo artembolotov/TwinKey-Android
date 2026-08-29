@@ -119,6 +119,7 @@ dependencies {
     implementation(libs.commons.codec)
     implementation(libs.reorderable)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.exifinterface)
     implementation(libs.appmetrica.analytics)
     implementation(libs.haze)
     testImplementation(libs.junit)
