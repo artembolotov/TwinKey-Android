@@ -377,7 +377,6 @@ fun AccountsScreen(
                             ) {
                                 AccountsSearchBar(
                                     query = state.searchQuery,
-                                    searchActive = searchActive,
                                     onQueryChange = { vm.setSearchQuery(it) },
                                     onSearchActiveChange = { searchActive = it },
                                     onClearQuery = { vm.setSearchQuery("") },
