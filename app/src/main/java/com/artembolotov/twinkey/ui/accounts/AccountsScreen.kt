@@ -119,8 +119,8 @@ fun AccountsScreen(
 
     BackHandler(enabled = searchActive || state.searchQuery.isNotEmpty() || state.editMode) {
         when {
-            state.searchQuery.isNotEmpty() -> vm.setSearchQuery("")
             searchActive -> focusManager.clearFocus()
+            state.searchQuery.isNotEmpty() -> vm.setSearchQuery("")
             else -> vm.setEditMode(false)
         }
     }
