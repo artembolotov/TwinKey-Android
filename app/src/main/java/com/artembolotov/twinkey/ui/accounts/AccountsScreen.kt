@@ -15,6 +15,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,13 +40,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -95,6 +99,15 @@ fun AccountsScreen(
 
     var searchActive by remember { mutableStateOf(false) }
     val density = LocalDensity.current
+
+    val clearFocusOnScroll = remember(focusManager) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y != 0f) focusManager.clearFocus()
+                return Offset.Zero
+            }
+        }
+    }
 
     val copiedMessage = stringResource(R.string.accounts_code_copied)
     val invalidQrMessage = stringResource(R.string.scan_invalid_qr)
@@ -302,6 +315,7 @@ fun AccountsScreen(
                             codes = state.codes,
                             secondsRemaining = state.secondsRemaining,
                             onCopyCode = { code ->
+                                focusManager.clearFocus()
                                 context.getSystemService(ClipboardManager::class.java)
                                     .setPrimaryClip(ClipData.newPlainText("", code))
                                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
@@ -320,13 +334,9 @@ fun AccountsScreen(
                                 .fillMaxSize()
                                 .hazeSource(hazeState)
                                 .background(pageBackground)
+                                .nestedScroll(clearFocusOnScroll)
                                 .pointerInput(Unit) {
-                                    awaitPointerEventScope {
-                                        while (true) {
-                                            awaitPointerEvent(PointerEventPass.Initial)
-                                            focusManager.clearFocus()
-                                        }
-                                    }
+                                    detectTapGestures { focusManager.clearFocus() }
                                 }
                         )
                     }
