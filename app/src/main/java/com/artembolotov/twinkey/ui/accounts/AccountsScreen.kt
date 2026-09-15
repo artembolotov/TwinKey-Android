@@ -117,9 +117,12 @@ fun AccountsScreen(
         }
     }
 
-    BackHandler(enabled = state.searchQuery.isNotEmpty() || state.editMode) {
-        if (state.searchQuery.isNotEmpty()) vm.setSearchQuery("")
-        else vm.setEditMode(false)
+    BackHandler(enabled = searchActive || state.searchQuery.isNotEmpty() || state.editMode) {
+        when {
+            state.searchQuery.isNotEmpty() -> vm.setSearchQuery("")
+            searchActive -> focusManager.clearFocus()
+            else -> vm.setEditMode(false)
+        }
     }
 
     // Когда аккаунтов нет, поиск скрыт — сбрасываем остаточный запрос
