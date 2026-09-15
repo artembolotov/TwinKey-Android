@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -44,13 +43,10 @@ import com.artembolotov.twinkey.ui.theme.appTextFieldColors
 @Composable
 fun AccountsSearchBar(
     query: String,
-    searchActive: Boolean,
     onQueryChange: (String) -> Unit,
     onSearchActiveChange: (Boolean) -> Unit,
     onClearQuery: () -> Unit,
 ) {
-    val focusManager = LocalFocusManager.current
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -87,14 +83,11 @@ fun AccountsSearchBar(
                     },
                     trailingIcon = {
                         AnimatedVisibility(
-                            visible = searchActive,
+                            visible = query.isNotEmpty(),
                             enter = fadeIn() + scaleIn(initialScale = 0.7f),
                             exit = fadeOut() + scaleOut(targetScale = 0.7f)
                         ) {
-                            IconButton(onClick = {
-                                onClearQuery()
-                                focusManager.clearFocus()
-                            }) {
+                            IconButton(onClick = onClearQuery) {
                                 Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.accounts_search_clear))
                             }
                         }
