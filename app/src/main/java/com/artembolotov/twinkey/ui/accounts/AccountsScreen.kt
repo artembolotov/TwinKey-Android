@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -37,7 +38,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -74,6 +77,7 @@ import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
+import kotlinx.coroutines.flow.drop
 
 /**
  * Порт AccountsScreen.swift.
@@ -99,6 +103,13 @@ fun AccountsScreen(
 
     var searchActive by remember { mutableStateOf(false) }
     val density = LocalDensity.current
+
+    // Back closes the keyboard before the app ever sees it, so focus follows the keyboard down
+    val imeBottomPx by rememberUpdatedState(WindowInsets.ime.getBottom(density))
+    LaunchedEffect(Unit) {
+        // drop(1): the initial value is not a change, and it stays 0 with a hardware keyboard
+        snapshotFlow { imeBottomPx }.drop(1).collect { if (it == 0) focusManager.clearFocus() }
+    }
 
     val clearFocusOnScroll = remember(focusManager) {
         object : NestedScrollConnection {
