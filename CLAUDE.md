@@ -74,10 +74,9 @@ State management pattern used throughout:
 
 **Navigation**: no NavController. `WelcomeScreen` acts as a root router via `AppMode` enum in `core/` (`Unknown` → splash, `Welcome` → `TutorialScreen`, `Accounts` → `AccountsScreen`). All state survives config changes via ViewModel. System splash uses `androidx.core.splashscreen`.
 
-**Keyboard / focus pattern** (`AccountsScreen`):
-- `rememberUpdatedState(WindowInsets.ime.getBottom(density))` captures IME height in composable context
-- `snapshotFlow { imeBottomPx }.drop(1)` reacts to changes only (skips initial value — safe for Bluetooth keyboards)
-- `pointerInput` with `PointerEventPass.Initial` on the accounts list clears focus on any touch without consuming events
+**Keyboard / focus pattern** (`AccountsScreen`) — search focus never outlives the keyboard:
+- While the IME is up the system consumes back to hide it and the app never sees that gesture, so `WindowInsets.ime` is watched and focus is cleared once the inset reaches zero. With a hardware keyboard the inset stays zero and focus is left alone — there the `BackHandler` clears it instead
+- Scrolling clears focus through a `NestedScrollConnection`, tapping empty list space through `detectTapGestures`. Never by reading raw pointer events: the back swipe arrives as an ordinary touch before the system claims it, so clearing focus from it disables the `BackHandler` mid-gesture and the activity finishes
 
 ### ui/welcome/
 `TutorialViewModel` drives a chat-style onboarding sequence with message timing and animation state. After the tutorial completes, `AppMode` transitions to `Accounts`.
