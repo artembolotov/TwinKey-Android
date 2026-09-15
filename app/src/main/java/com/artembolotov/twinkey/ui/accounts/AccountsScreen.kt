@@ -315,7 +315,6 @@ fun AccountsScreen(
                             codes = state.codes,
                             secondsRemaining = state.secondsRemaining,
                             onCopyCode = { code ->
-                                focusManager.clearFocus()
                                 context.getSystemService(ClipboardManager::class.java)
                                     .setPrimaryClip(ClipData.newPlainText("", code))
                                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
