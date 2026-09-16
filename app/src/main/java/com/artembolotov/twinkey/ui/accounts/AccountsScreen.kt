@@ -101,9 +101,19 @@ fun AccountsScreen(
     var searchActive by remember { mutableStateOf(false) }
     val density = LocalDensity.current
 
-    // Back closes the keyboard before the app ever sees it, so focus follows the keyboard down
+    // Back closes the keyboard before the app ever sees it, so focus follows the keyboard down —
+    // but only once it actually appeared: a back swipe started while it animates in cancels it, and
+    // clearing focus there would disable the BackHandler mid-gesture and let the activity finish.
+    var keyboardWasUp by remember { mutableStateOf(false) }
     val imeVisible = WindowInsets.ime.getBottom(density) > 0
-    LaunchedEffect(imeVisible) { if (!imeVisible) focusManager.clearFocus() }
+    LaunchedEffect(imeVisible) {
+        if (imeVisible) {
+            keyboardWasUp = true
+        } else if (keyboardWasUp) {
+            keyboardWasUp = false
+            focusManager.clearFocus()
+        }
+    }
 
     val clearFocusOnScroll = remember(focusManager) {
         object : NestedScrollConnection {

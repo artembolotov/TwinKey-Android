@@ -75,7 +75,7 @@ State management pattern used throughout:
 **Navigation**: no NavController. `WelcomeScreen` acts as a root router via `AppMode` enum in `core/` (`Unknown` → splash, `Welcome` → `TutorialScreen`, `Accounts` → `AccountsScreen`). All state survives config changes via ViewModel. System splash uses `androidx.core.splashscreen`.
 
 **Keyboard / focus pattern** (`AccountsScreen`) — search focus never outlives the keyboard:
-- While the IME is up the system consumes back to hide it and the app never sees that gesture, so `WindowInsets.ime` is watched and focus is cleared once the inset reaches zero. With a hardware keyboard the inset stays zero and focus is left alone — there the `BackHandler` clears it instead
+- While the IME is up the system consumes back to hide it and the app never sees that gesture, so `WindowInsets.ime` is watched and focus is cleared once a keyboard that was up goes down. The "was up" guard matters: a back swipe started while the keyboard animates in cancels it, and clearing focus there would disable the `BackHandler` mid-gesture. With a hardware keyboard the inset stays zero throughout and focus is left alone — there the `BackHandler` clears it instead
 - Scrolling clears focus through a `NestedScrollConnection`, tapping empty list space through `detectTapGestures`. Never by reading raw pointer events: the back swipe arrives as an ordinary touch before the system claims it, so clearing focus from it disables the `BackHandler` mid-gesture and the activity finishes
 
 ### ui/welcome/
