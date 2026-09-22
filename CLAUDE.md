@@ -68,7 +68,9 @@ State management pattern used throughout:
 - ViewModel holds `_state: MutableStateFlow<UiState>`, exposes `state: StateFlow<UiState>`
 - Composables observe via `state.collectAsState()` and call ViewModel methods — no direct state mutations in UI
 - `ModalBottomSheetState` animation state lives in the Composable (UI-only concern, not in ViewModel)
-- `ui/components/` provides shared building blocks: `AppModalBottomSheet` + `rememberAppSheetState` (wrappers used by every overlay), `OtpCodeView`, `CheckableTokenRow`, `GlassScaffold` (frosted-glass scaffold via Haze), `ReadOnlyField`, `TextInputScreen`
+- `ui/components/` provides shared building blocks: `AppModalBottomSheet` + `rememberAppSheetState` (wrappers used by every overlay), `OtpCodeView`, `CheckableTokenRow`, `GlassScaffold` (frosted-glass scaffold via Haze), `ReadOnlyField`, `TextInputScreen`, `MaxContentWidth` + `Modifier.centeredContentWidth()`, `rememberSelection` (saveable checkbox selection)
+
+**Large screens** (foldables, tablets, landscape): layout follows the window width, never the device model. `AccountsListView` is a `LazyVerticalGrid` whose column count comes from a 300dp minimum cell width; one column keeps the iOS grouped list, several columns switch to separate cards. Forms and other single-column content are capped at `MaxContentWidth` (640dp, Material3's sheet max width) — `GlassScaffold` does it by widening the horizontal content padding, so every screen built on it must apply that padding. Folding/unfolding recreates the activity, so user input on screens (form fields, edit state, selections) is kept in `rememberSaveable`, not `remember`
 
 **Overlay system** (`AccountsScreen`): a sealed class `AccountsOverlay` drives which bottom sheet is visible (`None`, `Scanner`, `Manual`, `Added(token)`, `Editing(token)`, `Settings`, `ImportFromEmpty`). `AccountsSheets` renders sheets conditionally based on overlay state.
 

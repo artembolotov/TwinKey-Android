@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artembolotov.twinkey.R
+import com.artembolotov.twinkey.ui.components.centeredContentWidth
 import kotlinx.coroutines.delay
 
 @Composable
@@ -64,7 +66,7 @@ fun TutorialScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp)
+        modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp).centeredContentWidth()
     ) {
         LazyColumn(
             state = listState,
@@ -101,21 +103,25 @@ fun TutorialScreen(
         }
 
         AnimatedVisibility(visible = showButtons, enter = fadeIn()) {
+            // The buttons are the user's replies, so they sit on the user's side of the chat, the
+            // trailing edge where outgoing bubbles go. This also balances the incoming bubbles
+            // against the leading edge on a wide screen. The primary action goes last, at the edge,
+            // so it stays put when the secondary one disappears.
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
             ) {
+                if (depth < 1) {
+                    TextButton(onClick = { vm.requestMoreInfo() }) {
+                        Text(stringResource(R.string.tutorial_more_about_2fa))
+                    }
+                }
+
                 Button(onClick = {
                     vm.showButtons.value = false
                     onGetStarted()
                 }) {
                     Text(stringResource(R.string.tutorial_get_started))
-                }
-
-                if (depth < 1) {
-                    TextButton(onClick = { vm.requestMoreInfo() }) {
-                        Text(stringResource(R.string.tutorial_more_about_2fa))
-                    }
                 }
             }
         }

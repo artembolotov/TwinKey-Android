@@ -38,6 +38,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,7 +73,8 @@ fun AccountEditScreen(
     onDelete: (String) -> Unit,
     onCancel: () -> Unit
 ) {
-    val state = remember { AccountEditState(token.issuer, token.name) }
+    // Saveable: folding or unfolding a foldable recreates the activity mid-edit.
+    val state = rememberSaveable(saver = AccountEditState.Saver) { AccountEditState(token.issuer, token.name) }
 
     val hasChanges = state.issuer != token.issuer || state.name != token.name
     val canDone = state.issuer.isNotBlank() && hasChanges
@@ -269,6 +272,18 @@ private class AccountEditState(issuer: String, name: String) {
     var name by mutableStateOf(name)
     var showDeleteDialog by mutableStateOf(false)
     var activeField: AccountEditField? by mutableStateOf(null)
+
+    companion object {
+        val Saver = listSaver<AccountEditState, Any?>(
+            save = { listOf(it.issuer, it.name, it.showDeleteDialog, it.activeField?.name) },
+            restore = { saved ->
+                AccountEditState(saved[0] as String, saved[1] as String).apply {
+                    showDeleteDialog = saved[2] as Boolean
+                    activeField = (saved[3] as String?)?.let(AccountEditField::valueOf)
+                }
+            }
+        )
+    }
 }
 
 @Composable

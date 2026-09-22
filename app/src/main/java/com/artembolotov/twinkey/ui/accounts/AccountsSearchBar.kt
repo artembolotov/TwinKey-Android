@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
+import com.artembolotov.twinkey.ui.components.centeredContentWidth
 import com.artembolotov.twinkey.ui.theme.appTextFieldColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +61,7 @@ fun AccountsSearchBar(
             textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
             modifier = Modifier
-                .weight(1f)
+                .centeredContentWidth()
                 .padding(
                     start = 28.dp,
                     end = 28.dp,

@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.Color
 import com.artembolotov.twinkey.ui.components.GlassScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,6 +52,7 @@ import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.data.BackupManager
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.CheckableTokenRow
+import com.artembolotov.twinkey.ui.components.rememberSelection
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -69,7 +69,7 @@ fun AccountsExportScreen(
 
     val context = LocalContext.current
     val layoutDirection = LocalLayoutDirection.current
-    val selected = remember { mutableStateMapOf<String, Boolean>() }
+    val selected = rememberSelection()
     val allSelected = accounts.all { selected[it.id] == true }
     val exportState = remember { ExportState() }
     val exportErrorMsg = stringResource(R.string.backup_export_error)

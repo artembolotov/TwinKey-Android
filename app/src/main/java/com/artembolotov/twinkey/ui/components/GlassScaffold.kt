@@ -3,6 +3,7 @@ package com.artembolotov.twinkey.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
@@ -61,13 +62,24 @@ fun GlassScaffold(
         ).toDp()
     }
 
-    Box(modifier = modifier.fillMaxSize().background(pageBackground)) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize().background(pageBackground)) {
+        // On a wide window the content stays a centered column no wider than MaxContentWidth. It is
+        // done through the padding, not by narrowing the content, so the scroll area still spans the
+        // whole window and the margins scroll too.
+        val sideMargin = ((maxWidth - safeLeft - safeRight - MaxContentWidth) / 2).coerceAtLeast(0.dp)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSource(hazeState)
         ) {
-            content(PaddingValues(start = safeLeft, top = topBarHeightDp, end = safeRight, bottom = navBarBottomDp))
+            content(
+                PaddingValues(
+                    start = safeLeft + sideMargin,
+                    top = topBarHeightDp,
+                    end = safeRight + sideMargin,
+                    bottom = navBarBottomDp
+                )
+            )
         }
 
         Box(

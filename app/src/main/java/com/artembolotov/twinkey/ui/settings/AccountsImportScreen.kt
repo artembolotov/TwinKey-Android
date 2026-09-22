@@ -36,7 +36,6 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.ui.graphics.Color
 import com.artembolotov.twinkey.ui.components.GlassScaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +54,7 @@ import com.artembolotov.twinkey.data.ImportResult
 import com.artembolotov.twinkey.data.SkipReason
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.ui.components.CheckableTokenRow
+import com.artembolotov.twinkey.ui.components.rememberSelection
 
 /** Шаг 1: только выбор файла. Используется внутри bottom sheet. */
 @Composable
@@ -118,9 +118,7 @@ fun AccountsImportSelectionScreen(
 ) {
     BackHandler { onDismiss() }
 
-    val selected = remember { mutableStateMapOf<String, Boolean>().also { map ->
-        importResult.successful.forEach { map[it.id] = true }
-    }}
+    val selected = rememberSelection { importResult.successful.map { it.id } }
     val allSelected = importResult.successful.all { selected[it.id] == true }
     val selectedCount = importResult.successful.count { selected[it.id] == true }
 

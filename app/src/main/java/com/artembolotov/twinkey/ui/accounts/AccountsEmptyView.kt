@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.artembolotov.twinkey.R
+import com.artembolotov.twinkey.ui.components.MaxContentWidth
 
 // Порт twinkey://add-test из iOS: ссылка в подсказке добавляет тестовый аккаунт
 const val ADD_TEST_ACCOUNT_URL = "twinkey://add-test"
@@ -105,7 +107,7 @@ fun AccountsEmptyView(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
+            modifier = Modifier.widthIn(max = MaxContentWidth).padding(horizontal = 32.dp)
         )
 
         Spacer(Modifier.height(32.dp))

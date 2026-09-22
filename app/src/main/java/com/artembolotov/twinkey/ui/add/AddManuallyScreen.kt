@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,13 +66,15 @@ fun AddManuallyScreen(
     onDone: (Token) -> Unit,
     onCancel: () -> Unit
 ) {
-    var issuer by remember { mutableStateOf("") }
-    var secretRaw by remember { mutableStateOf("") }
-    var account by remember { mutableStateOf("") }
-    var period by remember { mutableIntStateOf(30) }
-    var digits by remember { mutableStateOf(6) }
-    var algorithm by remember { mutableStateOf(OtpAlgorithm.SHA1) }
-    var activeField: AddManuallyField? by remember { mutableStateOf(null) }
+    // Saveable: folding or unfolding a foldable recreates the activity, and a half-typed secret
+    // should not vanish with it.
+    var issuer by rememberSaveable { mutableStateOf("") }
+    var secretRaw by rememberSaveable { mutableStateOf("") }
+    var account by rememberSaveable { mutableStateOf("") }
+    var period by rememberSaveable { mutableIntStateOf(30) }
+    var digits by rememberSaveable { mutableStateOf(6) }
+    var algorithm by rememberSaveable { mutableStateOf(OtpAlgorithm.SHA1) }
+    var activeField: AddManuallyField? by rememberSaveable { mutableStateOf(null) }
 
     val base32 = remember { Base32() }
     val secretValid by remember {
