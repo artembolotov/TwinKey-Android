@@ -30,7 +30,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
-        versionName = "1.0.1"
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "APPMETRICA_API_KEY", "\"$appmetricaApiKey\"")
