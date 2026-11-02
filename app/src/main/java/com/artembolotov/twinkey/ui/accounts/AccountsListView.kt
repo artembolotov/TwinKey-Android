@@ -76,7 +76,9 @@ fun AccountsListView(
     accounts: List<Token>,
     codes: Map<String, String>,
     secondsRemaining: Map<String, Int>,
+    nextCodes: Map<String, String>,
     onCopyCode: (String) -> Unit,
+    onCopyNextCode: (String) -> Unit,
     onEditAccount: (String) -> Unit,
     onMove: (Int, Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -175,7 +177,9 @@ fun AccountsListView(
                             token = token,
                             code = codes[token.id] ?: "",
                             secondsRemaining = secondsRemaining[token.id] ?: 30,
+                            nextCode = nextCodes[token.id],
                             onCopyCode = onCopyCode,
+                            onCopyNextCode = onCopyNextCode,
                             onEdit = { onEditAccount(token.id) },
                             isEditMode = isEditMode,
                             // Cards in a row should share a height, so a long title is cut, not wrapped.
@@ -211,7 +215,9 @@ fun AccountCell(
     token: Token,
     code: String,
     secondsRemaining: Int,
+    nextCode: String?,
     onCopyCode: (String) -> Unit,
+    onCopyNextCode: (String) -> Unit,
     onEdit: () -> Unit,
     modifier: Modifier = Modifier,
     isEditMode: Boolean = false,
@@ -253,7 +259,9 @@ fun AccountCell(
                     code = code,
                     secondsRemaining = secondsRemaining,
                     fullWidth = true,
-                    onTap = onCopyCode
+                    nextCode = nextCode,
+                    onTap = onCopyCode,
+                    onTapNext = onCopyNextCode
                 )
             }
         }

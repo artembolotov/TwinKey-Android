@@ -13,6 +13,7 @@ import com.artembolotov.twinkey.domain.OtpFactor
 import com.artembolotov.twinkey.domain.OtpGenerator
 import com.artembolotov.twinkey.domain.Token
 import com.artembolotov.twinkey.domain.TotpCodeGenerator
+import com.artembolotov.twinkey.ui.components.NextCodeLeadSeconds
 import org.apache.commons.codec.binary.Base32
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
+
+private const val SHOW_NEXT_CODE_KEY = "show_next_code"
 
 sealed class AccountsOverlay {
     object None : AccountsOverlay()
@@ -43,6 +46,9 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
         val accounts: List<Token> = emptyList(),
         val codes: Map<String, String> = emptyMap(),
         val secondsRemaining: Map<String, Int> = emptyMap(),
+        // Only for accounts whose code changes within NextCodeLeadSeconds, and only with showNextCode on.
+        val nextCodes: Map<String, String> = emptyMap(),
+        val showNextCode: Boolean = true,
         val message: String? = null,
         val welcomeSessionId: Int = 0,
         val overlay: AccountsOverlay = AccountsOverlay.None,
@@ -83,7 +89,9 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
             if (accountsLost && accounts.isEmpty()) AccountsOverlay.DataLost
             else AccountsOverlay.None
 
-        _state.update { it.copy(mode = mode, accounts = accounts, overlay = overlay) }
+        val showNextCode = settings.getBoolean(SHOW_NEXT_CODE_KEY, true)
+
+        _state.update { it.copy(mode = mode, accounts = accounts, overlay = overlay, showNextCode = showNextCode) }
         updateCodes()
     }
 
@@ -118,6 +126,13 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
     // --- Edit mode / Search ---
 
     fun setEditMode(enabled: Boolean) = _state.update { it.copy(editMode = enabled) }
+
+    fun setShowNextCode(enabled: Boolean) {
+        settings.edit { putBoolean(SHOW_NEXT_CODE_KEY, enabled) }
+        _state.update { it.copy(showNextCode = enabled) }
+        updateCodes()
+    }
+
     fun setSearchQuery(query: String) = _state.update { it.copy(searchQuery = query) }
 
     // --- Accounts (порт AccountAction) ---
@@ -145,17 +160,24 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
 
     fun removeAll() {
         repository.removeAll()
-        _state.update { it.copy(accounts = emptyList(), codes = emptyMap(), secondsRemaining = emptyMap(), editMode = false) }
+        _state.update {
+            it.copy(accounts = emptyList(), codes = emptyMap(), secondsRemaining = emptyMap(), nextCodes = emptyMap(), editMode = false)
+        }
     }
 
     fun eraseAll() {
         repository.removeAll()
-        settings.edit { remove("initialized") }
+        settings.edit {
+            remove("initialized")
+            remove(SHOW_NEXT_CODE_KEY)
+        }
         _state.update {
             it.copy(
                 accounts = emptyList(),
                 codes = emptyMap(),
                 secondsRemaining = emptyMap(),
+                nextCodes = emptyMap(),
+                showNextCode = true,
                 mode = AppMode.Welcome,
                 welcomeSessionId = it.welcomeSessionId + 1,
                 overlay = AccountsOverlay.None,
@@ -203,7 +225,12 @@ class AccountsViewModel(application: Application) : AndroidViewModel(application
             val period = (token.generator.factor as? OtpFactor.Timer)?.period ?: 30
             token.id to TotpCodeGenerator.secondsRemaining(period, now)
         }
-        _state.update { it.copy(codes = codes, secondsRemaining = remaining) }
+        val nextCodes = if (!_state.value.showNextCode) emptyMap() else accounts.mapNotNull { token ->
+            val period = (token.generator.factor as? OtpFactor.Timer)?.period ?: return@mapNotNull null
+            if ((remaining[token.id] ?: period) > NextCodeLeadSeconds) return@mapNotNull null
+            token.id to TotpCodeGenerator.generateCode(token.generator, now + period * 1_000L)
+        }.toMap()
+        _state.update { it.copy(codes = codes, secondsRemaining = remaining, nextCodes = nextCodes) }
     }
 
     private fun tickerFlow() = flow {
