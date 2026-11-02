@@ -8,6 +8,8 @@
     <string name="accounts_lost_message">Ключи аккаунтов хранятся в защищённом хранилище этого устройства, поэтому их нельзя скопировать на другое устройство или восстановить из системной резервной копии. Восстановите аккаунты из файла .twinkey или добавьте их заново.</string>
     <string name="accounts_lost_dismiss">Не сейчас</string>
     <string name="accounts_code_copied">Код скопирован</string>
+    <string name="accounts_next_code_copied">Скопирован следующий код</string>
+    <string name="accounts_next_code_description">Следующий код %1$s</string>
     <string name="accounts_edit">Изменить</string>
     <string name="accounts_done">Готово</string>
     <string name="settings">Настройки</string>
@@ -95,6 +97,9 @@
     <string name="settings_version">Версия</string>
     <string name="settings_done">Готово</string>
     <string name="settings_section_accounts">Аккаунты</string>
+    <string name="settings_section_codes">Коды</string>
+    <string name="settings_show_next_code">Показывать следующий код</string>
+    <string name="settings_show_next_code_detail">Появляется за 5 секунд до смены кода</string>
     <string name="settings_edit_accounts">Редактировать</string>
     <string name="settings_export">Экспортировать в файл</string>
     <string name="settings_import">Импортировать из файла</string>

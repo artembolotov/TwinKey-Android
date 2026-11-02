@@ -19,3 +19,7 @@ val CardBackgroundDark  = Color(0xFF2C2C2E)
 
 val SearchFieldBackgroundLight = Color(0xFFE5E5EA)
 val SearchFieldBackgroundDark  = Color(0xFF1C1C1E)
+
+// Text of the next-code capsule: the Normal blue, deepened in light and lifted in dark so it reads on the tinted glass.
+val NextCodeLight = Color(0xFF2A74DB)
+val NextCodeDark  = Color(0xFF86C0FB)

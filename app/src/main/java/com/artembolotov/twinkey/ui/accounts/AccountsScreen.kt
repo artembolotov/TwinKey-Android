@@ -2,6 +2,7 @@ package com.artembolotov.twinkey.ui.accounts
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -125,6 +126,7 @@ fun AccountsScreen(
     }
 
     val copiedMessage = stringResource(R.string.accounts_code_copied)
+    val nextCodeCopiedMessage = stringResource(R.string.accounts_next_code_copied)
     val invalidQrMessage = stringResource(R.string.scan_invalid_qr)
     val noQrInImageMessage = stringResource(R.string.scan_no_qr_in_image)
     val scanErrorMessage = stringResource(R.string.scan_error)
@@ -233,7 +235,9 @@ fun AccountsScreen(
                     settingsImportResult = state.settingsImportResult,
                     onShowExport = { vm.showSettingsExport() },
                     onHideExport = { vm.hideSettingsExport() },
-                    onSetImportResult = { vm.setSettingsImportResult(it) }
+                    onSetImportResult = { vm.setSettingsImportResult(it) },
+                    showNextCode = state.showNextCode,
+                    onShowNextCodeChange = { vm.setShowNextCode(it) }
                 )
             }
 
@@ -329,13 +333,9 @@ fun AccountsScreen(
                             accounts = filteredAccounts,
                             codes = state.codes,
                             secondsRemaining = state.secondsRemaining,
-                            onCopyCode = { code ->
-                                context.getSystemService(ClipboardManager::class.java)
-                                    .setPrimaryClip(ClipData.newPlainText("", code))
-                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                                    vm.showMessage(copiedMessage)
-                                }
-                            },
+                            nextCodes = state.nextCodes,
+                            onCopyCode = { code -> copyCode(context, code) { vm.showMessage(copiedMessage) } },
+                            onCopyNextCode = { code -> copyCode(context, code) { vm.showMessage(nextCodeCopiedMessage) } },
                             onEditAccount = { id ->
                                 val token = state.accounts.find { it.id == id } ?: return@AccountsListView
                                 vm.showOverlay(AccountsOverlay.Editing(token))
@@ -412,4 +412,10 @@ fun AccountsScreen(
         copiedMessage = copiedMessage,
         importSuccess = importSuccess,
     )
+}
+
+// Android 13+ confirms a copy itself, so the app's own message is only for older versions.
+private fun copyCode(context: Context, code: String, showMessage: () -> Unit) {
+    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", code))
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) showMessage()
 }

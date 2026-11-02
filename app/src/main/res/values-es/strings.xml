@@ -8,6 +8,8 @@
     <string name="accounts_lost_message">Las claves de tus cuentas se guardan en el almacenamiento seguro de este dispositivo, así que no se pueden copiar a otro dispositivo ni restaurar desde una copia de seguridad del sistema. Restaura las cuentas desde un archivo .twinkey o vuelve a añadirlas.</string>
     <string name="accounts_lost_dismiss">Ahora no</string>
     <string name="accounts_code_copied">El código se copia</string>
+    <string name="accounts_next_code_copied">El siguiente código se copia</string>
+    <string name="accounts_next_code_description">Siguiente código %1$s</string>
     <string name="accounts_edit">Editar</string>
     <string name="accounts_done">OK</string>
     <string name="settings">Configuración</string>
@@ -95,6 +97,9 @@
     <string name="settings_version">Versión</string>
     <string name="settings_done">OK</string>
     <string name="settings_section_accounts">Cuentas</string>
+    <string name="settings_section_codes">Códigos</string>
+    <string name="settings_show_next_code">Mostrar el siguiente código</string>
+    <string name="settings_show_next_code_detail">Aparece 5 segundos antes de que cambie el código</string>
     <string name="settings_edit_accounts">Editar</string>
     <string name="settings_export">Exportar a archivo</string>
     <string name="settings_import">Importar desde archivo</string>

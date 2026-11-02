@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -33,6 +34,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -49,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.data.ImportResult
@@ -73,7 +76,9 @@ fun SettingsScreen(
     settingsImportResult: ImportResult? = null,
     onShowExport: () -> Unit = {},
     onHideExport: () -> Unit = {},
-    onSetImportResult: (ImportResult?) -> Unit = {}
+    onSetImportResult: (ImportResult?) -> Unit = {},
+    showNextCode: Boolean = true,
+    onShowNextCodeChange: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -161,6 +166,19 @@ fun SettingsScreen(
                             .padding(contentPadding)
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
+                        SectionLabel(stringResource(R.string.settings_section_codes))
+
+                        SettingsSwitchRow(
+                            title = stringResource(R.string.settings_show_next_code),
+                            detail = stringResource(R.string.settings_show_next_code_detail),
+                            checked = showNextCode,
+                            onCheckedChange = onShowNextCodeChange
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(Modifier.height(16.dp))
+
                         SectionLabel(stringResource(R.string.settings_section_accounts))
 
                         if (onEditAccounts != null) {
@@ -417,6 +435,30 @@ private fun SettingsRow(
                 modifier = Modifier.size(16.dp)
             )
         }
+    }
+    HorizontalDivider()
+}
+
+@Composable
+private fun SettingsSwitchRow(
+    title: String,
+    detail: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        // The whole row toggles, so the switch itself only shows the state.
+        Switch(checked = checked, onCheckedChange = null)
     }
     HorizontalDivider()
 }
