@@ -49,6 +49,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.ui.theme.OtpExpiredDark
@@ -326,7 +327,7 @@ private fun Modifier.tailFade(amount: Float, g: NextCodeGeometry): Modifier =
 // The label is "→ " followed by the digits.
 private const val NextCodeDigitsStart = 2
 
-/** A light arrow and the next code's digits in the label colour. */
+/** An arrow in the counter's grey and the next code's digits in the label colour. */
 @Composable
 private fun NextCodeLabel(
     code: String,
@@ -338,7 +339,9 @@ private fun NextCodeLabel(
     val labelColor = MaterialTheme.colorScheme.onSurface
     Text(
         text = buildAnnotatedString {
-            withStyle(SpanStyle(color = labelColor.copy(alpha = 0.3f))) { append("→ ") }
+            withStyle(SpanStyle(color = Color.Gray, fontWeight = FontWeight.SemiBold, fontSize = 0.85.em)) {
+                append("→ ")
+            }
             withStyle(
                 SpanStyle(
                     color = if (showsDigits) labelColor else Color.Transparent,
