@@ -52,6 +52,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.TextUnit
@@ -76,6 +77,8 @@ private val ChipFontSize = 15.sp
 // They grow with the font scale up to 130% (iOS: up to the XXL text size). Past it the chip no
 // longer fits within the height of the code's digits.
 private const val MaxFontScale = 1.3f
+// The counter is centred in a fixed width, so it keeps its place as the number of digits changes.
+private val CounterWidth = 30.dp
 private val RingSize = 18.dp
 private val RingStroke = 2.dp
 private val ChipPaddingStart = 4.dp
@@ -267,8 +270,9 @@ fun OtpCodeView(
                 fontSize = smallFontSize,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Gray,
+                textAlign = TextAlign.Center,
                 onTextLayout = { counterLayout = it },
-                modifier = Modifier.graphicsLayer {
+                modifier = Modifier.width(CounterWidth).graphicsLayer {
                     // Gives way to the chip while it is shown and comes back during the swap.
                     alpha = 1f - if (swapping) 1f - p else appear.value
                 }

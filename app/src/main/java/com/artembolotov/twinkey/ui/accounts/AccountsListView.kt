@@ -228,7 +228,7 @@ fun AccountCell(
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = isEditMode) { onEdit() }
-            .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
