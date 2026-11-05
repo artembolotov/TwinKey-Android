@@ -170,6 +170,8 @@ fun OtpCodeView(
             codeBaseline = codeBaseline,
             nextX = nextX,
             nextTop = codeBaseline - nextBaseline,
+            nextBaseline = nextBaseline,
+            digitsInNextX = digitsInNextX,
             digitsX = nextX + digitsInNextX,
             scale = smallFontSize.toPx() / CodeFontSize.toPx(),
             counterShiftY = codeCapTop + CapHeight * smallFontSize.toPx() - counterBaseline,
@@ -250,14 +252,23 @@ fun OtpCodeView(
             Box(Modifier.matchParentSize()) {
                 val next = shownNext
                 if (swapping || next == null) {
-                    // The arrow stays in place and fades out while the digits grow into the code.
+                    // The arrow rides along with the digits as they grow into the code, and fades out early.
                     NextCodeLabel(
                         code = code,
                         fontSize = smallFontSize,
                         showsDigits = false,
                         modifier = Modifier
                             .offset { IntOffset(g.nextX.roundToInt(), g.nextTop.roundToInt()) }
-                            .graphicsLayer { alpha = 1f - p }
+                            .graphicsLayer {
+                                val scale = 1f + (1f / g.scale - 1f) * p
+                                scaleX = scale
+                                scaleY = scale
+                                if (size.width > 0f && size.height > 0f) {
+                                    transformOrigin = TransformOrigin(g.digitsInNextX / size.width, g.nextBaseline / size.height)
+                                }
+                                translationX = -g.digitsX * p
+                                alpha = 1f - (p * 3f).coerceAtMost(1f)
+                            }
                     )
                 } else {
                     val description = stringResource(R.string.accounts_next_code_description, next.formatOtpCode())
@@ -294,6 +305,9 @@ private class NextCodeGeometry(
     val codeBaseline: Float,
     val nextX: Float,
     val nextTop: Float,
+    val nextBaseline: Float,
+    /** Where the next code's digits start, from the next code's leading edge. */
+    val digitsInNextX: Float,
     /** Where the next code's digits start, from the row's leading edge. */
     val digitsX: Float,
     /** Size of the next code's digits relative to the code's. */
