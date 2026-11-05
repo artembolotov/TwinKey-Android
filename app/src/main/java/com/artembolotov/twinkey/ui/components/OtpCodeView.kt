@@ -2,17 +2,21 @@ package com.artembolotov.twinkey.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,14 +28,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
@@ -39,17 +48,14 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.artembolotov.twinkey.R
 import com.artembolotov.twinkey.ui.theme.OtpExpiredDark
@@ -58,31 +64,38 @@ import com.artembolotov.twinkey.ui.theme.OtpExpiresDark
 import com.artembolotov.twinkey.ui.theme.OtpExpiresLight
 import com.artembolotov.twinkey.ui.theme.OtpNormalDark
 import com.artembolotov.twinkey.ui.theme.OtpNormalLight
-import kotlin.math.roundToInt
 
 /** How many seconds before the code changes the next one is shown. Same as the iOS app. */
 const val NextCodeLeadSeconds = 5
 
 private val CodeFontSize = 38.sp
 
-// The counter and the next code. Same values as the iOS app (OTPCodeView.swift).
+// The counter and the chip. Same layout as the iOS app (OTPCodeView.swift), scaled to the code's size.
 private val SmallFontSize = 12.sp
-// They grow with the font scale up to 130% (iOS: up to the XXL text size). Past it the two no
-// longer fit one above the other within the height of the code's digits.
-private val MaxSmallFontSize = (SmallFontSize.value * 1.3f).dp
-private val AppearSlide = 10.dp
+private val ChipFontSize = 15.sp
+// They grow with the font scale up to 130% (iOS: up to the XXL text size). Past it the chip no
+// longer fits within the height of the code's digits.
+private const val MaxFontScale = 1.3f
+private val RingSize = 18.dp
+private val RingStroke = 2.dp
+private val ChipPaddingStart = 4.dp
+private val ChipPaddingEnd = 10.dp
+private val ChipPaddingVertical = 4.dp
+private val ChipSpacing = 6.dp
+private const val ChipTintAlpha = 0.14f
+private const val RingTrackAlpha = 0.3f
+private const val AppearScale = 0.9f
 private val ExitOvershoot = 40.dp
-// The code's tail under the next code fades to this alpha, over FadeLength that ends FadeGap
-// before the next code or the counter, whichever is wider.
+// The code's tail under the chip fades to this alpha, over FadeLength that ends FadeGap
+// before the chip or the counter, whichever is wider.
 private const val FadedAlpha = 0.12f
 private val FadeLength = 16.dp
 private val FadeGap = 10.dp
 
-// Cap height of the system font as a share of its size: the counter's cap line is set on the code's.
-private const val CapHeight = 0.71f
-
 private val AppearSpec = tween<Float>(durationMillis = 300)
 private val SwapSpec = spring<Float>(dampingRatio = 0.9f, stiffness = 400f)
+// The ring runs down over the second that has begun, so it is empty at the change.
+private val RingSpec = tween<Float>(durationMillis = 1000, easing = LinearEasing)
 
 /**
  * Порт OTPCodeView.swift.
@@ -91,11 +104,11 @@ private val SwapSpec = spring<Float>(dampingRatio = 0.9f, stiffness = 400f)
  * Нажатие: копирует код + haptic feedback.
  *
  * With [nextCode] the code that follows is shown for the last [NextCodeLeadSeconds] seconds: the
- * counter moves up to the code's cap line and the next code appears under it, on the code's
- * baseline, both drawn over the row so nothing in its layout moves. On a narrow row with a long
- * code the next code lies over the code's tail, which fades under it. At the change the next
- * code's digits travel into the code's place and grow into it, the old code leaves to the left and
- * the counter returns.
+ * counter gives way to a chip at the row's end, a countdown ring in the code's colour and the next
+ * code's digits, drawn over the row so nothing in its layout moves. On a narrow row with a long
+ * code the chip lies over the code's tail, which fades under it. At the change the next code's
+ * digits travel into the code's place and grow into it, the old code leaves to the left and the
+ * counter returns.
  */
 @Composable
 fun OtpCodeView(
@@ -116,9 +129,11 @@ fun OtpCodeView(
 
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
-    val smallFontSize = with(density) {
-        if (SmallFontSize.toDp() > MaxSmallFontSize) MaxSmallFontSize.toSp() else SmallFontSize
-    }
+    val fontScale = minOf(density.fontScale, MaxFontScale)
+    val smallFontSize = with(density) { (SmallFontSize.value * fontScale).dp.toSp() }
+    val chipFontSize = with(density) { (ChipFontSize.value * fontScale).dp.toSp() }
+    val ringSize = RingSize * fontScale
+    val digitsStyle = LocalTextStyle.current.copy(fontFeatureSettings = "tnum")
 
     // The next code outlives nextCode by the length of the swap: at the change the next code
     // becomes the current one, and the swap starts from where the next code was.
@@ -146,43 +161,53 @@ fun OtpCodeView(
         }
     }
 
-    var rootWidth by remember { mutableIntStateOf(0) }
+    // The ring starts where it stands when the chip appears and then runs down each second.
+    val ring = remember { Animatable(0f) }
+    var ringShown by remember { mutableStateOf(false) }
+    val showsChip = shownNext != null
+    LaunchedEffect(secondsRemaining, showsChip) {
+        if (!showsChip) {
+            ringShown = false
+            return@LaunchedEffect
+        }
+        val target = (secondsRemaining - 1).coerceAtLeast(0) / NextCodeLeadSeconds.toFloat()
+        if (ringShown) {
+            ring.animateTo(target, RingSpec)
+        } else {
+            ring.snapTo(target)
+            ringShown = true
+        }
+    }
+
+    var rootSize by remember { mutableStateOf(IntSize.Zero) }
     var codeTop by remember { mutableFloatStateOf(0f) }
     var codeLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
-    var counterTop by remember { mutableFloatStateOf(0f) }
     var counterLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
-    var nextWidth by remember { mutableIntStateOf(0) }
-    var nextLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var chipWidth by remember { mutableIntStateOf(0) }
+    var digitsLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
     val swapping = outgoing != null
     val p = if (swapping) swap.value else 1f
-    val labelColor = MaterialTheme.colorScheme.onSurface
 
     val g = with(density) {
         val codeBaseline = codeTop + (codeLayout?.firstBaseline ?: 0f)
-        val codeCapTop = codeBaseline - CapHeight * CodeFontSize.toPx()
-        val counterBaseline = counterTop + (counterLayout?.firstBaseline ?: 0f)
-        val nextX = rootWidth - nextWidth.toFloat()
-        val nextBaseline = nextLayout?.firstBaseline ?: 0f
-        val digitsInNextX = nextLayout?.getHorizontalPosition(NextCodeDigitsStart, usePrimaryDirection = true) ?: 0f
+        // The chip is centred on the row's height and ends at its end; the digits are centred in it.
+        val digitsWidth = digitsLayout?.size?.width ?: 0
+        val digitsHeight = digitsLayout?.size?.height ?: 0
+        val digitsBaseline = (rootSize.height - digitsHeight) / 2f + (digitsLayout?.firstBaseline ?: 0f)
         val counterWidth = counterLayout?.size?.width ?: 0
         NextCodeGeometry(
             codeBaseline = codeBaseline,
-            nextX = nextX,
-            nextTop = codeBaseline - nextBaseline,
-            nextBaseline = nextBaseline,
-            digitsInNextX = digitsInNextX,
-            digitsX = nextX + digitsInNextX,
-            scale = smallFontSize.toPx() / CodeFontSize.toPx(),
-            counterShiftY = codeCapTop + CapHeight * smallFontSize.toPx() - counterBaseline,
-            fadeCut = rootWidth - maxOf(nextWidth, counterWidth) - FadeGap.toPx(),
+            digitsX = rootSize.width - ChipPaddingEnd.toPx() - digitsWidth,
+            digitsShiftY = digitsBaseline - codeBaseline,
+            scale = chipFontSize.toPx() / CodeFontSize.toPx(),
+            fadeCut = rootSize.width - maxOf(chipWidth, counterWidth) - FadeGap.toPx(),
             fadeLength = FadeLength.toPx(),
-            appearSlide = AppearSlide.toPx(),
             exitOvershoot = ExitOvershoot.toPx()
         )
     }
 
-    Box(modifier = modifier.onSizeChanged { rootWidth = it.width }) {
+    Box(modifier = modifier.onSizeChanged { rootSize = it }) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = if (onTap != null) {
@@ -199,6 +224,7 @@ fun OtpCodeView(
                         fontSize = CodeFontSize,
                         fontWeight = FontWeight.Normal,
                         color = otpColor(0, isDark),
+                        style = digitsStyle,
                         modifier = Modifier
                             .graphicsLayer {
                                 translationX = -((codeLayout?.size?.width ?: 0) + g.exitOvershoot) * p
@@ -211,7 +237,9 @@ fun OtpCodeView(
                     text = code.formatOtpCode(),
                     fontSize = CodeFontSize,
                     fontWeight = FontWeight.Normal,
-                    color = if (swapping) lerp(labelColor, color, p) else color,
+                    // The digits come in the colour they had in the chip, which is the fresh code's.
+                    color = if (swapping) otpColor(secondsRemaining, isDark) else color,
+                    style = digitsStyle,
                     onTextLayout = { codeLayout = it },
                     modifier = if (!swapping) {
                         Modifier.tailFade(if (shownNext != null) appear.value else 0f, g)
@@ -225,6 +253,7 @@ fun OtpCodeView(
                                 transformOrigin = TransformOrigin(0f, (g.codeBaseline - codeTop) / size.height)
                             }
                             translationX = g.digitsX * (1f - p)
+                            translationY = g.digitsShiftY * (1f - p)
                             alpha = (p * 2f).coerceAtMost(1f)
                         }
                     }
@@ -239,61 +268,53 @@ fun OtpCodeView(
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Gray,
                 onTextLayout = { counterLayout = it },
-                modifier = Modifier
-                    .onGloballyPositioned { counterTop = it.positionInParent().y }
-                    .graphicsLayer {
-                        val t = if (swapping) 1f - p else appear.value
-                        translationY = g.counterShiftY * t
-                    }
+                modifier = Modifier.graphicsLayer {
+                    // Gives way to the chip while it is shown and comes back during the swap.
+                    alpha = 1f - if (swapping) 1f - p else appear.value
+                }
             )
         }
 
-        if (shownNext != null || swapping) {
-            Box(Modifier.matchParentSize()) {
+        if (showsChip || swapping) {
+            Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
                 val next = shownNext
-                if (swapping || next == null) {
-                    // The arrow rides along with the digits as they grow into the code, and fades out early.
-                    NextCodeLabel(
+                if (swapping) {
+                    // The capsule stays behind while its digits grow into the code, and fades out early.
+                    NextCodeChip(
                         code = code,
-                        fontSize = smallFontSize,
-                        showsDigits = false,
+                        secondsRemaining = secondsRemaining,
+                        progress = { 0f },
+                        color = color,
+                        fontSize = chipFontSize,
+                        ringSize = ringSize,
+                        showsContent = false,
+                        modifier = Modifier.graphicsLayer { alpha = 1f - (p * 3f).coerceAtMost(1f) }
+                    )
+                } else if (next != null) {
+                    NextCodeChip(
+                        code = next,
+                        secondsRemaining = secondsRemaining,
+                        progress = { ring.value },
+                        color = color,
+                        fontSize = chipFontSize,
+                        ringSize = ringSize,
+                        description = stringResource(R.string.accounts_next_code_description, next.formatOtpCode()),
+                        onClick = onTapNext?.let { tap ->
+                            {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                tap(next)
+                            }
+                        },
+                        onDigitsLayout = { digitsLayout = it },
                         modifier = Modifier
-                            .offset { IntOffset(g.nextX.roundToInt(), g.nextTop.roundToInt()) }
                             .graphicsLayer {
-                                val scale = 1f + (1f / g.scale - 1f) * p
+                                alpha = appear.value
+                                val scale = AppearScale + (1f - AppearScale) * appear.value
                                 scaleX = scale
                                 scaleY = scale
-                                if (size.width > 0f && size.height > 0f) {
-                                    transformOrigin = TransformOrigin(g.digitsInNextX / size.width, g.nextBaseline / size.height)
-                                }
-                                translationX = -g.digitsX * p
-                                alpha = 1f - (p * 3f).coerceAtMost(1f)
+                                transformOrigin = TransformOrigin(1f, 0.5f)
                             }
-                    )
-                } else {
-                    val description = stringResource(R.string.accounts_next_code_description, next.formatOtpCode())
-                    NextCodeLabel(
-                        code = next,
-                        fontSize = smallFontSize,
-                        onTextLayout = { nextLayout = it },
-                        modifier = Modifier
-                            .offset {
-                                IntOffset(
-                                    (g.nextX + g.appearSlide * (1f - appear.value)).roundToInt(),
-                                    g.nextTop.roundToInt()
-                                )
-                            }
-                            .graphicsLayer { alpha = appear.value }
-                            .onSizeChanged { nextWidth = it.width }
-                            .then(
-                                if (onTapNext != null) {
-                                    Modifier.clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onTapNext(next)
-                                    }
-                                } else Modifier
-                            )
-                            .semantics { contentDescription = description }
+                            .onSizeChanged { chipWidth = it.width }
                     )
                 }
             }
@@ -303,24 +324,19 @@ fun OtpCodeView(
 
 private class NextCodeGeometry(
     val codeBaseline: Float,
-    val nextX: Float,
-    val nextTop: Float,
-    val nextBaseline: Float,
-    /** Where the next code's digits start, from the next code's leading edge. */
-    val digitsInNextX: Float,
     /** Where the next code's digits start, from the row's leading edge. */
     val digitsX: Float,
+    /** From the code's baseline to the next code's digits' baseline. */
+    val digitsShiftY: Float,
     /** Size of the next code's digits relative to the code's. */
     val scale: Float,
-    val counterShiftY: Float,
     /** Where, from the code's leading edge, its tail has faded. */
     val fadeCut: Float,
     val fadeLength: Float,
-    val appearSlide: Float,
     val exitOvershoot: Float
 )
 
-/** Fades the code's tail from [NextCodeGeometry.fadeCut], so the next code over it reads on a clear ground. */
+/** Fades the code's tail from [NextCodeGeometry.fadeCut], so the chip over it reads on a clear ground. */
 private fun Modifier.tailFade(amount: Float, g: NextCodeGeometry): Modifier =
     if (amount <= 0f) this else this
         .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -338,38 +354,99 @@ private fun Modifier.tailFade(amount: Float, g: NextCodeGeometry): Modifier =
             }
         }
 
-// The label is "→ " followed by the digits.
-private const val NextCodeDigitsStart = 2
-
-/** An arrow in the counter's grey and the next code's digits in the label colour. */
+/**
+ * A capsule tinted with the fresh code's colour: a ring that runs down in the code's colour with
+ * the seconds left in it, then the next code's digits in the colour they will have as the code.
+ * Without [showsContent] only the capsule and the ring's track are drawn, at the same size.
+ */
 @Composable
-private fun NextCodeLabel(
+private fun NextCodeChip(
     code: String,
+    secondsRemaining: Int,
+    progress: () -> Float,
+    color: Color,
     fontSize: TextUnit,
+    ringSize: Dp,
     modifier: Modifier = Modifier,
-    showsDigits: Boolean = true,
-    onTextLayout: (TextLayoutResult) -> Unit = {}
+    showsContent: Boolean = true,
+    description: String? = null,
+    onClick: (() -> Unit)? = null,
+    onDigitsLayout: (TextLayoutResult) -> Unit = {}
 ) {
-    val labelColor = MaterialTheme.colorScheme.onSurface
-    Text(
-        text = buildAnnotatedString {
-            withStyle(SpanStyle(color = Color.Gray, fontWeight = FontWeight.SemiBold, fontSize = 0.85.em)) {
-                append("→ ")
-            }
-            withStyle(
-                SpanStyle(
-                    color = if (showsDigits) labelColor else Color.Transparent,
-                    fontWeight = FontWeight.SemiBold
-                )
-            ) { append(code.formatOtpCode()) }
-        },
-        fontSize = fontSize,
-        maxLines = 1,
-        softWrap = false,
-        style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum"),
-        onTextLayout = onTextLayout,
+    val fresh = if (isSystemInDarkTheme()) OtpNormalDark else OtpNormalLight
+    val numberSize = with(LocalDensity.current) { (ringSize / 2).toSp() }
+    val digitsStyle = LocalTextStyle.current.copy(fontFeatureSettings = "tnum")
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(ChipSpacing),
         modifier = modifier
-    )
+            .clip(CircleShape)
+            .background(fresh.copy(alpha = ChipTintAlpha))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .clearAndSetSemantics { if (description != null) contentDescription = description }
+            .padding(
+                start = ChipPaddingStart,
+                end = ChipPaddingEnd,
+                top = ChipPaddingVertical,
+                bottom = ChipPaddingVertical
+            )
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(ringSize)
+                .drawBehind {
+                    val stroke = RingStroke.toPx()
+                    val topLeft = Offset(stroke / 2f, stroke / 2f)
+                    val arcSize = Size(size.width - stroke, size.height - stroke)
+                    drawArc(
+                        color = Color.Gray.copy(alpha = RingTrackAlpha),
+                        startAngle = 0f,
+                        sweepAngle = 360f,
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = arcSize,
+                        style = Stroke(stroke)
+                    )
+                    val sweep = 360f * progress()
+                    if (showsContent && sweep > 0f) {
+                        drawArc(
+                            color = color,
+                            startAngle = -90f,
+                            sweepAngle = sweep,
+                            useCenter = false,
+                            topLeft = topLeft,
+                            size = arcSize,
+                            style = Stroke(stroke, cap = StrokeCap.Round)
+                        )
+                    }
+                }
+        ) {
+            Text(
+                text = "$secondsRemaining",
+                fontSize = numberSize,
+                lineHeight = numberSize,
+                fontWeight = FontWeight.Bold,
+                color = if (showsContent) color else Color.Transparent,
+                maxLines = 1,
+                softWrap = false,
+                style = digitsStyle
+            )
+        }
+
+        Text(
+            text = code.formatOtpCode(),
+            fontSize = fontSize,
+            lineHeight = fontSize * 1.3f,
+            fontWeight = FontWeight.SemiBold,
+            color = if (showsContent) fresh else Color.Transparent,
+            maxLines = 1,
+            softWrap = false,
+            style = digitsStyle,
+            onTextLayout = onDigitsLayout
+        )
+    }
 }
 
 fun otpColor(secondsRemaining: Int, isDark: Boolean): Color = when {
