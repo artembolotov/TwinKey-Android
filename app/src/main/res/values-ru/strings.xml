@@ -19,7 +19,7 @@
     <string name="tutorial_greeting_2">Я умею генерировать шестизначные коды, которыми нужно подтверждать вход в аккаунты. Это повышает безопасность, ведь без такого кода не получится зайти в учётную запись, даже зная пароль.</string>
     <string name="tutorial_get_started">Начать работу</string>
     <string name="tutorial_more_about_2fa">Расскажи подробнее</string>
-    <string name="tutorial_more_info_text"><![CDATA[Двухфакторная аутентификация — это дополнительный уровень безопасности, который гарантирует, что доступ к своим учётным записям сможете получить только вы, даже если ваши пароли стали известны кому-то ещё. <a href="https://ru.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm">Подробнее в Википедии</a>]]></string>
+    <string name="tutorial_more_info_text"><![CDATA[Двухфакторная аутентификация — это дополнительный уровень безопасности, который гарантирует, что доступ к своим учётным записям сможете получить только вы, даже если ваши пароли стали известны кому-то ещё. <a href="https://twinkey.app/ru/totp">Подробнее</a>]]></string>
     <string name="tutorial_typing">TwinKey печатает</string>
 
     <!-- QrScannerScreen -->
