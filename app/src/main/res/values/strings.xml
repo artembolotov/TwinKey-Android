@@ -21,7 +21,7 @@
     <string name="tutorial_greeting_2">I can generate six-digit codes to confirm login to accounts. This increases security because without this code, you cannot log in to your account, even if you know the password.</string>
     <string name="tutorial_get_started">Get Started</string>
     <string name="tutorial_more_about_2fa">Tell More</string>
-    <string name="tutorial_more_info_text"><![CDATA[Two-factor authentication is an additional level of security that ensures that only you can access your accounts, even if your passwords have become known to someone else. <a href="https://en.wikipedia.org/wiki/Time-based_one-time_password">More in Wikipedia</a>]]></string>
+    <string name="tutorial_more_info_text"><![CDATA[Two-factor authentication is an additional level of security that ensures that only you can access your accounts, even if your passwords have become known to someone else. <a href="https://twinkey.app/en/totp">Learn more</a>]]></string>
     <string name="tutorial_typing">TwinKey is typing</string>
 
     <!-- QrScannerScreen -->
