@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -105,11 +106,12 @@ private val RingSpec = tween<Float>(durationMillis = 1000, easing = LinearEasing
  * Нажатие: копирует код + haptic feedback.
  *
  * With [nextCode] the code that follows is shown for the last [NextCodeLeadSeconds] seconds: the
- * counter gives way to a trailing preview — a countdown ring in the code's colour and the next
- * code's digits in the fresh-code colour — drawn over the row so nothing in its layout moves. On a
- * narrow row with a long code it lies over the code's tail, which fades under it. At the change the
- * ring and its digit vanish at once; the next digits travel into the code's place and grow into it
- * without fading, the old code leaves to the left and the counter returns.
+ * counter gives way to a trailing preview — a countdown ring in the code's urgency colour and the
+ * next code's digits in secondary (muted preview, not active blue) — drawn over the row so nothing
+ * in its layout moves. On a narrow row with a long code it lies over the code's tail, which fades
+ * under it. At the change the ring and its digit vanish at once; the next digits travel into the
+ * code's place and grow into it without fading, the old code leaves to the left and the counter
+ * returns.
  */
 @Composable
 fun OtpCodeView(
@@ -368,8 +370,8 @@ private fun Modifier.tailFade(amount: Float, g: NextCodeGeometry): Modifier =
         }
 
 /**
- * Ring + next digits with no capsule: the digits use the fresh-code colour they will have after
- * the change; the ring and its digit use the current code's urgency colour.
+ * Ring + next digits with no capsule: the digits are secondary so they read as a preview, not as
+ * a second active code; the ring and its digit keep the urgency colour of the current period.
  */
 @Composable
 private fun NextCodeChip(
@@ -384,7 +386,6 @@ private fun NextCodeChip(
     onClick: (() -> Unit)? = null,
     onDigitsLayout: (TextLayoutResult) -> Unit = {}
 ) {
-    val fresh = if (isSystemInDarkTheme()) OtpNormalDark else OtpNormalLight
     val numberSize = with(LocalDensity.current) { (ringSize / 2).toSp() }
     val digitsStyle = LocalTextStyle.current.copy(fontFeatureSettings = "tnum")
 
@@ -449,7 +450,7 @@ private fun NextCodeChip(
             fontSize = fontSize,
             lineHeight = fontSize * 1.3f,
             fontWeight = FontWeight.SemiBold,
-            color = fresh,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             softWrap = false,
             style = digitsStyle,
