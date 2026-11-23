@@ -1,11 +1,11 @@
 package com.artembolotov.twinkey.ui.components
 
+import android.provider.Settings
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -45,6 +43,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -85,8 +84,7 @@ private val ChipPaddingStart = 4.dp
 private val ChipPaddingEnd = 10.dp
 private val ChipPaddingVertical = 4.dp
 private val ChipSpacing = 6.dp
-private const val ChipTintAlpha = 0.14f
-private const val RingTrackAlpha = 0.3f
+private const val RingTrackAlpha = 0.25f
 private const val AppearScale = 0.9f
 private val ExitOvershoot = 40.dp
 // The code's tail under the chip fades to this alpha, over FadeLength that ends FadeGap
@@ -107,11 +105,11 @@ private val RingSpec = tween<Float>(durationMillis = 1000, easing = LinearEasing
  * Нажатие: копирует код + haptic feedback.
  *
  * With [nextCode] the code that follows is shown for the last [NextCodeLeadSeconds] seconds: the
- * counter gives way to a chip at the row's end, a countdown ring in the code's colour and the next
- * code's digits, drawn over the row so nothing in its layout moves. On a narrow row with a long
- * code the chip lies over the code's tail, which fades under it. At the change the next code's
- * digits travel into the code's place and grow into it, the old code leaves to the left and the
- * counter returns.
+ * counter gives way to a trailing preview — a countdown ring in the code's colour and the next
+ * code's digits in the fresh-code colour — drawn over the row so nothing in its layout moves. On a
+ * narrow row with a long code it lies over the code's tail, which fades under it. At the change the
+ * ring and its digit vanish at once; the next digits travel into the code's place and grow into it
+ * without fading, the old code leaves to the left and the counter returns.
  */
 @Composable
 fun OtpCodeView(
@@ -132,6 +130,7 @@ fun OtpCodeView(
 
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
+    val reduceMotion = rememberReduceMotion()
     val fontScale = minOf(density.fontScale, MaxFontScale)
     val smallFontSize = with(density) { (SmallFontSize.value * fontScale).dp.toSp() }
     val chipFontSize = with(density) { (ChipFontSize.value * fontScale).dp.toSp() }
@@ -146,10 +145,11 @@ fun OtpCodeView(
     var outgoing by remember { mutableStateOf<String?>(null) }
     var lastCode by remember { mutableStateOf(code) }
 
-    LaunchedEffect(code, nextCode) {
+    LaunchedEffect(code, nextCode, reduceMotion) {
         val previous = lastCode
         lastCode = code
-        if (code != previous && code == shownNext && appear.value > 0f) {
+        if (code != previous && code == shownNext && appear.value > 0f && !reduceMotion) {
+            // Ring + digit leave with the preview; the digits continue as the incoming code.
             swap.snapTo(0f)
             appear.snapTo(0f)
             shownNext = null
@@ -160,7 +160,11 @@ fun OtpCodeView(
             swap.snapTo(1f)
             outgoing = null
             shownNext = nextCode
-            if (nextCode != null) appear.animateTo(1f, AppearSpec) else appear.snapTo(0f)
+            when {
+                nextCode == null -> appear.snapTo(0f)
+                reduceMotion -> appear.snapTo(1f)
+                else -> appear.animateTo(1f, AppearSpec)
+            }
         }
     }
 
@@ -168,13 +172,18 @@ fun OtpCodeView(
     val ring = remember { Animatable(0f) }
     var ringShown by remember { mutableStateOf(false) }
     val showsChip = shownNext != null
-    LaunchedEffect(secondsRemaining, showsChip) {
+    LaunchedEffect(secondsRemaining, showsChip, reduceMotion) {
         if (!showsChip) {
             ringShown = false
             return@LaunchedEffect
         }
-        val target = (secondsRemaining - 1).coerceAtLeast(0) / NextCodeLeadSeconds.toFloat()
-        if (ringShown) {
+        // With reduced motion the ring steps once a second; otherwise it runs down over the second.
+        val target = if (reduceMotion) {
+            secondsRemaining / NextCodeLeadSeconds.toFloat()
+        } else {
+            (secondsRemaining - 1).coerceAtLeast(0) / NextCodeLeadSeconds.toFloat()
+        }
+        if (ringShown && !reduceMotion) {
             ring.animateTo(target, RingSpec)
         } else {
             ring.snapTo(target)
@@ -240,13 +249,14 @@ fun OtpCodeView(
                     text = code.formatOtpCode(),
                     fontSize = CodeFontSize,
                     fontWeight = FontWeight.Normal,
-                    // The digits come in the colour they had in the chip, which is the fresh code's.
+                    // The digits come in the colour they had in the preview, which is the fresh code's.
                     color = if (swapping) otpColor(secondsRemaining, isDark) else color,
                     style = digitsStyle,
                     onTextLayout = { codeLayout = it },
                     modifier = if (!swapping) {
                         Modifier.tailFade(if (shownNext != null) appear.value else 0f, g)
                     } else {
+                        // Stays opaque so the predicted digits do not blink out before they travel.
                         Modifier.graphicsLayer {
                             // Grows from the next code's digits into its own place, around its baseline.
                             val scale = g.scale + (1f - g.scale) * p
@@ -257,13 +267,12 @@ fun OtpCodeView(
                             }
                             translationX = g.digitsX * (1f - p)
                             translationY = g.digitsShiftY * (1f - p)
-                            alpha = (p * 2f).coerceAtMost(1f)
                         }
                     }
                 )
             }
 
-            if (fullWidth) Spacer(Modifier.weight(1f)) else Spacer(Modifier.width(8.dp))
+            if (fullWidth) Spacer(modifier.weight(1f)) else Spacer(Modifier.width(8.dp))
 
             Text(
                 text = "$secondsRemaining",
@@ -279,50 +288,50 @@ fun OtpCodeView(
             )
         }
 
-        if (showsChip || swapping) {
-            Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
-                val next = shownNext
-                if (swapping) {
-                    // The capsule stays behind while its digits grow into the code, and fades out early.
-                    NextCodeChip(
-                        code = code,
-                        secondsRemaining = secondsRemaining,
-                        progress = { 0f },
-                        color = color,
-                        fontSize = chipFontSize,
-                        ringSize = ringSize,
-                        showsContent = false,
-                        modifier = Modifier.graphicsLayer { alpha = 1f - (p * 3f).coerceAtMost(1f) }
-                    )
-                } else if (next != null) {
-                    NextCodeChip(
-                        code = next,
-                        secondsRemaining = secondsRemaining,
-                        progress = { ring.value },
-                        color = color,
-                        fontSize = chipFontSize,
-                        ringSize = ringSize,
-                        description = stringResource(R.string.accounts_next_code_description, next.formatOtpCode()),
-                        onClick = onTapNext?.let { tap ->
-                            {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                tap(next)
-                            }
-                        },
-                        onDigitsLayout = { digitsLayout = it },
-                        modifier = Modifier
-                            .graphicsLayer {
-                                alpha = appear.value
-                                val scale = AppearScale + (1f - AppearScale) * appear.value
-                                scaleX = scale
-                                scaleY = scale
-                                transformOrigin = TransformOrigin(1f, 0.5f)
-                            }
-                            .onSizeChanged { chipWidth = it.width }
-                    )
-                }
+        // Ring + digit leave with this preview; the digits continue as the incoming code.
+        val next = shownNext
+        if (next != null) {
+            Box(modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
+                NextCodeChip(
+                    code = next,
+                    secondsRemaining = secondsRemaining,
+                    progress = { ring.value },
+                    color = color,
+                    fontSize = chipFontSize,
+                    ringSize = ringSize,
+                    description = stringResource(R.string.accounts_next_code_description, next.formatOtpCode()),
+                    onClick = onTapNext?.let { tap ->
+                        {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            tap(next)
+                        }
+                    },
+                    onDigitsLayout = { digitsLayout = it },
+                    modifier = Modifier
+                        .graphicsLayer {
+                            alpha = appear.value
+                            val scale = AppearScale + (1f - AppearScale) * appear.value
+                            scaleX = scale
+                            scaleY = scale
+                            transformOrigin = TransformOrigin(1f, 0.5f)
+                        }
+                        .onSizeChanged { chipWidth = it.width }
+                )
             }
         }
+    }
+}
+
+/** True when system animator duration scale is 0 — same idea as iOS Reduce Motion. */
+@Composable
+private fun rememberReduceMotion(): Boolean {
+    val context = LocalContext.current
+    return remember(context) {
+        Settings.Global.getFloat(
+            context.contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f
+        ) == 0f
     }
 }
 
@@ -359,9 +368,8 @@ private fun Modifier.tailFade(amount: Float, g: NextCodeGeometry): Modifier =
         }
 
 /**
- * A capsule tinted with the fresh code's colour: a ring that runs down in the code's colour with
- * the seconds left in it, then the next code's digits in the colour they will have as the code.
- * Without [showsContent] only the capsule and the ring's track are drawn, at the same size.
+ * Ring + next digits with no capsule: the digits use the fresh-code colour they will have after
+ * the change; the ring and its digit use the current code's urgency colour.
  */
 @Composable
 private fun NextCodeChip(
@@ -372,7 +380,6 @@ private fun NextCodeChip(
     fontSize: TextUnit,
     ringSize: Dp,
     modifier: Modifier = Modifier,
-    showsContent: Boolean = true,
     description: String? = null,
     onClick: (() -> Unit)? = null,
     onDigitsLayout: (TextLayoutResult) -> Unit = {}
@@ -385,8 +392,6 @@ private fun NextCodeChip(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ChipSpacing),
         modifier = modifier
-            .clip(CircleShape)
-            .background(fresh.copy(alpha = ChipTintAlpha))
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .clearAndSetSemantics { if (description != null) contentDescription = description }
             .padding(
@@ -414,7 +419,7 @@ private fun NextCodeChip(
                         style = Stroke(stroke)
                     )
                     val sweep = 360f * progress()
-                    if (showsContent && sweep > 0f) {
+                    if (sweep > 0f) {
                         drawArc(
                             color = color,
                             startAngle = -90f,
@@ -432,7 +437,7 @@ private fun NextCodeChip(
                 fontSize = numberSize,
                 lineHeight = numberSize,
                 fontWeight = FontWeight.Bold,
-                color = if (showsContent) color else Color.Transparent,
+                color = color,
                 maxLines = 1,
                 softWrap = false,
                 style = digitsStyle
@@ -444,7 +449,7 @@ private fun NextCodeChip(
             fontSize = fontSize,
             lineHeight = fontSize * 1.3f,
             fontWeight = FontWeight.SemiBold,
-            color = if (showsContent) fresh else Color.Transparent,
+            color = fresh,
             maxLines = 1,
             softWrap = false,
             style = digitsStyle,
