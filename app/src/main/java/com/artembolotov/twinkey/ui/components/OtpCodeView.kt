@@ -110,12 +110,13 @@ private val RingSpec = tween<Float>(durationMillis = 1000, easing = LinearEasing
  * Нажатие: копирует код + haptic feedback.
  *
  * With [nextCode] the code that follows is shown for the last [NextCodeLeadSeconds] seconds: the
- * counter gives way to a trailing preview — a countdown ring in the code's urgency colour and the
- * next code's digits in secondary (muted preview, not active blue) — drawn over the row so nothing
- * in its layout moves. On a narrow row with a long code it lies over the code's tail, which fades
- * under it. At the change the ring and its digit vanish at once; the next digits travel into the
- * code's place and grow into it without fading, the old code leaves to the left and the counter
- * returns.
+ * trailing counter is removed at once and a chip takes its place — a countdown ring (digit already
+ * inside it) in the code's urgency colour and the next code's digits in secondary (muted preview,
+ * not active blue). The chip fades/scales in in place — no slide across the next digits, and no
+ * fading footnote counter painted over them. Drawn over the row so nothing in its layout moves.
+ * On a narrow row with a long code it lies over the code's tail, which fades under it. At the
+ * change the ring and its digit vanish at once; the next digits travel into the code's place and
+ * grow into it without fading, the old code leaves to the left and the counter returns.
  */
 @Composable
 fun OtpCodeView(
@@ -288,8 +289,10 @@ fun OtpCodeView(
                 textAlign = TextAlign.Center,
                 onTextLayout = { counterLayout = it },
                 modifier = Modifier.width(CounterWidth).graphicsLayer {
-                    // Gives way to the chip while it is shown and comes back during the swap.
-                    alpha = 1f - if (swapping) 1f - p else appear.value
+                    // Lead chip already shows the digit in-ring; hide the footnote counter at once
+                    // so it never fades over next digits (double counter). Outside lead it follows
+                    // swap (returns during the period-change swap). Same as iOS CounterFade.
+                    alpha = if (shownNext != null) 0f else p
                 }
             )
         }
@@ -375,7 +378,8 @@ private fun Modifier.tailFade(amount: Float, g: NextCodeGeometry): Modifier =
 
 /**
  * Ring + next digits in a soft “whisper” capsule: digits stay secondary so they read as a preview;
- * the ring and its digit keep the urgency colour of the current period.
+ * the ring keeps the urgency colour of the current period. The seconds digit is drawn already
+ * inside the ring — lead appear is a whole-chip fade/scale, not a travel morph.
  */
 @Composable
 private fun NextCodeChip(
