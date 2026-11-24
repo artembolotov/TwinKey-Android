@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -86,6 +88,8 @@ private val ChipPaddingEnd = 10.dp
 private val ChipPaddingVertical = 4.dp
 private val ChipSpacing = 6.dp
 private const val RingTrackAlpha = 0.25f
+/** Soft “whisper” capsule behind ring + next digits (secondary at this opacity). Same as iOS. */
+private const val CapsuleFillAlpha = 0.10f
 private const val AppearScale = 0.9f
 private val ExitOvershoot = 40.dp
 // The code's tail under the chip fades to this alpha, over FadeLength that ends FadeGap
@@ -370,8 +374,8 @@ private fun Modifier.tailFade(amount: Float, g: NextCodeGeometry): Modifier =
         }
 
 /**
- * Ring + next digits with no capsule: the digits are secondary so they read as a preview, not as
- * a second active code; the ring and its digit keep the urgency colour of the current period.
+ * Ring + next digits in a soft “whisper” capsule: digits stay secondary so they read as a preview;
+ * the ring and its digit keep the urgency colour of the current period.
  */
 @Composable
 private fun NextCodeChip(
@@ -388,6 +392,8 @@ private fun NextCodeChip(
 ) {
     val numberSize = with(LocalDensity.current) { (ringSize / 2).toSp() }
     val digitsStyle = LocalTextStyle.current.copy(fontFeatureSettings = "tnum")
+    // Same secondary family as the next digits; stadium shape matches iOS Capsule.
+    val capsuleFill = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = CapsuleFillAlpha)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -395,6 +401,7 @@ private fun NextCodeChip(
         modifier = modifier
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .clearAndSetSemantics { if (description != null) contentDescription = description }
+            .background(capsuleFill, RoundedCornerShape(percent = 50))
             .padding(
                 start = ChipPaddingStart,
                 end = ChipPaddingEnd,
